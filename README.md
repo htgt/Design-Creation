@@ -1,4 +1,4 @@
-Design-Creation
+DESIGN-CREATION
 ===============
 
 Create a knock out design for a given target.
@@ -10,7 +10,7 @@ Below the basic plan for the sofware is explained.
 INPUT DATA
 ==========
 
-DESIGN PARAMS:
+Design Parameters:
 --------------
 * target ( just coordinate for now )
 ** genome / assembly
@@ -21,20 +21,22 @@ DESIGN PARAMS:
 * phase - conditional
 * name
 
-OLIGO PROFILE:
+Oligo Profile:
 --------------
 * oligo parameters
 * define region oligos must be located in
 
 * * *
 
-OLIGO TARGET REGIONS
+WORKFLOW
+========
+
+Oligo Target Regions
 ====================
 Given the target coordinates for the design plus the parameters for the oligos
 produce oligo target region sequence files ( input to aos ).
-For deletion designs just one target region ( region to delete ) 
-For knockout designs we will have 2 ( cassette insertion point plus loxp insertion point )
-Will there ever be more that 2 target regions?
+For deletion designs just one target region ( region to delete ).
+For knockout designs we will have 2 ( cassette insertion point plus loxp insertion point ).
 
 Validate that we have the right design parameters for the given design type?
 
@@ -50,21 +52,15 @@ output: sequence for target region of each oligo
 * D3 region sequence
 * G3 region sequence
 
-                               ||||
-                               ||||
-                               ||||
-                             ||||||||
-                              \||||/
-                                \/
-PRODUCE OLIGOS
+
+Produce Oligos
 ===============
 Wrapper around below:
 Validation here.
 
-AOS WRAPPER
+AOS Wrapper
 -----------
 Takes target sequence and output list of primers for that region.
-
 Need to wrap up input and output for aos to produce usable output for next step.
 
 ###input:
@@ -78,13 +74,8 @@ Need to wrap up input and output for aos to produce usable output for next step.
 - list of oligos for each oligo type ( ranked )
 - coordinate offset returned as well
 
-                               ||||
-                               ||||
-                               ||||
-                             ||||||||
-                              \||||/
-                                \/
-OLIGO FILTERING
+
+Oligo Filtering
 ===============
 We will have multiple oligos of each type, need to filter out bad ones and pick the 'best'
 one of each type.
@@ -101,25 +92,19 @@ oligos?
 * best oligo for each oligo type
 * throw error if we can't find given oligo type
 
-G OLIGO OVERLAPS
+G Oligo Overlaps
 ----------------
 G5 and G3 oligo sequence can not overlap
 
-OLIGO SPECIFICITY
+Oligo Specificity
 -----------------
 inside bac ( but use genomes flanking sequence 200k )
 
-BEST G OLIGO PAIR
+Best G Oligo Pair
 -----------------
 
-                               ||||
-                               ||||
-                               ||||
-                             ||||||||
-                              \||||/
-                                \/
 
-PERSIST DESIGN
+Persist Design
 ==============
 Once we have valid oligos for the target we persist it, to LIMS2.
 Use the LIMS2 api to insert design.
