@@ -3,6 +3,13 @@ Design-Creation
 
 Create a knock out design for a given target.
 
+Below the basic plan for the sofware is explained.
+
+* * *
+
+INPUT DATA
+==========
+
 DESIGN PARAMS:
 --------------
 * target ( just coordinate for now )
@@ -19,7 +26,7 @@ OLIGO PROFILE:
 * oligo parameters
 * define region oligos must be located in
 
-***
+* * *
 
 OLIGO TARGET REGIONS
 ====================
