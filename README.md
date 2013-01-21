@@ -3,7 +3,7 @@ DESIGN-CREATION
 
 Create a knock out design for a given target.
 
-Below the basic plan for the sofware is explained.
+Below the basic plan for the software is explained.
 
 * * *
 
@@ -13,10 +13,10 @@ INPUT DATA
 Design Parameters:
 --------------
 * target ( just coordinate for now )
-** genome / assembly
-** chromosome name
-** chromosome strand
-** chromosome coordiantes
+    * genome / assembly
+    * chromosome name
+    * chromosome strand
+    * chromosome coordiantes
 * design type
 * phase - conditional
 * name
@@ -58,6 +58,10 @@ Produce Oligos
 Wrapper around below:
 Validation here.
 
+To work out assembly coordiantes we use the offset information returned by aos for each oligo.
+This information plus the oligo target region coordinates is enough to work out
+the assembly coordinates for the oligos.
+
 AOS Wrapper
 -----------
 Takes target sequence and output list of primers for that region.
@@ -65,14 +69,13 @@ Need to wrap up input and output for aos to produce usable output for next step.
 
 ###input:
 * sequence files
-* other parameters ?
 * location of chr genome files
 * design type
-** will these other parameters need to change?
+* other parameters to aos seem to get set, will not change
 
 ###output:
-- list of oligos for each oligo type ( ranked )
-- coordinate offset returned as well
+* list of oligos for each oligo type ( ranked )
+* coordinate offset returned as well
 
 
 Oligo Filtering
@@ -86,7 +89,6 @@ oligos?
 ###input:
 * oligos
 * design type
-* other parameters?
 
 ###output:
 * best oligo for each oligo type
@@ -102,6 +104,7 @@ inside bac ( but use genomes flanking sequence 200k )
 
 Best G Oligo Pair
 -----------------
+Find best combination of G5 and G3 oligos.
 
 
 Persist Design
@@ -113,16 +116,15 @@ Use the LIMS2 api to insert design.
 * target name
 * species
 * id? ( looks required in lims api, may need to change code here? )
-* phase?
 * design type
 * oligos
-** type
-** sequence
-** loci
-*** assembly
-*** chr name
-*** start
-*** end
+    * type
+    * sequence
+    * loci
+        * assembly
+        * chr name
+        * start
+        * end
 
 ###output:
-- design stored in LIMS2
+* design stored in LIMS2
