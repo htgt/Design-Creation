@@ -12,11 +12,19 @@ INPUT DATA
 
 Design Parameters:
 --------------
-* target ( just coordinate for now )
+* target coordinates
+    * species
     * genome / assembly
     * chromosome name
     * chromosome strand
     * chromosome coordiantes
+OR
+* target gene
+    * species
+    * genomes / assembly
+    * start exon
+    * end exon
+PLUS
 * design type
 * phase - conditional
 * name
@@ -26,13 +34,44 @@ Oligo Profile:
 * oligo parameters
 * define region oligos must be located in
 
+### Conventional Deletion
+
+```
+   G5               U5       TARGET       D3               G3
+|======|---------|======|-|          |-|======|---------|======|
+|------|                                                           > G5 Region Length
+                                                        |------|   > G3 Region Length
+       |------------------|                                        > G5 Region Offset
+                                     |------------------|          > G3 Region Offset
+                 |------|                                          > U5 Region Length
+                                       |------|                    > D3 Region Length
+                        |-|                                        > U5 Region Offset
+                                     |-|                           > D3 Region Offset
+```
+
+
 * * *
 
 WORKFLOW
 ========
 
-Oligo Target Regions
-====================
+1: Specify Target Area
+======================
+Given a target gene with details of the exons that are being targetted we need to produce
+a set of coordinates for the target region(s);
+
+###input:
+* target gene
+* start exon
+* end exon
+* species
+* assembly
+
+###output:
+* design coordinates
+
+2: Oligo Target Regions
+=======================
 Given the target coordinates for the design plus the parameters for the oligos
 produce oligo target region sequence files ( input to aos ).
 For deletion designs just one target region ( region to delete ).
@@ -40,11 +79,18 @@ For knockout designs we will have 2 ( cassette insertion point plus loxp inserti
 
 Validate that we have the right design parameters for the given design type?
 
-input:
+###input:
 * design params
+    * design coordinates
+        * chromosome
+        * strand
+        * start
+        * end
+    * species
+    * assembly
 * oligo profile
 
-output: sequence for target region of each oligo
+###output: sequence for target region of each oligo
 * G5 region sequence
 * U5 region sequence
 * U3 region sequence ( optional )
@@ -53,7 +99,7 @@ output: sequence for target region of each oligo
 * G3 region sequence
 
 
-Produce Oligos
+3: Produce Oligos
 ===============
 Wrapper around below:
 Validation here.
@@ -78,7 +124,7 @@ Need to wrap up input and output for aos to produce usable output for next step.
 * coordinate offset returned as well
 
 
-Oligo Filtering
+4: Oligo Filtering
 ===============
 We will have multiple oligos of each type, need to filter out bad ones and pick the 'best'
 one of each type.
@@ -107,7 +153,7 @@ Best G Oligo Pair
 Find best combination of G5 and G3 oligos.
 
 
-Persist Design
+5: Persist Design
 ==============
 Once we have valid oligos for the target we persist it, to LIMS2.
 Use the LIMS2 api to insert design.
