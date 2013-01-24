@@ -17,7 +17,7 @@ use Moose;
 use LIMS2::REST::Client;
 use Try::Tiny;
 use YAML::Any;
-use Data::Dumper;
+use Data::Dump qw( pp );
 use namespace::autoclean;
 
 extends qw( DesignCreate::Action );
@@ -63,7 +63,7 @@ sub execute {
 
     try{
         $self->log->info('Persisting design to LIMS2');
-        $self->log->debug( Dumper( $self->design_data ) );
+        $self->log->debug( pp( $self->design_data ) );
         $self->lims2_api->POST( 'design', $self->design_data );
     }
     catch {
