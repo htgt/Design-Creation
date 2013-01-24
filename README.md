@@ -40,13 +40,32 @@ Oligo Profile:
    G5               U5       TARGET       D3               G3
 |======|---------|======|-|          |-|======|---------|======|
 |------|                                                           > G5 Region Length
-                                                        |------|   > G3 Region Length
        |------------------|                                        > G5 Region Offset
-                                     |------------------|          > G3 Region Offset
                  |------|                                          > U5 Region Length
-                                       |------|                    > D3 Region Length
                         |-|                                        > U5 Region Offset
+                                       |------|                    > D3 Region Length
                                      |-|                           > D3 Region Offset
+                                                        |------|   > G3 Region Length
+                                     |------------------|          > G3 Region Offset
+```
+
+### Conventional Conditional
+
+```
+   G5            U5      U-REGION      U3         D5      D-REGION      D3            G3
+|======|------|======|-|          |-|======|---|======|-|          |-|======|------|======|
+|------|                                                                                     > G5 Region Length
+       |---------------|                                                                     > G5 Region Offset
+              |------|                                                                       > U5 Region Length
+                     |-|                                                                     > U5 Region Offset
+                                    |------|                                                 > U3 Region Length
+                                  |-|                                                        > U3 Region Offset
+                                               |------|                                      > D5 Region Length
+                                                      |-|                                    > D5 Region Offset
+                                                                     |------|                > D3 Region Length
+                                                                   |-|                       > D3 Region Offset
+                                                                                   |------|  > G3 Region Length
+                                                                   |---------------|         > G3 Region Offset
 ```
 
 
