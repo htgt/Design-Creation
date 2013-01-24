@@ -5,6 +5,7 @@ use warnings FATAL => 'all';
 
 use Moose;
 use Log::Log4perl qw( :levels );
+use Try::Tiny;
 use namespace::autoclean;
 
 extends qw( MooseX::App::Cmd::Command );
@@ -43,17 +44,20 @@ has log_layout => (
     cmd_flag      => 'log-layout'
 );
 
-has ensembl_util => (
-    is         => 'ro',
-    isa        => 'LIMS2::Util::EnsEMBL',
-    traits     => [ 'NoGetopt' ],
-    lazy_build => 1,
-    handles    => [ qw( gene_adaptor ) ]
+has dir => (
+    is            => 'ro',
+    isa           => 'Path::Class::Dir',
+    traits        => [ 'Getopt' ],
+    documentation => 'The working directory for this design',
+    required      => 1,
+    coerce        => 1,
+    trigger       => \&_init_output_dir
 );
 
-sub _build_ensembl_util {
-    require LIMS2::Util::EnsEMBL;
-    return LIMS2::Util::EnsEMBL->new;
+sub _init_output_dir {
+    my ( $self, $dir ) = @_;
+
+    $dir->mkpath();
 }
 
 sub BUILD {
