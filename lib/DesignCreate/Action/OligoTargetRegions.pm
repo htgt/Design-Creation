@@ -2,7 +2,7 @@ package DesignCreate::Action::OligoTargetRegions;
 
 =head1 NAME
 
-DesignCreate::Action::OligoTargetRegions - Produce fasta files of the oligo target region sequences 
+DesignCreate::Action::OligoTargetRegions - Produce fasta files of the oligo target region sequences
 
 =head1 DESCRIPTION
 
@@ -18,13 +18,14 @@ for each oligo we must find.
 # setup config files to set some values below, don't use defaults
 
 use strict;
+use warnings FATAL => 'all';
+
+use Moose;
 use Const::Fast;
 use Bio::SeqIO;
 use Bio::Seq;
 use Fcntl; # O_ constants
-use warnings FATAL => 'all';
 
-use Moose;
 
 extends qw( DesignCreate::Action );
 #with 'MooseX::SimpleConfig';
@@ -205,6 +206,15 @@ has G3_region_offset => (
     default => 4000,
 );
 
+sub BUILD {
+    my $self = shift;
+
+    if ( $self->target_start > $self->target_end ) {
+        $self->log->logdie( 'Target start ' . $self->target_start .  ' is greater than target end ' . $self->target_end );
+    }
+
+}
+
 sub execute {
     my ( $self, $opts, $args ) = @_;
 
@@ -212,12 +222,14 @@ sub execute {
 
     for my $oligo ( @oligos ) {
         my ( $start, $end ) = $self->get_oligo_region_coordinates( $oligo );
+        next if !defined $start || !defined $end;
+
         my $oligo_seq = $self->get_sequence( $start, $end );
-        $self->write_sequence_file( $oligo, $oligo_seq );
+        my $oligo_id = $self->create_oligo_id( $oligo, $start, $end );
+        $self->write_sequence_file( $oligo, $oligo_id, $oligo_seq );
     }
 }
 
-#TODO: check valid start and end coordinates returned
 sub get_oligo_region_coordinates {
     my ( $self, $oligo ) = @_;
     my ( $start, $end );
@@ -238,39 +250,60 @@ sub get_oligo_region_coordinates {
         $self->log->error( "Invalid oligo name $oligo" );
     }
 
+    if ( $start > $end ) {
+        $self->log->error( "Start $start, greater than end $end for oligo $oligo" );
+        return;
+    }
+
     return( $start, $end );
 }
 
-#TODO: check attribute exists
 sub get_oligo_region_offset {
     my ( $self, $oligo ) = @_;
 
     my $attribute_name = $oligo . '_region_offset';
+    unless ( $self->meta->has_attribute( $attribute_name ) ) {
+        $self->log->error( "Attribute $attribute_name does not exist" );
+        return;
+    }
+
     return $self->$attribute_name;
 }
 
-#TODO: check attribute exists
 sub get_oligo_region_length {
     my ( $self, $oligo ) = @_;
 
     my $attribute_name = $oligo . '_region_length';
+    unless ( $self->meta->has_attribute( $attribute_name ) ) {
+        $self->log->error( "Attribute $attribute_name does not exist" );
+        return;
+    }
+
     return $self->$attribute_name;
 }
 
-sub write_sequence_file {
-    my ( $self, $oligo, $seq ) = @_;
+sub create_oligo_id {
+    my ( $self, $oligo, $start, $end ) = @_;
 
-    my $bio_seq  = Bio::Seq->new( -seq => $seq, -id => $oligo . '_target_region_sequence' ); 
-    my $seq_file = $self->seq_dir->file( $bio_seq->display_id . '.fasta' );
-    my $fh       = $seq_file->open( O_WRONLY|O_CREAT|O_EXCL ) or die( "Open $seq_file: $!" );
+    return $oligo . ':' . $start . '-' . $end;
+}
+
+sub write_sequence_file {
+    my ( $self, $oligo, $oligo_id, $seq ) = @_;
+
+    my $bio_seq  = Bio::Seq->new( -seq => $seq, -id => $oligo_id );
+    my $seq_file = $self->seq_dir->file( $oligo . '.fasta' );
+
+    # write-only,create file if it does not exist,fail if fail already exists
+    my $fh = $seq_file->open( O_WRONLY|O_CREAT|O_EXCL ) or die( "Open $seq_file: $!" );
 
     my $seq_out = Bio::SeqIO->new( -fh => $fh, -format => 'fasta' );
-    $seq_out->write_seq( $bio_seq );        
+    $seq_out->write_seq( $bio_seq );
 }
 
 #TODO: check valid sequence found
 sub get_sequence {
-    my ( $self, $start, $end ) = @_; 
+    my ( $self, $start, $end ) = @_;
 
     my $slice = $self->slice_adaptor->fetch_by_region(
         'chromosome',
