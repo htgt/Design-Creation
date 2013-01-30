@@ -1,7 +1,7 @@
 DESIGN-CREATION
 ===============
 
-Create a knock out design for a given target.
+Create a Knock-Out design for a given target.
 
 Below the basic plan for the software is explained.
 
@@ -119,32 +119,45 @@ Validate that we have the right design parameters for the given design type?
 
 
 3: Produce Oligos
-===============
-Wrapper around below:
-Validation here.
+=================
+Run AOS multiple times for each oligo, group and validate AOS output if needed.
 
-To work out assembly coordiantes we use the offset information returned by aos for each oligo.
-This information plus the oligo target region coordinates is enough to work out
-the assembly coordinates for the oligos.
+###input:
+* design type
+* location of target region sequence files
+
+###output:
+* list of oligos for every target region
+
 
 AOS Wrapper
 -----------
 Takes target sequence and output list of primers for that region.
 Need to wrap up input and output for aos to produce usable output for next step.
 
+To work out assembly coordinates we use the offset information returned by aos for each oligo.
+This information plus the oligo target region coordinates is enough to work out
+the assembly coordinates for the oligos.
+
 ###input:
-* sequence files
-* location of chr genome files
-* design type
-* other parameters to aos seem to get set, will not change
+* query sequence file
+* target sequence file ( currently chr file )
+* AOS parameters
+    * oligo length ( 50 )
+    * minimum GC content ( 28 )
+    * number oligos ( 3 )
+    * mask by lower-case? ( no )
+    * genomic search method ( blat )
 
 ###output:
-* list of oligos for each oligo type ( ranked )
-* coordinate offset returned as well
+* list of oligos, with following details:
+    * sequence
+    * assembly coordinates
+    * id
 
 
 4: Oligo Filtering
-===============
+==================
 We will have multiple oligos of each type, need to filter out bad ones and pick the 'best'
 one of each type.
 
@@ -173,7 +186,7 @@ Find best combination of G5 and G3 oligos.
 
 
 5: Persist Design
-==============
+=================
 Once we have valid oligos for the target we persist it, to LIMS2.
 Use the LIMS2 api to insert design.
 
