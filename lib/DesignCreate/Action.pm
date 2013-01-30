@@ -5,6 +5,7 @@ use warnings FATAL => 'all';
 
 use Moose;
 use Log::Log4perl qw( :levels );
+use MooseX::Types::Path::Class;
 use Try::Tiny;
 use namespace::autoclean;
 
