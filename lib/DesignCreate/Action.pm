@@ -5,7 +5,7 @@ use warnings FATAL => 'all';
 
 use Moose;
 use Log::Log4perl qw( :levels );
-use MooseX::Types::Path::Class;
+use MooseX::Types::Path::Class::MoreCoercions qw/AbsDir/;
 use Try::Tiny;
 use namespace::autoclean;
 
@@ -47,7 +47,7 @@ has log_layout => (
 
 has dir => (
     is            => 'ro',
-    isa           => 'Path::Class::Dir',
+    isa           => AbsDir,
     traits        => [ 'Getopt' ],
     documentation => 'The working directory for this design',
     required      => 1,
