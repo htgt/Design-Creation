@@ -117,6 +117,12 @@ Validate that we have the right design parameters for the given design type?
 * D3 region sequence
 * G3 region sequence
 
+Sequence files must have fasta headers formated as such:
+```
+>oligo_name:start-end
+eg
+>U5:123124-123234
+```
 
 3: Produce Oligos
 =================
