@@ -50,7 +50,7 @@ has target_file => (
     traits        => [ 'Getopt' ],
     coerce        => 1,
     documentation => "Target file for AOS, defaults to chromosome sequence of design target",
-    cmd_flag      => 'aos-location',
+    cmd_flag      => 'target-file',
     predicate     => 'has_user_defined_target_file',
 );
 
@@ -125,9 +125,10 @@ sub create_aos_query_file {
         $self->log->debug( "Adding $oligo oligo target sequence to query file" );
 
         while ( my $seq = $seq_in->next_seq ) {
-            $seq_out->write_seq( $seq );        
+            $seq_out->write_seq( $seq );
         }
     }
+    $self->log->debug('AOS query file created: ' . $self->query_file->stringify );
 
     return;
 }
@@ -156,7 +157,15 @@ sub define_target_file {
 sub check_aos_output {
     my $self = shift;
 
-    # feed in oligo yaml files and check we have expected output for each oligo 
+    for my $oligo ( @{ $self->expected_oligos } ) {
+        my $oligo_file = $self->aos_output_dir->file( $oligo . '.yaml' );
+        unless ( $self->aos_output_dir->contains( $oligo_file ) ) {
+            $self->log->logdie("Can't find $oligo oligo file: $oligo_file");
+        }
+    }
+
+    $self->log->info('All oligo yaml files are present');
+    return;
 }
 
 __PACKAGE__->meta->make_immutable;
