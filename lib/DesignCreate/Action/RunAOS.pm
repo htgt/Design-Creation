@@ -52,7 +52,7 @@ has target_file => (
     cmd_flag      => 'target-file'
 );
 
-with 'DesignCreate::Role::AOSParameters';
+with 'DesignCreate::Role::AOS';
 
 sub execute {
     my ( $self, $opts, $args ) = @_;

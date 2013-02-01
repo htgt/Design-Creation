@@ -54,7 +54,7 @@ has target_file => (
     predicate     => 'has_user_defined_target_file',
 );
 
-with 'DesignCreate::Role::AOSParameters';
+with 'DesignCreate::Role::AOS';
 
 has target_region_dir => (
     is            => 'ro',
