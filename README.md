@@ -3,7 +3,13 @@ DESIGN-CREATION
 
 Create a Knock-Out design for a given target.
 
-Below the basic plan for the software is explained.
+Overview:
+
+1. Specify target area(s) coordinates for design.
+2. Produce oligo target ( candidate ) region sequences.
+3. Produce list of possible oligos, using AOS.
+4. Filter and rank oligos, pick the best one of each type.
+5. Persist design with oligos to LIMS2.
 
 * * *
 
