@@ -52,6 +52,9 @@ has design_data => (
     lazy_build => 1,
 );
 
+#TODO validate we have all oligos required in design data
+# rest of the validation should be done on the LIMS2 side
+
 sub _build_design_data {
     my $self = shift;
 

@@ -75,17 +75,6 @@ sub _build_target_region_dir {
     return $target_dir;
 }
 
-# TODO make this a custom type
-has design_method => (
-    is            => 'ro',
-    isa           => 'Str',
-    traits        => [ 'Getopt' ],
-    required      => 1,
-    default       => 'deletion',
-    documentation => 'Design type, Deletion, Insertion, Conditional',
-    cmd_flag      => 'design-method',
-);
-
 has base_chromosome_dir => (
     is            => 'ro',
     isa           => 'Path::Class::Dir',
@@ -105,27 +94,6 @@ has target_chromosome => (
     documentation => 'Chromosome the design target lies on',
     cmd_flag      => 'target-chr',
 );
-
-#TODO custom oligo type
-has expected_oligos => (
-    is         => 'ro',
-    isa        => 'ArrayRef',
-    traits     => [ 'NoGetopt' ],
-    lazy_build => 1,
-);
-
-#TODO push this to base Action class and account for all design type
-sub _build_expected_oligos {
-    my $self = shift;
-
-    if ( $self->design_method eq 'deletion' ) {
-        return [ qw( G5 U5 D3 G3 ) ];
-    }
-    else {
-        die( 'Unknown design method ' . $self->design_method );
-    }
-}
-
 
 sub execute {
     my ( $self, $opts, $args ) = @_;

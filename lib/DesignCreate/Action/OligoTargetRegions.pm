@@ -26,7 +26,6 @@ use Bio::SeqIO;
 use Bio::Seq;
 use Fcntl; # O_ constants
 
-
 extends qw( DesignCreate::Action );
 #with 'MooseX::SimpleConfig';
 
@@ -107,14 +106,6 @@ has assembly => (
     traits   => [ 'Getopt' ],
     default  => 'GRCm38'
 );
-
-#TODO this will be used to determine which oligos we need
-#has design_method => (
-    #is       => 'ro',
-    #isa      => 'Str',
-    #traits   => [ 'Getopt' ],
-    #required => 1,
-#);
 
 #
 # Oligo Target Region Parameters
@@ -218,9 +209,8 @@ sub BUILD {
 sub execute {
     my ( $self, $opts, $args ) = @_;
 
-    my @oligos = qw( G5 U5 D3 G3 );
-
-    for my $oligo ( @oligos ) {
+    for my $oligo ( @{ $self->expected_oligos } ) {
+        $self->log->info( "Getting target region for $oligo oligo" );
         my ( $start, $end ) = $self->get_oligo_region_coordinates( $oligo );
         next if !defined $start || !defined $end;
 
@@ -293,9 +283,9 @@ sub write_sequence_file {
 
     my $bio_seq  = Bio::Seq->new( -seq => $seq, -id => $oligo_id );
     my $seq_file = $self->seq_dir->file( $oligo . '.fasta' );
+    $self->log->debug( "Outputting sequence to file: $seq_file" );
 
-    # write-only,create file if it does not exist,fail if fail already exists
-    my $fh = $seq_file->open( O_WRONLY|O_CREAT|O_EXCL ) or die( "Open $seq_file: $!" );
+    my $fh = $seq_file->open( O_WRONLY|O_CREAT ) or die( "Open $seq_file: $!" );
 
     my $seq_out = Bio::SeqIO->new( -fh => $fh, -format => 'fasta' );
     $seq_out->write_seq( $bio_seq );

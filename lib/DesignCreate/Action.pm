@@ -61,6 +61,37 @@ sub _init_output_dir {
     $dir->mkpath();
 }
 
+# TODO make this a custom type
+has design_method => (
+    is            => 'ro',
+    isa           => 'Str',
+    traits        => [ 'Getopt' ],
+    required      => 1,
+    default       => 'deletion',
+    documentation => 'Design type, Deletion, Insertion, Conditional',
+    cmd_flag      => 'design-method',
+);
+
+#TODO custom oligo type
+has expected_oligos => (
+    is         => 'ro',
+    isa        => 'ArrayRef',
+    traits     => [ 'NoGetopt' ],
+    lazy_build => 1,
+);
+
+#TODO account for all design type
+sub _build_expected_oligos {
+    my $self = shift;
+
+    if ( $self->design_method eq 'deletion' ) {
+        return [ qw( G5 U5 D3 G3 ) ];
+    }
+    else {
+        die( 'Unknown design method ' . $self->design_method );
+    }
+}
+
 sub BUILD {
     my $self = shift;
 
