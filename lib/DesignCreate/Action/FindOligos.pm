@@ -15,6 +15,7 @@ use strict;
 use warnings FATAL => 'all';
 
 use Moose;
+use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
 use Bio::SeqIO;
 use Bio::Seq;
 use Fcntl; # O_ constants
@@ -24,10 +25,36 @@ use namespace::autoclean;
 use Smart::Comments;
 
 extends qw( DesignCreate::Action );
-with 'DesignCreate::Role::AOSParameters';
 
 const my $DEFAULT_CHROMOSOME_DIR => '/lustre/scratch101/blastdb/Users/vvi/KO_MOUSE/GRCm38';
 const my $DEFAULT_OLIGO_TARGET_DIR_NAME => 'oligo_target_regions';
+
+has query_file => (
+    is         => 'ro',
+    isa        => AbsFile,
+    traits     => [ 'NoGetopt' ],
+    lazy_build => 1,
+);
+
+sub _build_query_file {
+    my $self = shift;
+
+    my $file = $self->target_region_dir->file( 'all_target_regions.fasta' );
+
+    return $file;
+}
+
+has target_file => (
+    is            => 'rw',
+    isa           => AbsFile,
+    traits        => [ 'Getopt' ],
+    coerce        => 1,
+    documentation => "Target file for AOS, defaults to chromosome sequence of design target",
+    cmd_flag      => 'aos-location',
+    predicate     => 'has_user_defined_target_file',
+);
+
+with 'DesignCreate::Role::AOSParameters';
 
 has target_region_dir => (
     is            => 'ro',
@@ -99,30 +126,6 @@ sub _build_expected_oligos {
     }
 }
 
-has query_file => (
-    is         => 'ro',
-    isa        => 'Path::Class::File',
-    traits     => [ 'NoGetopt' ],
-    lazy_build => 1,
-);
-
-sub _build_query_file {
-    my $self = shift;
-
-    my $file = $self->target_region_dir->file( 'all_target_regions.fasta' );
-
-    return $file;
-}
-
-has target_file => (
-    is            => 'rw',
-    isa           => 'Path::Class::File',
-    traits        => [ 'Getopt' ],
-    coerce        => 1,
-    documentation => "Target file for AOS, defaults to chromosome sequence of design target",
-    cmd_flag      => 'aos-location',
-    predicate     => 'has_user_defined_target_file',
-);
 
 sub execute {
     my ( $self, $opts, $args ) = @_;
@@ -180,18 +183,6 @@ sub define_target_file {
     }
 
     return;
-}
-
-sub run_aos {
-    my $self = shift;
-
-    # options for AOS should be specified ( if there is no standard default )
-        # oligo length
-        # num oligos
-        # minimum gc content
-        # mask by lower case
-        # genomic search method
-        # aos location
 }
 
 sub check_aos_output {
