@@ -31,28 +31,27 @@ use IPC::System::Simple qw( system );
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
 use Bio::SeqIO;
 use YAML::Any qw( DumpFile );
-use Const::Fast;
 use namespace::autoclean;
 
 extends qw( DesignCreate::Action );
+with 'DesignCreate::Role::AOSParameters';
 
 #TODO install AOS in sensible place and change this
-const my $DEFAULT_AOS_LOCATION => '/nfs/users/nfs_s/sp12/workspace/ArrayOligoSelector';
 
-has aos_dir => (
+has aos_work_dir => (
     is         => 'ro',
     isa        => 'Path::Class::Dir',
     traits     => [ 'NoGetopt' ],
     lazy_build => 1,
 );
 
-sub _build_aos_dir {
+sub _build_aos_work_dir {
     my $self = shift;
 
-    my $aos_dir = $self->dir->subdir('aos')->absolute;
-    $aos_dir->mkpath();
+    my $aos_work_dir = $self->dir->subdir('aos_work')->absolute;
+    $aos_work_dir->mkpath();
 
-    return $aos_dir;
+    return $aos_work_dir;
 }
 
 has aos_output_dir => (
@@ -91,61 +90,6 @@ has target_file => (
     cmd_flag      => 'target-file'
 );
 
-has aos_location => (
-    is            => 'ro',
-    isa           => 'Path::Class::Dir',
-    traits        => [ 'Getopt' ],
-    coerce        => 1,
-    default       => sub{ Path::Class::Dir->new( $DEFAULT_AOS_LOCATION )->absolute },
-    documentation => "Location of AOS scripts ( default $DEFAULT_AOS_LOCATION )",
-    cmd_flag      => 'aos-location'
-);
-
-has oligo_length => (
-    is            => 'ro',
-    isa           => 'Int',
-    traits        => [ 'Getopt' ],
-    documentation => 'Length of the oligos AOS is to find ( default 50 )',
-    default       => 50,
-    cmd_flag      => 'oligo-length',
-);
-
-has num_oligos => (
-    is            => 'ro',
-    isa           => 'Int',
-    traits        => [ 'Getopt' ],
-    documentation => 'Number of oligos AOS finds for each query sequence ( default 3 )',
-    default       => 3,
-    cmd_flag      => 'num-oligos',
-);
-
-has minimum_gc_content => (
-    is            => 'ro',
-    isa           => 'Int',
-    traits        => [ 'Getopt' ],
-    documentation => 'Minumum GC content of oligos ( default 28 )',
-    default       => 28,
-    cmd_flag      => 'min-gc-content',
-);
-
-has mask_by_lower_case => (
-    is            => 'ro',
-    isa           => 'Str',
-    traits        => [ 'Getopt' ],
-    documentation => 'Should AOS mask lowercase sequence in its calculations ( default no )',
-    default       => 'no',
-    cmd_flag      => 'mask-by-lower-case',
-);
-
-has genomic_search_method => (
-    is            => 'ro',
-    isa           => 'Str',
-    traits        => [ 'Getopt' ],
-    documentation => 'Method AOS uses to identify genomic origin, options: blat or blast ( default blat )',
-    default       => 'blat',
-    cmd_flag      => 'genomic-search-method',
-);
-
 has oligos => (
     is      => 'rw',
     isa     => 'HashRef',
@@ -158,7 +102,6 @@ has oligos => (
     }
 );
 
-use Smart::Comments;
 sub execute {
     my ( $self, $opts, $args ) = @_;
 
@@ -178,7 +121,7 @@ sub run_aos {
     # AOS scripts need to be called from within its home directory
     # Also produces lots of output files within this directory so we symlink the
     # entire AOS home directory to keep output contained in one working directory
-    chdir $self->aos_dir->stringify;
+    chdir $self->aos_work_dir->stringify;
     system('ln -s ' . $self->aos_location->stringify . '/*' . ' .');
 
     #TODO not in vm, can i use /software/bin/blastall? using blastall that came with AOS at the moment
@@ -235,12 +178,12 @@ sub parse_aos_output {
     my $self = shift;
     $self->log->info('Parsing AOS output');
 
-    unless ( $self->aos_dir->contains( 'oligo_fasta' ) ) {
+    unless ( $self->aos_work_dir->contains( 'oligo_fasta' ) ) {
         $self->log->error( 'Can not find oligo_fasta output file from aos' );
         return;
     }
 
-    my $oligos_file = $self->aos_dir->file( 'oligo_fasta' );
+    my $oligos_file = $self->aos_work_dir->file( 'oligo_fasta' );
     my $seq_in = Bio::SeqIO->new( -fh => $oligos_file->openr, -format => 'fasta' );
 
     while ( my $seq = $seq_in->next_seq ) {
@@ -287,6 +230,11 @@ sub parse_oligo_seq {
 sub create_oligo_files {
     my $self = shift;
     $self->log->info('Creating oligo output files');
+
+    unless ( $self->has_oligos ) {
+        $self->log->error( 'No oligos found' );
+        return;
+    }
 
     for my $oligo ( keys %{ $self->oligos } ) {
         my $filename = $self->aos_output_dir->stringify . '/' . $oligo . '.yaml';
