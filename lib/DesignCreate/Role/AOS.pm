@@ -1,4 +1,4 @@
-package DesignCreate::Role::AOSParameters;
+package DesignCreate::Role::AOS;
 
 =head1 NAME
 
