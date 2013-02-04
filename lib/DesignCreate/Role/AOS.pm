@@ -15,6 +15,7 @@ generate these files dynamically.
 =cut
 
 use Moose::Role;
+use DesignCreate::Types qw( PositiveInt YesNo AOSSearchMethod );
 use Const::Fast;
 use IPC::System::Simple qw( system );
 use Bio::SeqIO;
@@ -74,7 +75,7 @@ sub _build_aos_output_dir {
 
 has oligo_length => (
     is            => 'ro',
-    isa           => 'Int',
+    isa           => PositiveInt,
     traits        => [ 'Getopt' ],
     documentation => 'Length of the oligos AOS is to find ( default 50 )',
     default       => 50,
@@ -83,7 +84,7 @@ has oligo_length => (
 
 has num_oligos => (
     is            => 'ro',
-    isa           => 'Int',
+    isa           => PositiveInt,
     traits        => [ 'Getopt' ],
     documentation => 'Number of oligos AOS finds for each query sequence ( default 3 )',
     default       => 3,
@@ -92,7 +93,7 @@ has num_oligos => (
 
 has minimum_gc_content => (
     is            => 'ro',
-    isa           => 'Int',
+    isa           => PositiveInt,
     traits        => [ 'Getopt' ],
     documentation => 'Minumum GC content of oligos ( default 28 )',
     default       => 28,
@@ -101,7 +102,7 @@ has minimum_gc_content => (
 
 has mask_by_lower_case => (
     is            => 'ro',
-    isa           => 'Str',
+    isa           => YesNo,
     traits        => [ 'Getopt' ],
     documentation => 'Should AOS mask lowercase sequence in its calculations ( default no )',
     default       => 'no',
@@ -110,7 +111,7 @@ has mask_by_lower_case => (
 
 has genomic_search_method => (
     is            => 'ro',
-    isa           => 'Str',
+    isa           => AOSSearchMethod,
     traits        => [ 'Getopt' ],
     documentation => 'Method AOS uses to identify genomic origin, options: blat or blast ( default blat )',
     default       => 'blat',

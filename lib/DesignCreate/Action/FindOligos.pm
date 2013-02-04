@@ -16,13 +16,12 @@ use warnings FATAL => 'all';
 
 use Moose;
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
+use DesignCreate::Types qw( Chromosome );
 use Bio::SeqIO;
 use Bio::Seq;
 use Fcntl; # O_ constants
 use Const::Fast;
 use namespace::autoclean;
-
-use Smart::Comments;
 
 extends qw( DesignCreate::Action );
 
@@ -85,10 +84,9 @@ has base_chromosome_dir => (
     cmd_flag      => 'aos-location'
 );
 
-# TODO custom chromosome type
 has target_chromosome => (
     is            => 'ro',
-    isa           => 'Str',
+    isa           => Chromosome,
     traits        => [ 'Getopt' ],
     required      => 1,
     documentation => 'Chromosome the design target lies on',

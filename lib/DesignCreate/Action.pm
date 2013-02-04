@@ -4,8 +4,9 @@ use strict;
 use warnings FATAL => 'all';
 
 use Moose;
-use Log::Log4perl qw( :levels );
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsDir/;
+use DesignCreate::Types qw( ArrayRefOfOligos DesignMethod );
+use Log::Log4perl qw( :levels );
 use Try::Tiny;
 use namespace::autoclean;
 
@@ -64,7 +65,7 @@ sub _init_output_dir {
 # TODO make this a custom type
 has design_method => (
     is            => 'ro',
-    isa           => 'Str',
+    isa           => DesignMethod,
     traits        => [ 'Getopt' ],
     required      => 1,
     default       => 'deletion',
@@ -75,7 +76,7 @@ has design_method => (
 #TODO custom oligo type
 has expected_oligos => (
     is         => 'ro',
-    isa        => 'ArrayRef',
+    isa        => ArrayRefOfOligos,
     traits     => [ 'NoGetopt' ],
     lazy_build => 1,
 );

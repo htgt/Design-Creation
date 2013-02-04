@@ -21,6 +21,7 @@ use strict;
 use warnings FATAL => 'all';
 
 use Moose;
+use DesignCreate::Types qw( PositiveInt Chromosome NaturalNumber Strand Species );
 use Const::Fast;
 use Bio::SeqIO;
 use Bio::Seq;
@@ -62,7 +63,7 @@ sub _build_seq_dir {
 
 has target_start => (
     is       => 'ro',
-    isa      => 'Int',
+    isa      => PositiveInt,
     traits   => [ 'Getopt' ],
     required => 1,
     cmd_flag => 'target-start'
@@ -70,7 +71,7 @@ has target_start => (
 
 has target_end => (
     is       => 'ro',
-    isa      => 'Int',
+    isa      => PositiveInt,
     traits   => [ 'Getopt' ],
     required => 1,
     cmd_flag => 'target-end'
@@ -78,7 +79,7 @@ has target_end => (
 
 has chr_name => (
     is       => 'ro',
-    isa      => 'Str',
+    isa      => Chromosome,
     traits   => [ 'Getopt' ],
     required => 1,
     cmd_flag => 'chromosome'
@@ -86,7 +87,7 @@ has chr_name => (
 
 has chr_strand => (
     is       => 'ro',
-    isa      => 'Int',
+    isa      => Strand,
     traits   => [ 'Getopt' ],
     required => 1,
     cmd_flag => 'strand'
@@ -94,7 +95,7 @@ has chr_strand => (
 
 has species => (
     is       => 'ro',
-    isa      => 'Str',
+    isa      => Species,
     traits   => [ 'Getopt' ],
     default  => 'mouse',
 );
@@ -115,84 +116,84 @@ has assembly => (
 
 has G5_region_length => (
     is      => 'ro',
-    isa     => 'Int',
+    isa     => PositiveInt,
     traits  => [ 'Getopt' ],
     default => 1000,
 );
 
 has G5_region_offset => (
     is      => 'ro',
-    isa     => 'Int',
+    isa     => PositiveInt,
     traits  => [ 'Getopt' ],
     default => 4000,
 );
 
 has U5_region_length => (
     is      => 'ro',
-    isa     => 'Int',
+    isa     => PositiveInt,
     traits  => [ 'Getopt' ],
     default => 200,
 );
 
 has U5_region_offset => (
     is      => 'ro',
-    isa     => 'Int',
+    isa     => NaturalNumber,
     traits  => [ 'Getopt' ],
     default => 0,
 );
 
 has U3_region_length => (
     is      => 'ro',
-    isa     => 'Int',
+    isa     => PositiveInt,
     traits  => [ 'Getopt' ],
     default => 200,
 );
 
 has U3_region_offset => (
     is      => 'ro',
-    isa     => 'Int',
+    isa     => NaturalNumber,
     traits  => [ 'Getopt' ],
     default => 0,
 );
 
 has D5_region_length => (
     is      => 'ro',
-    isa     => 'Int',
+    isa     => PositiveInt,
     traits  => [ 'Getopt' ],
     default => 200,
 );
 
 has D5_region_offset => (
     is      => 'ro',
-    isa     => 'Int',
+    isa     => NaturalNumber,
     traits  => [ 'Getopt' ],
     default => 0,
 );
 
 has D3_region_length => (
     is      => 'ro',
-    isa     => 'Int',
+    isa     => PositiveInt,
     traits  => [ 'Getopt' ],
     default => 200,
 );
 
 has D3_region_offset => (
     is      => 'ro',
-    isa     => 'Int',
+    isa     => NaturalNumber,
     traits  => [ 'Getopt' ],
     default => 0,
 );
 
 has G3_region_length => (
     is      => 'ro',
-    isa     => 'Int',
+    isa     => PositiveInt,
     traits  => [ 'Getopt' ],
     default => 1000,
 );
 
 has G3_region_offset => (
     is      => 'ro',
-    isa     => 'Int',
+    isa     => PositiveInt,
     traits  => [ 'Getopt' ],
     default => 4000,
 );
