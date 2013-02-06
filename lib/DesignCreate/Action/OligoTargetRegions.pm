@@ -62,45 +62,51 @@ sub _build_seq_dir {
 }
 
 has target_start => (
-    is       => 'ro',
-    isa      => PositiveInt,
-    traits   => [ 'Getopt' ],
-    required => 1,
-    cmd_flag => 'target-start'
+    is            => 'ro',
+    isa           => PositiveInt,
+    traits        => [ 'Getopt' ],
+    documentation => 'Start coordinate or target region',
+    required      => 1,
+    cmd_flag      => 'target-start'
 );
 
 has target_end => (
-    is       => 'ro',
-    isa      => PositiveInt,
-    traits   => [ 'Getopt' ],
-    required => 1,
-    cmd_flag => 'target-end'
+    is            => 'ro',
+    isa           => PositiveInt,
+    traits        => [ 'Getopt' ],
+    documentation => 'End coordinate or target region',
+    required      => 1,
+    cmd_flag      => 'target-end'
 );
 
 has chr_name => (
-    is       => 'ro',
-    isa      => Chromosome,
-    traits   => [ 'Getopt' ],
-    required => 1,
-    cmd_flag => 'chromosome'
+    is            => 'ro',
+    isa           => Chromosome,
+    traits        => [ 'Getopt' ],
+    documentation => 'Name of chromosome the design target lies within',
+    required      => 1,
+    cmd_flag      => 'chromosome'
 );
 
 has chr_strand => (
-    is       => 'ro',
-    isa      => Strand,
-    traits   => [ 'Getopt' ],
-    required => 1,
-    cmd_flag => 'strand'
+    is            => 'ro',
+    isa           => Strand,
+    traits        => [ 'Getopt' ],
+    documentation => 'The strand the design target lies on',
+    required      => 1,
+    cmd_flag      => 'strand'
 );
 
 has species => (
-    is       => 'ro',
-    isa      => Species,
-    traits   => [ 'Getopt' ],
-    default  => 'mouse',
+    is            => 'ro',
+    isa           => Species,
+    traits        => [ 'Getopt' ],
+    documentation => 'The species of the design target',
+    default       => 'mouse',
 );
 
 #TODO figure out how to get slice adapter for anything other than current assembly
+# if I can not do that, or there is no point, remove this attribute
 has assembly => (
     is       => 'ro',
     isa      => 'Str',
