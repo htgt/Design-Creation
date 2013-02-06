@@ -118,6 +118,16 @@ has genomic_search_method => (
     cmd_flag      => 'genomic-search-method',
 );
 
+has oligo_count => (
+    is      => 'ro',
+    isa     => 'Num',
+    default => 0,
+    traits  => [ 'NoGetopt', 'Counter' ],
+    handles => {
+        inc_oligo_count => 'inc',
+    }
+);
+
 has oligos => (
     is      => 'rw',
     isa     => 'HashRef',
@@ -125,7 +135,6 @@ has oligos => (
     default => sub { {  } },
     handles => {
         has_oligos => 'count',
-        add_oligo  => 'set',
         get_oligos => 'get',
     }
 );
@@ -213,6 +222,7 @@ sub parse_aos_output {
     my $seq_in = Bio::SeqIO->new( -fh => $oligos_file->openr, -format => 'fasta' );
 
     while ( my $seq = $seq_in->next_seq ) {
+        $self->inc_oligo_count;
         $self->log->debug('Parsing: ' . $seq->display_id );
         $self->parse_oligo_seq( $seq );
     }
@@ -247,6 +257,7 @@ sub parse_oligo_seq {
     $oligo_data{oligo_seq}    = $seq->seq;
     $oligo_data{offset}       = $offset;
     $oligo_data{oligo}        = $oligo;
+    $oligo_data{id}           = $oligo . '-' . $self->oligo_count;
 
     push @{ $self->oligos->{$oligo} }, \%oligo_data;
 
