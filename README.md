@@ -170,42 +170,57 @@ the assembly coordinates for the oligos.
 
 4: Oligo Filtering
 ==================
-We will have multiple oligos of each type, need to filter out bad ones and pick the 'best'
-one of each type.
-
-Do we only care about the one 'best' one we picked, will be need to examine the rest of the
-oligos?
+We will have multiple oligos of each type, need to filter out bad ones.
 
 ###input:
 * oligos
 * design type
 
 ###output:
-* best oligo for each oligo type
+* validated oligo for each oligo type
 * throw error if we can't find given oligo type
+
+Oligo Validity
+--------------
+Check following:
+* Coordinates for oligo are worked out correctly
+* Length of oligo is correct
+* Sequence is the same as the sequence from ensembl for given coordinates
+
+Oligo Specificity
+-----------------
+inside bac ( but use genomes flanking sequence, 100k by default )
+
+
+5: Find Best Global Oligo Pair
+=============================
+We need to carry out additional checks on the G5 and G3 oligos and then
+find the best pair of oligos to use.
+
+###input:
+* G5 and G3 oligos
+
+###output
+* Best pair of G5 and G3 oligos
 
 G Oligo Overlaps
 ----------------
 G5 and G3 oligo sequence can not overlap
-
-Oligo Specificity
------------------
-inside bac ( but use genomes flanking sequence 200k )
 
 Best G Oligo Pair
 -----------------
 Find best combination of G5 and G3 oligos.
 
 
-5: Persist Design
-=================
-Once we have valid oligos for the target we persist it, to LIMS2.
-Use the LIMS2 api to insert design.
+6: Create Design File
+=====================
+
+Create the yaml design file, that will be used in the next persist step.
+Brings together all the data from the previous steps and formats it correctly.
 
 ###input:
 * target name
 * species
-* id? ( looks required in lims api, may need to change code here? )
 * design type
 * oligos
     * type
@@ -215,6 +230,18 @@ Use the LIMS2 api to insert design.
         * chr name
         * start
         * end
+* created by
+
+###output
+* deisng data yaml file
+
+7: Persist Design
+=================
+Once we have valid oligos for the target we persist it, to LIMS2.
+Use the LIMS2 api to insert design.
+
+###input:
+* design data yaml file
 
 ###output:
 * design stored in LIMS2
