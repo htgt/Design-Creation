@@ -94,7 +94,7 @@ has flank_length => (
     traits        => [ 'Getopt' ],
     documentation => 'Number of bases to either side of G5 and G3 where we check for oligo specificity',
     cmd_flag      => 'flank-length',
-    default       => 10000
+    default       => 100000
 );
 
 has aos_oligo_dir => (
