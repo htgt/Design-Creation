@@ -18,7 +18,7 @@ use warnings FATAL => 'all';
 use Moose;
 use DesignCreate::Types qw( PositiveInt Chromosome Strand Species );
 use DesignCreate::Util::Exonerate;
-use YAML::Any qw( LoadFile );
+use YAML::Any qw( LoadFile DumpFile );
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
 use Const::Fast;
 use Fcntl; # O_ constants
@@ -26,6 +26,7 @@ use namespace::autoclean;
 
 const my $DEFAULT_AOS_OLIGO_DIR_NAME => 'aos_output';
 const my $DEFAULT_EXONERATE_OLIGO_DIR_NAME => 'exonerate_oligos';
+const my $DEFAULT_VALIDATED_OLIGO_DIR_NAME => 'validated_oligos';
 
 extends qw( DesignCreate::Action );
 
@@ -130,6 +131,23 @@ sub _build_exonerate_oligo_dir {
     return $exonerate_oligo_dir;
 }
 
+has validated_oligo_dir => (
+    is         => 'ro',
+    isa        => 'Path::Class::Dir',
+    traits     => [ 'NoGetopt' ],
+    lazy_build => 1,
+);
+
+sub _build_validated_oligo_dir {
+    my $self = shift;
+
+    my $validated_oligo_dir = $self->dir->subdir( $DEFAULT_VALIDATED_OLIGO_DIR_NAME )->absolute;
+    $validated_oligo_dir->rmtree();
+    $validated_oligo_dir->mkpath();
+
+    return $validated_oligo_dir;
+}
+
 has oligo_length => (
     is            => 'ro',
     isa           => PositiveInt,
@@ -143,13 +161,18 @@ has oligo_length => (
 has oligos => (
     is      => 'rw',
     isa     => 'HashRef',
-    traits  => [ 'NoGetopt', 'Hash' ],
+    traits  => [ 'NoGetopt' ],
     default => sub { {  } },
-    handles => {
-        has_oligos => 'exists',
-        get_oligos => 'get',
-    }
 );
+
+has validated_oligos => (
+    is      => 'rw',
+    isa     => 'HashRef',
+    traits  => [ 'NoGetopt' ],
+    default => sub { {  } },
+);
+
+use Smart::Comments;
 
 sub execute {
     my ( $self, $opts, $args ) = @_;
@@ -158,7 +181,7 @@ sub execute {
 
     $self->check_specificity_of_oligos or return;
 
-    #TODO output oligos data in format we will persist it to LIMS2
+    $self->output_validated_oligos;
 
     return;
 }
@@ -200,7 +223,7 @@ sub validate_oligos_of_type {
         }
     }
 
-    unless ( $self->has_oligos( $oligo_type ) ) {
+    unless ( @{ $self->oligos->{$oligo_type} } ) {
         $self->log->error("No valid $oligo_type oligos");
     }
 
@@ -273,15 +296,75 @@ sub check_specificity_of_oligos {
     $self->define_exonerate_query_file;
     $self->define_exonerate_target_file;
 
+    my $exonerate_matches = $self->run_exonerate;
+
+    return unless $exonerate_matches;
+
+    # go through output and filter out oligos that are not specific enough
+    $self->filter_out_non_specific_oligos( $exonerate_matches );
+
+    for my $oligo_type ( @{ $self->expected_oligos } ) {
+        unless ( exists $self->validated_oligos->{$oligo_type} ) {
+            $self->log->warn( "No valid $oligo_type oligos, halting filter process" );
+            return;
+        }
+    }
+
+    return 1;
+}
+
+sub filter_out_non_specific_oligos {
+    my ( $self, $matches ) = @_;
+
+    for my $oligo_type ( keys %{ $self->oligos } ) {
+
+        for my $oligo ( @{ $self->oligos->{$oligo_type} } ) {
+            my $match_info = $matches->{ $oligo->{id} };
+
+            if ( !$match_info->{exact_matches} ) {
+                $self->log->error( 'Oligo ' . $oligo->{id} . ' does not have any exact matches, somethings wrong ' );
+                next;
+            }
+            elsif ( $match_info->{exact_matches} > 1 ) {
+                $self->log->info( 'Oligo ' . $oligo->{id} . ' is invalid, has multiple exact matches: ' . $match_info->{exact_matches} );
+                next;
+            }
+            # hit is above 80% similarity
+            elsif ( $match_info->{hits} > 1 ) {
+                $self->log->info( 'Oligo ' . $oligo->{id} . ' is invalid, has multiple hits: ' . $match_info->{hits} );
+                next;
+            }
+            #its ok
+            push @{ $self->validated_oligos->{$oligo_type} }, $oligo;
+        }
+
+    }
+
+    return;
+}
+
+sub run_exonerate {
+    my $self = shift;
+
     # now run exonerate
     my $exonerate = DesignCreate::Util::Exonerate->new(
         target_file => $self->exonerate_target_file->stringify,
         query_file  => $self->exonerate_query_file->stringify,
     );
 
-    my $matches = $exonerate->matches;
+    my $output = $exonerate->run_exonerate;
+    # put exonerate output in a log file
+    my $exonerate_output = $self->exonerate_oligo_dir->file('exonerate_output.log');
+    my $fh = $exonerate_output->open( O_WRONLY|O_CREAT ) or die( "Open $exonerate_output: $!" );
+    print $fh $output;
 
-    # go through output and filter out oligos that are not specific enough
+    my $matches = $exonerate->parse_exonerate_output;
+    unless ( %{ $matches } ) {
+        $self->log->error("No output from exonerate");
+        return;
+    }
+
+    return $matches;
 }
 
 sub define_exonerate_query_file {
@@ -337,6 +420,15 @@ sub target_flanking_region_coordinates {
     my $flanking_region_end = $g3_region_end + $self->flank_length;
 
     return( $flanking_region_start, $flanking_region_end );
+}
+
+sub output_validated_oligos {
+    my $self = shift;
+
+    for my $oligo_type ( keys %{ $self->validated_oligos } ) {
+        my $filename = $self->validated_oligo_dir->stringify . '/' . $oligo_type . '.yaml';
+        DumpFile( $filename, $self->validated_oligos->{$oligo_type} );
+    }
 }
 
 sub get_sequence {
