@@ -95,6 +95,8 @@ a set of coordinates for the target region(s);
 ###output:
 * design coordinates
 
+* * *
+
 2: Oligo Target Regions
 =======================
 Given the target coordinates for the design plus the parameters for the oligos
@@ -129,6 +131,8 @@ Sequence files must have fasta headers formated as such:
 eg
 >U5:123124-123234
 ```
+
+* * *
 
 3: Produce Oligos
 =================
@@ -167,6 +171,7 @@ the assembly coordinates for the oligos.
     * assembly coordinates
     * id
 
+* * *
 
 4: Oligo Filtering
 ==================
@@ -191,6 +196,7 @@ Oligo Specificity
 -----------------
 inside bac ( but use genomes flanking sequence, 100k by default )
 
+* * *
 
 5: Find Best Global Oligo Pair
 =============================
@@ -211,6 +217,7 @@ Best G Oligo Pair
 -----------------
 Find best combination of G5 and G3 oligos.
 
+* * *
 
 6: Create Design File
 =====================
@@ -233,7 +240,9 @@ Brings together all the data from the previous steps and formats it correctly.
 * created by
 
 ###output
-* deisng data yaml file
+* design data yaml file
+
+* * *
 
 7: Persist Design
 =================
