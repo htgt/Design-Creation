@@ -172,8 +172,6 @@ has validated_oligos => (
     default => sub { {  } },
 );
 
-use Smart::Comments;
-
 sub execute {
     my ( $self, $opts, $args ) = @_;
 
