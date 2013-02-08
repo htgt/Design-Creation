@@ -198,10 +198,14 @@ inside bac ( but use genomes flanking sequence, 100k by default )
 
 * * *
 
-5: Find Best Global Oligo Pair
+5: Find Best Gap Oligo Pair
 =============================
 We need to carry out additional checks on the G5 and G3 oligos and then
 find the best pair of oligos to use.
+
+All the oligo sequences and tiled into sections of sequence 6 bases long and then
+compared against each other. If a pair of oligos has any matching 6 base sequences
+then it is not a good oligo pair.
 
 ###input:
 * G5 and G3 oligos
@@ -209,13 +213,7 @@ find the best pair of oligos to use.
 ###output
 * Best pair of G5 and G3 oligos
 
-G Oligo Overlaps
-----------------
-G5 and G3 oligo sequence can not overlap
 
-Best G Oligo Pair
------------------
-Find best combination of G5 and G3 oligos.
 
 * * *
 
