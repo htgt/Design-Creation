@@ -2,15 +2,13 @@ package DesignCreate::Role::AOS;
 
 =head1 NAME
 
-DesignCreate::Role::AOSParameters
+DesignCreate::Role::AOS
 
 =head1 DESCRIPTION
 
-Some common parameters required to run AOS, all have solid defaults.
-
-The query and target file parameters are not specified here,
-but in RunAOS.pm as FindOligos.pm calls RunAOS and must specify or
-generate these files dynamically.
+Role for running AOS, anything that consumes this role should provide these attributes:
+query_file
+target_file
 
 =cut
 
@@ -21,8 +19,6 @@ use IPC::System::Simple qw( system );
 use Bio::SeqIO;
 use YAML::Any qw( DumpFile );
 use namespace::autoclean;
-
-requires 'target_file', 'query_file';
 
 #TODO install AOS in sensible place and change this
 const my $DEFAULT_AOS_LOCATION        => '/nfs/users/nfs_s/sp12/workspace/ArrayOligoSelector';
