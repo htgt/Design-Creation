@@ -84,13 +84,13 @@ has base_chromosome_dir => (
     cmd_flag      => 'aos-location'
 );
 
-has target_chromosome => (
+has chr_name => (
     is            => 'ro',
     isa           => Chromosome,
     traits        => [ 'Getopt' ],
     required      => 1,
     documentation => 'Chromosome the design target lies on',
-    cmd_flag      => 'target-chr',
+    cmd_flag      => 'chromosome',
 );
 
 sub execute {
@@ -139,7 +139,7 @@ sub define_target_file {
         return;
     }
 
-    my $chr_file = $self->base_chromosome_dir->file( $self->target_chromosome . '.fasta' );
+    my $chr_file = $self->base_chromosome_dir->file( $self->chr_name . '.fasta' );
     if ( $self->base_chromosome_dir->contains( $chr_file ) ) {
         $self->log->debug( "Target file found: $chr_file" );
         $self->target_file( $chr_file );
