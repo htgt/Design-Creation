@@ -62,7 +62,6 @@ sub _init_output_dir {
     $dir->mkpath();
 }
 
-# TODO make this a custom type
 has design_method => (
     is            => 'ro',
     isa           => DesignMethod,
@@ -73,7 +72,6 @@ has design_method => (
     cmd_flag      => 'design-method',
 );
 
-#TODO custom oligo type
 has expected_oligos => (
     is         => 'ro',
     isa        => ArrayRefOfOligos,
