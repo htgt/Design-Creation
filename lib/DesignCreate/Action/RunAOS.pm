@@ -27,32 +27,10 @@ use strict;
 use warnings FATAL => 'all';
 
 use Moose;
-use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
 use namespace::autoclean;
 
 extends qw( DesignCreate::Action );
-
-has query_file => (
-    is            => 'ro',
-    isa           => AbsFile,
-    traits        => [ 'Getopt' ],
-    coerce        => 1,
-    required      => 1,
-    documentation => 'The fasta file containing the query sequence',
-    cmd_flag      => 'query-file'
-);
-
-has target_file => (
-    is            => 'ro',
-    isa           => AbsFile,
-    traits        => [ 'Getopt' ],
-    coerce        => 1,
-    required      => 1,
-    documentation => 'The fasta file containing the target sequence',
-    cmd_flag      => 'target-file'
-);
-
-with 'DesignCreate::Role::AOS';
+with 'DesignCreate::CmdRole::RunAOS';
 
 sub execute {
     my ( $self, $opts, $args ) = @_;
@@ -61,7 +39,6 @@ sub execute {
 
     return;
 }
-
 
 __PACKAGE__->meta->make_immutable;
 
