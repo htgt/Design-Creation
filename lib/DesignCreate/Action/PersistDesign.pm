@@ -14,6 +14,7 @@ use strict;
 use warnings FATAL => 'all';
 
 use Moose;
+use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
 use LIMS2::REST::Client;
 use Try::Tiny;
 use YAML::Any;
@@ -37,13 +38,22 @@ sub _build_lims2_api {
 
 has design_data_file => (
     is            => 'ro',
-    isa           => 'Path::Class::File',
+    isa           => AbsFile,
     traits        => [ 'Getopt' ],
     coerce        => 1,
-    required      => 1,
+    lazy_build    => 1,
     documentation => 'The yaml file containing all the design data',
     cmd_flag      => 'design-data'
 );
+
+#TODO don't hard done the file name here
+sub _build_design_data_file {
+    my $self = shift;
+
+    my $file = $self->dir->file( 'design_data.yaml' );
+
+    return $file->absolute;
+}
 
 has design_data => (
     is         => 'ro',
@@ -61,6 +71,7 @@ sub _build_design_data {
     return YAML::Any::LoadFile( $self->design_data_file );
 }
 
+#TODO return design_id
 sub execute {
     my ( $self, $opts, $args ) = @_;
 
