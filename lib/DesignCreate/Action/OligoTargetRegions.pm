@@ -30,6 +30,8 @@ use Fcntl; # O_ constants
 extends qw( DesignCreate::Action );
 #with 'MooseX::SimpleConfig';
 
+const my $DEFAULT_OLIGO_TARGET_REGIONS_DIR_NAME => 'oligo_target_regions';
+
 has ensembl_util => (
     is         => 'ro',
     isa        => 'LIMS2::Util::EnsEMBL',
@@ -45,27 +47,28 @@ sub _build_ensembl_util {
     return LIMS2::Util::EnsEMBL->new( species => $self->species );
 }
 
-has seq_dir => (
+has oligo_target_regions_dir => (
     is         => 'ro',
     isa        => 'Path::Class::Dir',
     traits     => [ 'NoGetopt' ],
     lazy_build => 1,
 );
 
-sub _build_seq_dir {
+sub _build_oligo_target_regions_dir {
     my $self = shift;
 
-    my $seq_dir = $self->dir->subdir('oligo_target_regions');
-    $seq_dir->mkpath();
+    my $oligo_target_regions_dir = $self->dir->subdir( $DEFAULT_OLIGO_TARGET_REGIONS_DIR_NAME )->absolute;
+    $oligo_target_regions_dir->rmtree();
+    $oligo_target_regions_dir->mkpath();
 
-    return $seq_dir;
+    return $oligo_target_regions_dir;
 }
 
 has target_start => (
     is            => 'ro',
     isa           => PositiveInt,
     traits        => [ 'Getopt' ],
-    documentation => 'Start coordinate or target region',
+    documentation => 'Start coordinate of target region',
     required      => 1,
     cmd_flag      => 'target-start'
 );
@@ -74,7 +77,7 @@ has target_end => (
     is            => 'ro',
     isa           => PositiveInt,
     traits        => [ 'Getopt' ],
-    documentation => 'End coordinate or target region',
+    documentation => 'End coordinate of target region',
     required      => 1,
     cmd_flag      => 'target-end'
 );
@@ -103,15 +106,6 @@ has species => (
     traits        => [ 'Getopt' ],
     documentation => 'The species of the design target',
     default       => 'mouse',
-);
-
-#TODO figure out how to get slice adapter for anything other than current assembly
-# if I can not do that, or there is no point, remove this attribute
-has assembly => (
-    is       => 'ro',
-    isa      => 'Str',
-    traits   => [ 'Getopt' ],
-    default  => 'GRCm38'
 );
 
 #
