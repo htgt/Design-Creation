@@ -213,8 +213,6 @@ then it is not a good oligo pair.
 ###output
 * Best pair of G5 and G3 oligos
 
-
-
 * * *
 
 6: Create Design File
@@ -222,6 +220,7 @@ then it is not a good oligo pair.
 
 Create the yaml design file, that will be used in the next persist step.
 Brings together all the data from the previous steps and formats it correctly.
+Also calls seperate module to work out phase of design.
 
 ###input:
 * target name
@@ -239,6 +238,10 @@ Brings together all the data from the previous steps and formats it correctly.
 
 ###output
 * design data yaml file
+
+Design Phase
+------------
+To work our the phase the target transcript and oligo coordinates are required.
 
 * * *
 
