@@ -56,13 +56,6 @@ has species => (
     default       => 'mouse',
 );
 
-has assembly => (
-    is       => 'ro',
-    isa      => 'Str',
-    traits   => [ 'Getopt' ],
-    default  => 'GRCm38'
-);
-
 has chr_name => (
     is            => 'ro',
     isa           => Chromosome,

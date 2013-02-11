@@ -8,10 +8,13 @@ use MooseX::Types::Path::Class::MoreCoercions qw/AbsDir/;
 use DesignCreate::Types qw( ArrayRefOfOligos DesignMethod );
 use Log::Log4perl qw( :levels );
 use Try::Tiny;
+use Const::Fast;
 use namespace::autoclean;
 
 extends qw( MooseX::App::Cmd::Command );
 with qw( MooseX::Log::Log4perl );
+
+const my $CURRENT_ASSEMBLY => 'GRCm38';
 
 has trace => (
     is            => 'ro',
@@ -61,6 +64,13 @@ sub _init_output_dir {
 
     $dir->mkpath();
 }
+
+has assembly => (
+    is      => 'ro',
+    isa     => 'Str',
+    traits  => [ 'NoGetopt' ],
+    default => sub { $CURRENT_ASSEMBLY },
+);
 
 has design_method => (
     is            => 'ro',
