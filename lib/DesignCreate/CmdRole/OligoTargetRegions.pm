@@ -1,8 +1,8 @@
-package DesignCreate::Role::OligoTargetRegions;
+package DesignCreate::CmdRole::OligoTargetRegions;
 
 =head1 NAME
 
-DesignCreate::Role::OligoTargetRegions - Produce fasta files of the oligo target region sequences
+DesignCreate::CmdRole::OligoTargetRegions - Produce fasta files of the oligo target region sequences
 
 =head1 DESCRIPTION
 

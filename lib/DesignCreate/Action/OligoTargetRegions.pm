@@ -23,7 +23,7 @@ use warnings FATAL => 'all';
 use Moose;
 
 extends qw( DesignCreate::Action );
-with 'DesignCreate::Role::OligoTargetRegions';
+with 'DesignCreate::CmdRole::OligoTargetRegions';
 
 sub BUILD {
     my $self = shift;
