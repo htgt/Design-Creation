@@ -42,22 +42,13 @@ has verbose => (
     default       => 0
 );
 
-has log_layout => (
-    is            => 'ro',
-    isa           => 'Str',
-    traits        => [ 'Getopt' ],
-    documentation => 'Specify the Log::Log4perl layout',
-    default       => '%d %c %p %m%n',
-    cmd_flag      => 'log-layout'
-);
-
 has design_method => (
     is            => 'ro',
     isa           => DesignMethod,
     traits        => [ 'Getopt' ],
     required      => 1,
     default       => 'deletion',
-    documentation => 'Design type, either Deletion, Insertion or Conditional ( default deletion )',
+    documentation => 'Design type, Deletion, Insertion or Conditional ( default deletion )',
     cmd_flag      => 'design-method',
 );
 
@@ -85,8 +76,8 @@ has validated_oligo_dir => (
     is            => 'ro',
     isa           => 'Path::Class::Dir',
     traits        => [ 'Getopt' ],
-    documentation => 'Directory holding the validated oligos, '
-                     . " defaults to [design_dir]/$DEFAULT_VALIDATED_OLIGO_DIR_NAME",
+    documentation => 'Directory holding the validated oligos '
+                     . "( default [design_dir]/$DEFAULT_VALIDATED_OLIGO_DIR_NAME )",
     coerce        => 1,
     cmd_flag      => 'validated-oligo-dir',
     lazy_build    => 1,
@@ -106,11 +97,11 @@ has aos_output_dir => (
     is            => 'ro',
     isa           => 'Path::Class::Dir',
     traits        => [ 'Getopt' ],
-    documentation => 'Directory holding the oligo yaml files'
-                     . " defaults to [design_dir]/$DEFAULT_AOS_OUTPUT_DIR_NAME",
+    documentation => 'Directory holding the oligo yaml files '
+                     . "( default [design_dir]/$DEFAULT_AOS_OUTPUT_DIR_NAME )",
     coerce        => 1,
     lazy_build    => 1,
-    cmd_flag      => 'aos-oligo-dir',
+    cmd_flag      => 'aos-output-dir',
 );
 
 sub _build_aos_output_dir {
@@ -127,10 +118,10 @@ has oligo_target_regions_dir => (
     is         => 'ro',
     isa        => 'Path::Class::Dir',
     traits     => [ 'Getopt' ],
-    documentation => 'Directory holding the oligo target region fasta files,'
-                     . " defaults to [design_dir]/$DEFAULT_OLIGO_TARGET_REGIONS_DIR_NAME",
+    documentation => 'Directory holding the oligo target region fasta files '
+                     . "( default [design_dir]/$DEFAULT_OLIGO_TARGET_REGIONS_DIR_NAME )",
     lazy_build => 1,
-    cmd_flag      => 'target-region-dir',
+    cmd_flag      => 'oligo-target-region-dir',
     coerce        => 1,
 );
 
@@ -153,7 +144,7 @@ sub BUILD {
         : $self->verbose ? $INFO
         :                  $WARN;
 
-    Log::Log4perl->easy_init( { level => $log_level, layout => $self->log_layout } );
+    Log::Log4perl->easy_init( { level => $log_level, layout => '%d %c %p %m%n' } );
     return;
 }
 

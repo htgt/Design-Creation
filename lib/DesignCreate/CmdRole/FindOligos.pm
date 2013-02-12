@@ -51,7 +51,7 @@ has target_file => (
     isa           => AbsFile,
     traits        => [ 'Getopt' ],
     coerce        => 1,
-    documentation => "Target file for AOS ( defaults to chromosome sequence of design target )",
+    documentation => "Target file for AOS ( defaults to chromosome sequence of design )",
     cmd_flag      => 'target-file',
     predicate     => 'has_user_defined_target_file',
 );
@@ -63,7 +63,7 @@ has base_chromosome_dir => (
     coerce        => 1,
     default       => sub{ Path::Class::Dir->new( $DEFAULT_CHROMOSOME_DIR )->absolute },
     documentation => "Location of chromosome files ( default $DEFAULT_CHROMOSOME_DIR )",
-    cmd_flag      => 'aos-location'
+    cmd_flag      => 'base-chromosome-dir'
 );
 
 sub find_oligos {

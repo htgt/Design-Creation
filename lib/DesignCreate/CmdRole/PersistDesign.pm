@@ -37,8 +37,8 @@ has design_data_file => (
     traits        => [ 'Getopt' ],
     coerce        => 1,
     lazy_build    => 1,
-    documentation => 'The yaml file containing all the design data',
-    cmd_flag      => 'design-data'
+    documentation => 'The yaml file containing design data ( default [work_dir]/design_data.yaml )',
+    cmd_flag      => 'design-data-file'
 );
 
 #TODO don't code done the file name here

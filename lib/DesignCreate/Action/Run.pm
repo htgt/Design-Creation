@@ -15,6 +15,7 @@ Runs all the seperate steps used to create a design.
 #
 
 use strict;
+use Const::Fast;
 use Fcntl; # O_ constants
 use warnings FATAL => 'all';
 
@@ -30,6 +31,24 @@ DesignCreate::CmdRole::PickGapOligos
 DesignCreate::CmdRole::ConsolidateDesignData
 DesignCreate::CmdRole::PersistDesign
 );
+
+# Turn off the following attributes command line option attribute
+# these values should be set when running the design creation process
+# end to end
+const my @ATTRIBUTES_NO_CMD_OPTION => qw(
+target_file
+exonerate_target_file
+design_data_file
+validated_oligo_dir
+aos_output_dir
+oligo_target_regions_dir
+aos_location
+base_chromosome_dir
+);
+
+for my $attribute ( @ATTRIBUTES_NO_CMD_OPTION ) {
+    has '+' . $attribute => ( traits => [ 'NoGetopt' ] );
+}
 
 sub execute {
     my ( $self, $opts, $args ) = @_;

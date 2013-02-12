@@ -73,7 +73,7 @@ has tile_size => (
     is            => 'ro',
     isa           => PositiveInt,
     traits        => [ 'Getopt' ],
-    documentation => 'Size of tiling when matching G oligos, default 6',
+    documentation => 'Size of tiling when matching G oligos ( default 6 )',
     cmd_flag      => 'tile-size',
     default       => 6,
 );

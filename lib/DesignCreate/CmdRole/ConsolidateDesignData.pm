@@ -30,7 +30,7 @@ has target_genes => (
     is            => 'ro',
     isa           => 'ArrayRef',
     traits        => [ 'Getopt' ],
-    documentation => 'The name of the target gene(s) of the design',
+    documentation => 'Name of target gene(s) of design',
     required      => 1,
     cmd_flag      => 'target-gene',
 );
@@ -39,7 +39,7 @@ has created_by => (
     is            => 'ro',
     isa           => 'Str',
     traits        => [ 'Getopt' ],
-    documentation => 'Name of user who created design, must be valid LIMS2 user ( default system )',
+    documentation => 'Name of user, must be valid LIMS2 user ( default system )',
     default       => 'system',
     cmd_flag      => 'created-by',
 );
@@ -47,6 +47,7 @@ has created_by => (
 has gap_oligo_pair => (
     is         => 'ro',
     isa        => 'HashRef',
+    traits     => [ 'NoGetopt' ],
     lazy_build => 1,
 );
 
