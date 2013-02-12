@@ -13,7 +13,7 @@ meet our requirments.
 =cut
 
 use Moose::Role;
-use DesignCreate::Types qw( PositiveInt Chromosome Strand Species );
+use DesignCreate::Types qw( PositiveInt );
 use DesignCreate::Util::Exonerate;
 use YAML::Any qw( LoadFile DumpFile );
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
@@ -39,7 +39,7 @@ has exonerate_target_file => (
     isa           => AbsFile,
     traits        => [ 'Getopt' ],
     coerce        => 1,
-    documentation => "Target file for AOS, defaults to chromosome sequence of design target",
+    documentation => "Target file for exonerate ( defaults to 100000 bases flanking design target )",
     cmd_flag      => 'exonerate-target-file',
     predicate     => 'has_exonerate_target_file',
 );
@@ -48,7 +48,7 @@ has flank_length => (
     is            => 'ro',
     isa           => PositiveInt,
     traits        => [ 'Getopt' ],
-    documentation => 'Number of bases to either side of G5 and G3 where we check for oligo specificity',
+    documentation => 'Number of bases to either side of G5 and G3 where we check for oligo specificity ( default 100000 )',
     cmd_flag      => 'flank-length',
     default       => 100000
 );
@@ -191,8 +191,8 @@ sub check_oligo_length {
     my ( $self, $oligo_data ) = @_;
 
     my $oligo_length = length($oligo_data->{oligo_seq});
-    if ( $oligo_length != $self->oligo_length ) {
-        $self->log->error("Oligo length is $oligo_length, should be " . $self->oligo_length );
+    if ( $oligo_length != $oligo_data->{oligo_length} ) {
+        $self->log->error("Oligo length is $oligo_length, should be " . $oligo_data->{oligo_length} );
         return 0;
     }
 

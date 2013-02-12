@@ -10,11 +10,12 @@ DesignCreate::Role::AOS
 
 use Moose::Role;
 use DesignCreate::Types qw( Chromosome Strand Species );
+use Const::Fast;
 use namespace::autoclean;
 
-#TODO move assembly here?
-# Rename
-# move ensembl_util attribute here?
+#TODO Rename
+const my $CURRENT_ASSEMBLY => 'GRCm38';
+
 has chr_name => (
     is            => 'ro',
     isa           => Chromosome,
@@ -40,6 +41,28 @@ has species => (
     documentation => 'The species of the design target ( default mouse )',
     default       => 'mouse',
 );
+
+has assembly => (
+    is      => 'ro',
+    isa     => 'Str',
+    traits  => [ 'NoGetopt' ],
+    default => sub { $CURRENT_ASSEMBLY },
+);
+
+has ensembl_util => (
+    is         => 'ro',
+    isa        => 'LIMS2::Util::EnsEMBL',
+    traits     => [ 'NoGetopt' ],
+    lazy_build => 1,
+    handles    => [ qw( slice_adaptor ) ],
+);
+
+sub _build_ensembl_util {
+    my $self = shift;
+    require LIMS2::Util::EnsEMBL;
+
+    return LIMS2::Util::EnsEMBL->new( species => $self->species );
+}
 
 #TODO: check valid sequence found
 sub get_sequence {

@@ -17,13 +17,13 @@ Oligos
 =cut
 
 use Moose::Role;
-use DesignCreate::Types qw( Species Strand Chromosome );
 use YAML::Any qw( LoadFile DumpFile );
 use Data::Dump qw( pp );
 use namespace::autoclean;
 
 with qw(
 DesignCreate::Role::Chromosome
+DesignCreate::Role::Oligos
 );
 
 has target_genes => (
@@ -39,7 +39,7 @@ has created_by => (
     is            => 'ro',
     isa           => 'Str',
     traits        => [ 'Getopt' ],
-    documentation => 'Name of user who created design, must be valid LIMS2 user, default is: system',
+    documentation => 'Name of user who created design, must be valid LIMS2 user ( default system )',
     default       => 'system',
     cmd_flag      => 'created-by',
 );

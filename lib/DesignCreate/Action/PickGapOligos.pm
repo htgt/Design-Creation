@@ -33,7 +33,8 @@ sub execute {
     return;
 }
 
-#if running command by itself we want to check the validate oligo dir exists
+# if running command by itself we want to check the validate oligo dir exists
+# default is to delete and re-create folder
 override _build_validated_oligo_dir => sub {
     my $self = shift;
 

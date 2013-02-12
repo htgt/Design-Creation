@@ -13,21 +13,23 @@ This is a wrapper around RunAOS which does the real work.
 
 use Moose::Role;
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
-use DesignCreate::Types qw( Chromosome );
 use Bio::SeqIO;
 use Bio::Seq;
 use Fcntl; # O_ constants
 use Const::Fast;
 use namespace::autoclean;
 
-with qw( DesignCreate::Role::AOS DesignCreate::Role::Chromosome );
+with qw(
+DesignCreate::Role::AOS
+DesignCreate::Role::Chromosome
+DesignCreate::Role::Oligos
+);
 
 # Don't need the following attributes when running this command on its own
 __PACKAGE__->meta->remove_attribute( 'chr_strand' );
 __PACKAGE__->meta->remove_attribute( 'species' );
 
 const my $DEFAULT_CHROMOSOME_DIR => '/lustre/scratch101/blastdb/Users/vvi/KO_MOUSE/GRCm38';
-const my $DEFAULT_OLIGO_TARGET_DIR_NAME => 'oligo_target_regions';
 
 has query_file => (
     is         => 'ro',
@@ -39,7 +41,7 @@ has query_file => (
 sub _build_query_file {
     my $self = shift;
 
-    my $file = $self->target_region_dir->file( 'all_target_regions.fasta' );
+    my $file = $self->oligo_target_regions_dir->file( 'all_target_regions.fasta' );
 
     return $file;
 }
@@ -49,29 +51,10 @@ has target_file => (
     isa           => AbsFile,
     traits        => [ 'Getopt' ],
     coerce        => 1,
-    documentation => "Target file for AOS, defaults to chromosome sequence of design target",
+    documentation => "Target file for AOS ( defaults to chromosome sequence of design target )",
     cmd_flag      => 'target-file',
     predicate     => 'has_user_defined_target_file',
 );
-
-has target_region_dir => (
-    is            => 'ro',
-    isa           => 'Path::Class::Dir',
-    traits        => [ 'Getopt' ],
-    documentation => 'Directory holding the oligo target region fasta files,'
-                     . " defaults to [design_dir]/$DEFAULT_OLIGO_TARGET_DIR_NAME",
-    coerce        => 1,
-    cmd_flag      => 'target-region-dir',
-    lazy_build    => 1,
-);
-
-sub _build_target_region_dir {
-    my $self = shift;
-
-    my $target_dir = $self->dir->subdir( $DEFAULT_OLIGO_TARGET_DIR_NAME )->absolute;
-
-    return $target_dir;
-}
 
 has base_chromosome_dir => (
     is            => 'ro',
@@ -79,7 +62,7 @@ has base_chromosome_dir => (
     traits        => [ 'Getopt' ],
     coerce        => 1,
     default       => sub{ Path::Class::Dir->new( $DEFAULT_CHROMOSOME_DIR )->absolute },
-    documentation => "Location of chromosome files( default $DEFAULT_CHROMOSOME_DIR )",
+    documentation => "Location of chromosome files ( default $DEFAULT_CHROMOSOME_DIR )",
     cmd_flag      => 'aos-location'
 );
 
@@ -104,8 +87,8 @@ sub create_aos_query_file {
     my $seq_out = Bio::SeqIO->new( -fh => $fh, -format => 'fasta' );
 
     for my $oligo ( @{ $self->expected_oligos } ) {
-        my $oligo_file = $self->target_region_dir->file( $oligo . '.fasta' );
-        unless ( $self->target_region_dir->contains( $oligo_file ) ) {
+        my $oligo_file = $self->oligo_target_regions_dir->file( $oligo . '.fasta' );
+        unless ( $self->oligo_target_regions_dir->contains( $oligo_file ) ) {
             $self->log->logdie("Can't find $oligo target region file: $oligo_file");
         }
 

@@ -20,8 +20,6 @@ use Bio::SeqIO;
 use YAML::Any qw( DumpFile );
 use namespace::autoclean;
 
-with qw( DesignCreate::Role::Oligos );
-
 #TODO install AOS in sensible place and change this
 const my $DEFAULT_AOS_LOCATION        => '/nfs/users/nfs_s/sp12/workspace/ArrayOligoSelector';
 const my $DEFAULT_AOS_WORK_DIR_NAME   => 'aos_work';
@@ -52,6 +50,15 @@ sub _build_aos_work_dir {
 
     return $aos_work_dir;
 }
+
+has oligo_length => (
+    is            => 'ro',
+    isa           => PositiveInt,
+    traits        => [ 'Getopt' ],
+    documentation => 'Length of the oligos AOS is to find ( default 50 )',
+    default       => 50,
+    cmd_flag      => 'oligo-length',
+);
 
 has num_oligos => (
     is            => 'ro',

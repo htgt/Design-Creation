@@ -6,56 +6,32 @@ DesignCreate::Role::Oligos
 
 =head1 DESCRIPTION
 
+Common Oligo attributes and methods
+
 =cut
 
 use Moose::Role;
-use DesignCreate::Types qw( PositiveInt );
-use Const::Fast;
+use DesignCreate::Types qw( ArrayRefOfOligos );
 use namespace::autoclean;
 
-const my $DEFAULT_VALIDATED_OLIGO_DIR_NAME => 'validated_oligos';
-
-has oligo_length => (
-    is            => 'ro',
-    isa           => PositiveInt,
-    traits        => [ 'Getopt' ],
-    documentation => 'Length of the oligos AOS is to find ( default 50 )',
-    default       => 50,
-    cmd_flag      => 'oligo-length',
+has expected_oligos => (
+    is         => 'ro',
+    isa        => ArrayRefOfOligos,
+    traits     => [ 'NoGetopt' ],
+    lazy_build => 1,
 );
 
-has validated_oligo_dir => (
-    is            => 'ro',
-    isa           => 'Path::Class::Dir',
-    traits        => [ 'Getopt' ],
-    documentation => 'Directory holding the validated oligos, '
-                     . " defaults to [design_dir]/$DEFAULT_VALIDATED_OLIGO_DIR_NAME",
-    coerce        => 1,
-    cmd_flag      => 'validated-oligo-dir',
-    lazy_build    => 1,
-);
-
-sub _build_validated_oligo_dir {
+#TODO account for all design type
+sub _build_expected_oligos {
     my $self = shift;
 
-    my $validated_oligo_dir = $self->dir->subdir( $DEFAULT_VALIDATED_OLIGO_DIR_NAME )->absolute;
-    $validated_oligo_dir->rmtree();
-    $validated_oligo_dir->mkpath();
-
-    return $validated_oligo_dir;
+    if ( $self->design_method eq 'deletion' ) {
+        return [ qw( G5 U5 D3 G3 ) ];
+    }
+    else {
+        die( 'Unknown design method ' . $self->design_method );
+    }
 }
-
-#sub _build_validated_oligo_dir {
-    #my $self = shift;
-
-    #my $validated_oligo_dir = $self->dir->subdir( $DEFAULT_VALIDATED_OLIGO_DIR_NAME );
-    #unless ( $self->dir->contains( $validated_oligo_dir ) ) {
-        #$self->log->logdie( "Can't find validated oligo file dir: "
-                           #. $self->validated_oligo_dir->stringify );
-    #}
-
-    #return $validated_oligo_dir->absolute;
-#}
 
 1;
 

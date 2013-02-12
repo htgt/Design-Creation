@@ -11,30 +11,18 @@ for each oligo we must find.
 
 =cut
 
-#
-# Initial version will be setup for standard deletion design only
-#
-#TODO
-# setup config files to set some values below, don't use defaults
-
 use strict;
 use warnings FATAL => 'all';
 
 use Moose;
+use Const::Fast;
+use namespace::autoclean;
 
 extends qw( DesignCreate::Action );
 with 'DesignCreate::CmdRole::OligoTargetRegions';
 
-sub BUILD {
-    my $self = shift;
-
-    if ( $self->target_start > $self->target_end ) {
-        $self->log->logdie( 'Target start ' . $self->target_start
-                            .  ' is greater than target end '
-                            . $self->target_end );
-    }
-
-}
+#TODO move this
+const my $DEFAULT_OLIGO_TARGET_REGIONS_DIR_NAME => 'oligo_target_regions';
 
 sub execute {
     my ( $self, $opts, $args ) = @_;
@@ -43,6 +31,20 @@ sub execute {
 
     return;
 }
+
+# if running command by itself we want to check the target regions dir exists
+# default is to delete and re-create folder
+override _build_oligo_target_regions_dir => sub {
+    my $self = shift;
+
+    my $target_regions_dir = $self->dir->subdir( $DEFAULT_OLIGO_TARGET_REGIONS_DIR_NAME );
+    unless ( $self->dir->contains( $target_regions_dir ) ) {
+        $self->log->logdie( "Can't find aos output dir: "
+                           . $self->target_regions_dir->stringify );
+    }
+
+    return $target_regions_dir->absolute;
+};
 
 __PACKAGE__->meta->make_immutable;
 

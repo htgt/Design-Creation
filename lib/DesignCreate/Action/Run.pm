@@ -39,7 +39,7 @@ sub execute {
     $self->filter_oligos;
     $self->pick_gap_oligos;
     $self->consolidate_design_data;
-    $self->persist_design;
+    #$self->persist_design;
 
     return;
 }

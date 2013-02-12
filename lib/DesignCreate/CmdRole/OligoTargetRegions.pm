@@ -18,33 +18,17 @@ for each oligo we must find.
 # setup config files to set some values below, don't use defaults
 
 use Moose::Role;
-use DesignCreate::Types qw( PositiveInt Chromosome NaturalNumber Strand Species );
-use Const::Fast;
+use DesignCreate::Types qw( PositiveInt NaturalNumber );
 use Bio::SeqIO;
 use Bio::Seq;
 use Fcntl; # O_ constants
 
 #with 'MooseX::SimpleConfig';
-with qw( DesignCreate::Role::Chromosome );
 
-const my $DEFAULT_OLIGO_TARGET_REGIONS_DIR_NAME => 'oligo_target_regions';
-
-has oligo_target_regions_dir => (
-    is         => 'ro',
-    isa        => 'Path::Class::Dir',
-    traits     => [ 'NoGetopt' ],
-    lazy_build => 1,
+with qw(
+DesignCreate::Role::Chromosome
+DesignCreate::Role::Oligos
 );
-
-sub _build_oligo_target_regions_dir {
-    my $self = shift;
-
-    my $oligo_target_regions_dir = $self->dir->subdir( $DEFAULT_OLIGO_TARGET_REGIONS_DIR_NAME )->absolute;
-    $oligo_target_regions_dir->rmtree();
-    $oligo_target_regions_dir->mkpath();
-
-    return $oligo_target_regions_dir;
-}
 
 has target_start => (
     is            => 'ro',
