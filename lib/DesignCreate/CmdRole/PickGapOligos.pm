@@ -13,14 +13,11 @@ and pick the ones with no matching sections of sequence.
 =cut
 
 use Moose::Role;
-use Const::Fast;
 use YAML::Any qw( LoadFile DumpFile );
 use DesignCreate::Types qw( PositiveInt );
 use List::MoreUtils qw( all );
 use Data::Dump qw( pp );
 use namespace::autoclean;
-
-const my $DEFAULT_VALIDATED_OLIGO_DIR_NAME => 'validated_oligos';
 
 has g5_oligos_data => (
     is         => 'ro',
@@ -70,29 +67,6 @@ sub _build_g3_oligos_data {
     my $data = LoadFile( $g3_oligos_file );
 
     return { map{ $_->{id} => $_ } @{ $data } };
-}
-
-has validated_oligo_dir => (
-    is            => 'ro',
-    isa           => 'Path::Class::Dir',
-    traits        => [ 'Getopt' ],
-    documentation => 'Directory holding the validated oligos, '
-                     . " defaults to [design_dir]/$DEFAULT_VALIDATED_OLIGO_DIR_NAME",
-    coerce        => 1,
-    cmd_flag      => 'validated-oligo-dir',
-    lazy_build    => 1,
-);
-
-sub _build_validated_oligo_dir {
-    my $self = shift;
-
-    my $validated_oligo_dir = $self->dir->subdir( $DEFAULT_VALIDATED_OLIGO_DIR_NAME );
-    unless ( $self->dir->contains( $validated_oligo_dir ) ) {
-        $self->log->logdie( "Can't find validated oligo file dir: "
-                           . $self->validated_oligo_dir->stringify );
-    }
-
-    return $validated_oligo_dir->absolute;
 }
 
 has tile_size => (

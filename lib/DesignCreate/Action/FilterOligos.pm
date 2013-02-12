@@ -16,10 +16,14 @@ use strict;
 use warnings FATAL => 'all';
 
 use Moose;
+use Const::Fast;
 use namespace::autoclean;
 
 extends qw( DesignCreate::Action );
 with 'DesignCreate::CmdRole::FilterOligos';
+
+#TODO move this
+const my $DEFAULT_AOS_OUTPUT_DIR_NAME => 'aos_output';
 
 sub execute {
     my ( $self, $opts, $args ) = @_;
@@ -28,6 +32,19 @@ sub execute {
 
     return;
 }
+
+#if running command by itself we want to check the aos output dir exists
+override _build_aos_output_dir => sub {
+    my $self = shift;
+
+    my $aos_output_dir = $self->dir->subdir( $DEFAULT_AOS_OUTPUT_DIR_NAME );
+    unless ( $self->dir->contains( $aos_output_dir ) ) {
+        $self->log->logdie( "Can't find aos output dir: "
+                           . $self->aos_output_dir->stringify );
+    }
+
+    return $aos_output_dir->absolute;
+};
 
 __PACKAGE__->meta->make_immutable;
 

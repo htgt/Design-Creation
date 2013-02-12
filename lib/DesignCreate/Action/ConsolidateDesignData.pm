@@ -20,10 +20,14 @@ use strict;
 use warnings FATAL => 'all';
 
 use Moose;
+use Const::Fast;
 use namespace::autoclean;
 
 extends qw( DesignCreate::Action );
 with 'DesignCreate::CmdRole::ConsolidateDesignData';
+
+#TODO move this to somewhere global
+const my $DEFAULT_VALIDATED_OLIGO_DIR_NAME => 'validated_oligos';
 
 sub execute {
     my ( $self, $opts, $args ) = @_;
@@ -32,6 +36,19 @@ sub execute {
 
     return;
 }
+
+#if running command by itself we want to check the validate oligo dir exists
+override _build_validated_oligo_dir => sub {
+    my $self = shift;
+
+    my $validated_oligo_dir = $self->dir->subdir( $DEFAULT_VALIDATED_OLIGO_DIR_NAME );
+    unless ( $self->dir->contains( $validated_oligo_dir ) ) {
+        $self->log->logdie( "Can't find validated oligo file dir: "
+                           . $self->validated_oligo_dir->stringify );
+    }
+
+    return $validated_oligo_dir->absolute;
+};
 
 __PACKAGE__->meta->make_immutable;
 

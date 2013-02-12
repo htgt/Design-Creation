@@ -41,7 +41,7 @@ has design_data_file => (
     cmd_flag      => 'design-data'
 );
 
-#TODO don't hard done the file name here
+#TODO don't code done the file name here
 sub _build_design_data_file {
     my $self = shift;
 

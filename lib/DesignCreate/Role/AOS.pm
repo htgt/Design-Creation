@@ -20,10 +20,11 @@ use Bio::SeqIO;
 use YAML::Any qw( DumpFile );
 use namespace::autoclean;
 
+with qw( DesignCreate::Role::Oligos );
+
 #TODO install AOS in sensible place and change this
 const my $DEFAULT_AOS_LOCATION        => '/nfs/users/nfs_s/sp12/workspace/ArrayOligoSelector';
 const my $DEFAULT_AOS_WORK_DIR_NAME   => 'aos_work';
-const my $DEFAULT_AOS_OUTPUT_DIR_NAME => 'aos_output';
 
 has aos_location => (
     is            => 'ro',
@@ -51,32 +52,6 @@ sub _build_aos_work_dir {
 
     return $aos_work_dir;
 }
-
-has aos_output_dir => (
-    is            => 'ro',
-    isa           => 'Path::Class::Dir',
-    traits        => [ 'NoGetopt' ],
-    lazy_build    => 1,
-);
-
-sub _build_aos_output_dir {
-    my $self = shift;
-
-    my $aos_output_dir = $self->dir->subdir( $DEFAULT_AOS_OUTPUT_DIR_NAME )->absolute;
-    $aos_output_dir->rmtree();
-    $aos_output_dir->mkpath();
-
-    return $aos_output_dir;
-}
-
-has oligo_length => (
-    is            => 'ro',
-    isa           => PositiveInt,
-    traits        => [ 'Getopt' ],
-    documentation => 'Length of the oligos AOS is to find ( default 50 )',
-    default       => 50,
-    cmd_flag      => 'oligo-length',
-);
 
 has num_oligos => (
     is            => 'ro',
@@ -124,7 +99,7 @@ has oligo_count => (
     }
 );
 
-has oligos => (
+has aos_oligos => (
     is      => 'rw',
     isa     => 'HashRef',
     traits  => [ 'NoGetopt', 'Hash' ],
@@ -234,7 +209,7 @@ sub parse_oligo_seq {
         $self->log->warn(
             'Oligo sequence display id is not in expected format: ' . $seq->display_id );
         $seq->display_id =~ /^(.*)_(\d+)$/;
-        push @{ $self->oligos->{$1} },
+        push @{ $self->aos_oligos->{$1} },
             { seq => $seq->seq, display_id => $seq->display_id, offset => $2 };
 
         return;
@@ -255,7 +230,7 @@ sub parse_oligo_seq {
     $oligo_data{oligo}        = $oligo;
     $oligo_data{id}           = $oligo . '-' . $self->oligo_count;
 
-    push @{ $self->oligos->{$oligo} }, \%oligo_data;
+    push @{ $self->aos_oligos->{$oligo} }, \%oligo_data;
 
     return;
 }
@@ -269,7 +244,7 @@ sub create_oligo_files {
         return;
     }
 
-    for my $oligo ( keys %{ $self->oligos } ) {
+    for my $oligo ( keys %{ $self->aos_oligos } ) {
         my $filename = $self->aos_output_dir->stringify . '/' . $oligo . '.yaml';
         DumpFile( $filename, $self->get_oligos( $oligo ) );
     }

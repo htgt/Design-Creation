@@ -20,7 +20,6 @@ use namespace::autoclean;
 extends qw( DesignCreate::Action );
 with 'DesignCreate::CmdRole::FindOligos';
 
-
 sub execute {
     my ( $self, $opts, $args ) = @_;
 

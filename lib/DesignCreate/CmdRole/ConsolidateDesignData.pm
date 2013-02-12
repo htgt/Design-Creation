@@ -18,12 +18,13 @@ Oligos
 
 use Moose::Role;
 use DesignCreate::Types qw( Species Strand Chromosome );
-use Const::Fast;
 use YAML::Any qw( LoadFile DumpFile );
 use Data::Dump qw( pp );
 use namespace::autoclean;
 
-const my $DEFAULT_VALIDATED_OLIGO_DIR_NAME => 'validated_oligos';
+with qw(
+DesignCreate::Role::Chromosome
+);
 
 has target_genes => (
     is            => 'ro',
@@ -42,55 +43,6 @@ has created_by => (
     default       => 'system',
     cmd_flag      => 'created-by',
 );
-
-has species => (
-    is            => 'ro',
-    isa           => Species,
-    traits        => [ 'Getopt' ],
-    documentation => 'The species of the design target, default is: mouse',
-    default       => 'mouse',
-);
-
-has chr_name => (
-    is            => 'ro',
-    isa           => Chromosome,
-    traits        => [ 'Getopt' ],
-    documentation => 'Name of chromosome the design target lies within',
-    required      => 1,
-    cmd_flag      => 'chromosome'
-);
-
-has chr_strand => (
-    is            => 'ro',
-    isa           => Strand,
-    traits        => [ 'Getopt' ],
-    documentation => 'The strand the design target lies on',
-    required      => 1,
-    cmd_flag      => 'strand'
-);
-
-has validated_oligo_dir => (
-    is            => 'ro',
-    isa           => 'Path::Class::Dir',
-    traits        => [ 'Getopt' ],
-    documentation => 'Directory holding the validated oligos, '
-                     . " defaults to [design_dir]/$DEFAULT_VALIDATED_OLIGO_DIR_NAME",
-    coerce        => 1,
-    cmd_flag      => 'validated-oligo-dir',
-    lazy_build    => 1,
-);
-
-sub _build_validated_oligo_dir {
-    my $self = shift;
-
-    my $validated_oligo_dir = $self->dir->subdir( $DEFAULT_VALIDATED_OLIGO_DIR_NAME );
-    unless ( $self->dir->contains( $validated_oligo_dir ) ) {
-        $self->log->logdie( "Can't find validated oligo file dir: "
-                           . $self->validated_oligo_dir->stringify );
-    }
-
-    return $validated_oligo_dir->absolute;
-}
 
 has gap_oligo_pair => (
     is         => 'ro',
@@ -117,7 +69,7 @@ has phase => (
     traits => [ 'NoGetopt' ],
 );
 
-has oligos => (
+has picked_oligos => (
     is     => 'rw',
     isa    => 'ArrayRef',
     traits => [ 'NoGetopt' ],
@@ -159,7 +111,7 @@ sub build_oligo_array {
         push @oligos, $self->get_oligo( $oligos, $oligo_type );
     }
 
-    $self->oligos( \@oligos );
+    $self->picked_oligos( \@oligos );
 
     return;
 }
@@ -206,10 +158,11 @@ sub create_design_file {
         gene_ids   => $self->target_genes,
         phase      => $self->phase,
         created_by => $self->created_by,
-        oligos     => $self->oligos,
+        oligos     => $self->picked_oligos,
     );
     $self->log->debug( 'Design Data: ' . pp(%design_data) );
 
+    #TODO make name of file a constant
     my $design_data_file = $self->dir->file('design_data.yaml');
     $self->log->info( "Creating design file: $design_data_file" );
     DumpFile( $design_data_file, \%design_data );

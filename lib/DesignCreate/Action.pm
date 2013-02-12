@@ -15,6 +15,8 @@ extends qw( MooseX::App::Cmd::Command );
 with qw( MooseX::Log::Log4perl );
 
 const my $CURRENT_ASSEMBLY => 'GRCm38';
+const my $DEFAULT_VALIDATED_OLIGO_DIR_NAME => 'validated_oligos';
+const my $DEFAULT_AOS_OUTPUT_DIR_NAME => 'aos_output';
 
 has trace => (
     is            => 'ro',
@@ -65,6 +67,7 @@ sub _init_output_dir {
     $dir->mkpath();
 }
 
+#TODO move attributes below to somewhere more logical
 has assembly => (
     is      => 'ro',
     isa     => 'Str',
@@ -89,6 +92,21 @@ has expected_oligos => (
     lazy_build => 1,
 );
 
+has ensembl_util => (
+    is         => 'ro',
+    isa        => 'LIMS2::Util::EnsEMBL',
+    traits     => [ 'NoGetopt' ],
+    lazy_build => 1,
+    handles    => [ qw( slice_adaptor ) ],
+);
+
+sub _build_ensembl_util {
+    my $self = shift;
+    require LIMS2::Util::EnsEMBL;
+
+    return LIMS2::Util::EnsEMBL->new( species => $self->species );
+}
+
 #TODO account for all design type
 sub _build_expected_oligos {
     my $self = shift;
@@ -99,6 +117,48 @@ sub _build_expected_oligos {
     else {
         die( 'Unknown design method ' . $self->design_method );
     }
+}
+
+has validated_oligo_dir => (
+    is            => 'ro',
+    isa           => 'Path::Class::Dir',
+    traits        => [ 'Getopt' ],
+    documentation => 'Directory holding the validated oligos, '
+                     . " defaults to [design_dir]/$DEFAULT_VALIDATED_OLIGO_DIR_NAME",
+    coerce        => 1,
+    cmd_flag      => 'validated-oligo-dir',
+    lazy_build    => 1,
+);
+
+sub _build_validated_oligo_dir {
+    my $self = shift;
+
+    my $validated_oligo_dir = $self->dir->subdir( $DEFAULT_VALIDATED_OLIGO_DIR_NAME )->absolute;
+    $validated_oligo_dir->rmtree();
+    $validated_oligo_dir->mkpath();
+
+    return $validated_oligo_dir;
+}
+
+has aos_output_dir => (
+    is            => 'ro',
+    isa           => 'Path::Class::Dir',
+    traits        => [ 'Getopt' ],
+    documentation => 'Directory holding the oligo yaml files'
+                     . " defaults to [design_dir]/$DEFAULT_AOS_OUTPUT_DIR_NAME",
+    coerce        => 1,
+    lazy_build    => 1,
+    cmd_flag      => 'aos-oligo-dir',
+);
+
+sub _build_aos_output_dir {
+    my $self = shift;
+
+    my $aos_output_dir = $self->dir->subdir( $DEFAULT_AOS_OUTPUT_DIR_NAME )->absolute;
+    $aos_output_dir->rmtree();
+    $aos_output_dir->mkpath();
+
+    return $aos_output_dir;
 }
 
 sub BUILD {

@@ -21,24 +21,12 @@ use Const::Fast;
 use Fcntl; # O_ constants
 use namespace::autoclean;
 
-const my $DEFAULT_AOS_OLIGO_DIR_NAME => 'aos_output';
-const my $DEFAULT_EXONERATE_OLIGO_DIR_NAME => 'exonerate_oligos';
-const my $DEFAULT_VALIDATED_OLIGO_DIR_NAME => 'validated_oligos';
-
-has ensembl_util => (
-    is         => 'ro',
-    isa        => 'LIMS2::Util::EnsEMBL',
-    traits     => [ 'NoGetopt' ],
-    lazy_build => 1,
-    handles    => [ qw( slice_adaptor ) ],
+with qw(
+DesignCreate::Role::Chromosome
+DesignCreate::Role::Oligos
 );
 
-sub _build_ensembl_util {
-    my $self = shift;
-    require LIMS2::Util::EnsEMBL;
-
-    return LIMS2::Util::EnsEMBL->new( species => $self->species );
-}
+const my $DEFAULT_EXONERATE_OLIGO_DIR_NAME => 'exonerate_oligos';
 
 has exonerate_query_file => (
     is     => 'rw',
@@ -56,33 +44,6 @@ has exonerate_target_file => (
     predicate     => 'has_exonerate_target_file',
 );
 
-has species => (
-    is            => 'ro',
-    isa           => Species,
-    traits        => [ 'Getopt' ],
-    documentation => 'The species of the design target',
-    required      => 1,
-    default       => 'mouse',
-);
-
-has chr_name => (
-    is            => 'ro',
-    isa           => Chromosome,
-    traits        => [ 'Getopt' ],
-    documentation => 'Name of chromosome the design target lies within',
-    required      => 1,
-    cmd_flag      => 'chromosome'
-);
-
-has chr_strand => (
-    is            => 'ro',
-    isa           => Strand,
-    traits        => [ 'Getopt' ],
-    documentation => 'The strand the design target lies on',
-    required      => 1,
-    cmd_flag      => 'strand'
-);
-
 has flank_length => (
     is            => 'ro',
     isa           => PositiveInt,
@@ -91,23 +52,6 @@ has flank_length => (
     cmd_flag      => 'flank-length',
     default       => 100000
 );
-
-has aos_oligo_dir => (
-    is            => 'ro',
-    isa           => 'Path::Class::Dir',
-    traits        => [ 'Getopt' ],
-    documentation => 'Directory holding the oligo yaml files'
-                     . " defaults to [design_dir]/$DEFAULT_AOS_OLIGO_DIR_NAME",
-    coerce        => 1,
-    lazy_build    => 1,
-    cmd_flag      => 'aos-oligo-dir',
-);
-
-sub _build_aos_oligo_dir {
-    my $self = shift;
-
-    return $self->dir->subdir( $DEFAULT_AOS_OLIGO_DIR_NAME )->absolute;
-}
 
 has exonerate_oligo_dir => (
     is         => 'ro',
@@ -126,34 +70,7 @@ sub _build_exonerate_oligo_dir {
     return $exonerate_oligo_dir;
 }
 
-has validated_oligo_dir => (
-    is         => 'ro',
-    isa        => 'Path::Class::Dir',
-    traits     => [ 'NoGetopt' ],
-    lazy_build => 1,
-);
-
-sub _build_validated_oligo_dir {
-    my $self = shift;
-
-    my $validated_oligo_dir = $self->dir->subdir( $DEFAULT_VALIDATED_OLIGO_DIR_NAME )->absolute;
-    $validated_oligo_dir->rmtree();
-    $validated_oligo_dir->mkpath();
-
-    return $validated_oligo_dir;
-}
-
-has oligo_length => (
-    is            => 'ro',
-    isa           => PositiveInt,
-    traits        => [ 'Getopt' ],
-    documentation => 'Length of the oligos AOS is to find ( default 50 )',
-    default       => 50,
-    required      => 1,
-    cmd_flag      => 'oligo-length',
-);
-
-has oligos => (
+has all_oligos => (
     is      => 'rw',
     isa     => 'HashRef',
     traits  => [ 'NoGetopt' ],
@@ -184,8 +101,8 @@ sub validate_oligos {
     my $self = shift;
 
     for my $oligo_type ( @{ $self->expected_oligos } ) {
-        my $oligo_file = $self->aos_oligo_dir->file( $oligo_type . '.yaml' );
-        unless ( $self->aos_oligo_dir->contains( $oligo_file ) ) {
+        my $oligo_file = $self->aos_output_dir->file( $oligo_type . '.yaml' );
+        unless ( $self->aos_output_dir->contains( $oligo_file ) ) {
             $self->log->error("Can't find $oligo_type oligo file: $oligo_file");
             return;
         }
@@ -212,11 +129,11 @@ sub validate_oligos_of_type {
     my $valid_oligos = 0;
     for my $oligo_data ( @{ $oligos } ) {
         if ( $self->validate_oligo( $oligo_data, $oligo_type ) ) {
-            push @{ $self->oligos->{$oligo_type} }, $oligo_data;
+            push @{ $self->all_oligos->{$oligo_type} }, $oligo_data;
         }
     }
 
-    unless ( @{ $self->oligos->{$oligo_type} } ) {
+    unless ( @{ $self->all_oligos->{$oligo_type} } ) {
         $self->log->error("No valid $oligo_type oligos");
     }
 
@@ -309,9 +226,9 @@ sub check_specificity_of_oligos {
 sub filter_out_non_specific_oligos {
     my ( $self, $matches ) = @_;
 
-    for my $oligo_type ( keys %{ $self->oligos } ) {
+    for my $oligo_type ( keys %{ $self->all_oligos } ) {
 
-        for my $oligo ( @{ $self->oligos->{$oligo_type} } ) {
+        for my $oligo ( @{ $self->all_oligos->{$oligo_type} } ) {
             my $match_info = $matches->{ $oligo->{id} };
 
             if ( !$match_info->{exact_matches} ) {
@@ -367,8 +284,8 @@ sub define_exonerate_query_file {
     my $fh         = $query_file->open( O_WRONLY|O_CREAT ) or die( "Open $query_file: $!" );
     my $seq_out    = Bio::SeqIO->new( -fh => $fh, -format => 'fasta' );
 
-    for my $oligo_type ( keys %{ $self->oligos } ) {
-        for my $oligo ( @{ $self->oligos->{$oligo_type} } ) {
+    for my $oligo_type ( keys %{ $self->all_oligos } ) {
+        for my $oligo ( @{ $self->all_oligos->{$oligo_type} } ) {
             my $bio_seq  = Bio::Seq->new( -seq => $oligo->{oligo_seq}, -id => $oligo->{id} );
             $seq_out->write_seq( $bio_seq );
         }
@@ -406,8 +323,8 @@ sub define_exonerate_target_file {
 sub target_flanking_region_coordinates {
     my $self = shift;
 
-    my $g5_region_start = $self->oligos->{'G5'}[0]{target_region_start};
-    my $g3_region_end   = $self->oligos->{'G3'}[0]{target_region_end};
+    my $g5_region_start = $self->all_oligos->{'G5'}[0]{target_region_start};
+    my $g3_region_end   = $self->all_oligos->{'G3'}[0]{target_region_end};
 
     my $flanking_region_start = $g5_region_start - $self->flank_length;
     my $flanking_region_end = $g3_region_end + $self->flank_length;
@@ -422,20 +339,6 @@ sub output_validated_oligos {
         my $filename = $self->validated_oligo_dir->stringify . '/' . $oligo_type . '.yaml';
         DumpFile( $filename, $self->validated_oligos->{$oligo_type} );
     }
-}
-
-sub get_sequence {
-    my ( $self, $start, $end ) = @_;
-
-    my $slice = $self->slice_adaptor->fetch_by_region(
-        'chromosome',
-        $self->chr_name,
-        $start,
-        $end,
-        $self->chr_strand,
-    );
-
-    return $slice->seq;
 }
 
 1;

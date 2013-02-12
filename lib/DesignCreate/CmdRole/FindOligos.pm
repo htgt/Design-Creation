@@ -20,7 +20,11 @@ use Fcntl; # O_ constants
 use Const::Fast;
 use namespace::autoclean;
 
-with 'DesignCreate::Role::AOS';
+with qw( DesignCreate::Role::AOS DesignCreate::Role::Chromosome );
+
+# Don't need the following attributes when running this command on its own
+__PACKAGE__->meta->remove_attribute( 'chr_strand' );
+__PACKAGE__->meta->remove_attribute( 'species' );
 
 const my $DEFAULT_CHROMOSOME_DIR => '/lustre/scratch101/blastdb/Users/vvi/KO_MOUSE/GRCm38';
 const my $DEFAULT_OLIGO_TARGET_DIR_NAME => 'oligo_target_regions';
@@ -77,15 +81,6 @@ has base_chromosome_dir => (
     default       => sub{ Path::Class::Dir->new( $DEFAULT_CHROMOSOME_DIR )->absolute },
     documentation => "Location of chromosome files( default $DEFAULT_CHROMOSOME_DIR )",
     cmd_flag      => 'aos-location'
-);
-
-has chr_name => (
-    is            => 'ro',
-    isa           => Chromosome,
-    traits        => [ 'Getopt' ],
-    required      => 1,
-    documentation => 'Chromosome the design target lies on',
-    cmd_flag      => 'chromosome',
 );
 
 sub find_oligos {
@@ -160,6 +155,7 @@ sub check_aos_output {
     $self->log->info('All oligo yaml files are present');
     return;
 }
+
 
 1;
 
