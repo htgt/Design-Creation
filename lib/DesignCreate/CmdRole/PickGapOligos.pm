@@ -91,9 +91,10 @@ has matching_oligos => (
 );
 
 has oligo_pairs => (
-    is     => 'rw',
-    isa    => 'ArrayRef',
-    traits => [ 'NoGetopt', 'Array' ],
+    is      => 'rw',
+    isa     => 'ArrayRef',
+    traits  => [ 'NoGetopt', 'Array' ],
+    default => sub { [] },
     handles => {
         add_oligo_pair => 'push',
         no_oligo_pairs => 'is_empty',
@@ -128,7 +129,8 @@ sub generate_tiled_oligo_seqs {
             $tiled_seqs{ $subseq }{ $oligo->{id} }++;
         }
     }
-    $self->log->debug('Generated tiled oligo sequence hash');
+    $self->log->info('Generated tiled oligo sequence hash');
+    $self->log->debug('Tiled oligo sequence hash: ' . pp(%tiled_seqs) );
 
     $self->tiled_oligo_seqs( \%tiled_seqs );
     return;
@@ -182,7 +184,7 @@ sub create_oligo_pair_file {
     my $self = shift;
 
     if ( $self->no_oligo_pairs ) {
-        $self->log->warn('No suitable gap oligo pairs found');
+        $self->log->logdie('No suitable gap oligo pairs found');
         return;
     }
 
