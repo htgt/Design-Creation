@@ -41,7 +41,7 @@ override _build_validated_oligo_dir => sub {
     my $validated_oligo_dir = $self->dir->subdir( $DEFAULT_VALIDATED_OLIGO_DIR_NAME );
     unless ( $self->dir->contains( $validated_oligo_dir ) ) {
         $self->log->logdie( "Can't find validated oligo file dir: "
-                           . $self->validated_oligo_dir->stringify );
+                           . $validated_oligo_dir->stringify );
     }
 
     return $validated_oligo_dir->absolute;

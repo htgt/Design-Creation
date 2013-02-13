@@ -41,7 +41,7 @@ override _build_aos_output_dir => sub {
     my $aos_output_dir = $self->dir->subdir( $DEFAULT_AOS_OUTPUT_DIR_NAME );
     unless ( $self->dir->contains( $aos_output_dir ) ) {
         $self->log->logdie( "Can't find aos output dir: "
-                           . $self->aos_output_dir->stringify );
+                           . $aos_output_dir->stringify );
     }
 
     return $aos_output_dir->absolute;
