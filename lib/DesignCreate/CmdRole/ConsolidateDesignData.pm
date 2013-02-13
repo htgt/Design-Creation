@@ -22,7 +22,7 @@ use Data::Dump qw( pp );
 use namespace::autoclean;
 
 with qw(
-DesignCreate::Role::Chromosome
+DesignCreate::Role::TargetSequence
 DesignCreate::Role::Oligos
 );
 

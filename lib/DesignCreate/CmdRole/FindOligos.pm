@@ -21,7 +21,7 @@ use namespace::autoclean;
 
 with qw(
 DesignCreate::Role::AOS
-DesignCreate::Role::Chromosome
+DesignCreate::Role::TargetSequence
 DesignCreate::Role::Oligos
 );
 

@@ -22,7 +22,7 @@ use Fcntl; # O_ constants
 use namespace::autoclean;
 
 with qw(
-DesignCreate::Role::Chromosome
+DesignCreate::Role::TargetSequence
 DesignCreate::Role::Oligos
 );
 

@@ -25,7 +25,7 @@ use Bio::Seq;
 use Fcntl; # O_ constants
 
 with qw(
-DesignCreate::Role::Chromosome
+DesignCreate::Role::TargetSequence
 DesignCreate::Role::Oligos
 DesignCreate::Role::OligoRegionParameters
 );
