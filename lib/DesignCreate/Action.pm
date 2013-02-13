@@ -12,7 +12,13 @@ use Const::Fast;
 use namespace::autoclean;
 
 extends qw( MooseX::App::Cmd::Command );
-with qw( MooseX::Log::Log4perl );
+with qw(
+MooseX::Log::Log4perl
+);
+#MooseX::SimpleConfig
+
+#TODO use SimpleConfig,
+#with 'MooseX::SimpleConfig';
 
 const my $DEFAULT_VALIDATED_OLIGO_DIR_NAME      => 'validated_oligos';
 const my $DEFAULT_AOS_OUTPUT_DIR_NAME           => 'aos_output';
