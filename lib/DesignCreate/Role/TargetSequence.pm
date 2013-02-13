@@ -1,10 +1,12 @@
-package DesignCreate::Role::Chromosome;
+package DesignCreate::Role::TargetSequence;
 
 =head1 NAME
 
-DesignCreate::Role::AOS
+DesignCreate::Role::TargetSequence
 
 =head1 DESCRIPTION
+
+Attributes required to grab the sequence for the design target from Ensembl.
 
 =cut
 
@@ -13,7 +15,6 @@ use DesignCreate::Types qw( Chromosome Strand Species );
 use Const::Fast;
 use namespace::autoclean;
 
-#TODO Rename
 const my $CURRENT_ASSEMBLY => 'GRCm38';
 
 has chr_name => (
