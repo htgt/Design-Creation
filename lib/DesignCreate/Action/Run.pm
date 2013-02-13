@@ -16,7 +16,9 @@ Runs all the seperate steps used to create a design.
 
 use strict;
 use Const::Fast;
+use Try::Tiny;
 use Fcntl; # O_ constants
+use Data::Dump qw( pp );
 use warnings FATAL => 'all';
 
 use Moose;
@@ -53,12 +55,20 @@ for my $attribute ( @ATTRIBUTES_NO_CMD_OPTION ) {
 sub execute {
     my ( $self, $opts, $args ) = @_;
 
-    $self->build_oligo_target_regions;
-    $self->find_oligos;
-    $self->filter_oligos;
-    $self->pick_gap_oligos;
-    $self->consolidate_design_data;
-    #$self->persist_design;
+    $self->log->info( 'Starting new design create run' );
+    $self->log->debug( 'Design run args: ' . pp($opts) );
+
+    try {
+        $self->build_oligo_target_regions;
+        $self->find_oligos;
+        $self->filter_oligos;
+        $self->pick_gap_oligos;
+        $self->consolidate_design_data;
+        #$self->persist_design;
+    }
+    catch {
+        $self->log->error( 'Error completing design creation run: ' . $_ );
+    };
 
     return;
 }
