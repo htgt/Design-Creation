@@ -14,8 +14,9 @@ for each oligo we must find.
 #
 # Initial version will be setup for standard deletion design only
 #
-#TODO
-# setup config files to set some values below, don't use defaults
+
+#TODO setup config files to set some values below, don't use defaults
+#TODO work with conditional designs too
 
 use Moose::Role;
 use DesignCreate::Types qw( PositiveInt NaturalNumber );
@@ -23,121 +24,10 @@ use Bio::SeqIO;
 use Bio::Seq;
 use Fcntl; # O_ constants
 
-#with 'MooseX::SimpleConfig';
-
 with qw(
 DesignCreate::Role::Chromosome
 DesignCreate::Role::Oligos
-);
-
-has target_start => (
-    is            => 'ro',
-    isa           => PositiveInt,
-    traits        => [ 'Getopt' ],
-    documentation => 'Start coordinate of target region',
-    required      => 1,
-    cmd_flag      => 'target-start'
-);
-
-has target_end => (
-    is            => 'ro',
-    isa           => PositiveInt,
-    traits        => [ 'Getopt' ],
-    documentation => 'End coordinate of target region',
-    required      => 1,
-    cmd_flag      => 'target-end'
-);
-
-#
-# Oligo Target Region Parameters
-# TODO Too many attributes here, confusing, need to clean this up
-# maybe put all these attributes in a role? plus any relevent subroutines
-# maybe consume different roles depending on design type
-# TODO add cmd_alias and documentation
-#
-
-has G5_region_length => (
-    is      => 'ro',
-    isa     => PositiveInt,
-    traits  => [ 'Getopt' ],
-    default => 1000,
-);
-
-has G5_region_offset => (
-    is      => 'ro',
-    isa     => PositiveInt,
-    traits  => [ 'Getopt' ],
-    default => 4000,
-);
-
-has U5_region_length => (
-    is      => 'ro',
-    isa     => PositiveInt,
-    traits  => [ 'Getopt' ],
-    default => 200,
-);
-
-has U5_region_offset => (
-    is      => 'ro',
-    isa     => NaturalNumber,
-    traits  => [ 'Getopt' ],
-    default => 0,
-);
-
-has U3_region_length => (
-    is      => 'ro',
-    isa     => PositiveInt,
-    traits  => [ 'Getopt' ],
-    default => 200,
-);
-
-has U3_region_offset => (
-    is      => 'ro',
-    isa     => NaturalNumber,
-    traits  => [ 'Getopt' ],
-    default => 0,
-);
-
-has D5_region_length => (
-    is      => 'ro',
-    isa     => PositiveInt,
-    traits  => [ 'Getopt' ],
-    default => 200,
-);
-
-has D5_region_offset => (
-    is      => 'ro',
-    isa     => NaturalNumber,
-    traits  => [ 'Getopt' ],
-    default => 0,
-);
-
-has D3_region_length => (
-    is      => 'ro',
-    isa     => PositiveInt,
-    traits  => [ 'Getopt' ],
-    default => 200,
-);
-
-has D3_region_offset => (
-    is      => 'ro',
-    isa     => NaturalNumber,
-    traits  => [ 'Getopt' ],
-    default => 0,
-);
-
-has G3_region_length => (
-    is      => 'ro',
-    isa     => PositiveInt,
-    traits  => [ 'Getopt' ],
-    default => 1000,
-);
-
-has G3_region_offset => (
-    is      => 'ro',
-    isa     => PositiveInt,
-    traits  => [ 'Getopt' ],
-    default => 4000,
+DesignCreate::Role::OligoRegionParameters
 );
 
 sub build_oligo_target_regions {
