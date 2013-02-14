@@ -129,8 +129,8 @@ sub generate_tiled_oligo_seqs {
             $tiled_seqs{ $subseq }{ $oligo->{id} }++;
         }
     }
-    $self->log->info('Generated tiled oligo sequence hash');
-    $self->log->debug('Tiled oligo sequence hash: ' . pp(%tiled_seqs) );
+    $self->log->debug('Generated tiled oligo sequence hash');
+    DumpFile( $self->validated_oligo_dir->file('tiled_oligo_seqs.yaml'), \%tiled_seqs );
 
     $self->tiled_oligo_seqs( \%tiled_seqs );
     return;
@@ -156,7 +156,9 @@ sub find_oligos_with_matching_seqs {
         }
     }
 
-    $self->log->debug('Found matching oligos: ' . pp(%matching_oligos) );
+    $self->log->debug('Generated matching oligos hash');
+    DumpFile( $self->validated_oligo_dir->file('matching_oligos.yaml'), \%matching_oligos );
+
     $self->matching_oligos( \%matching_oligos );
     return;
 }
