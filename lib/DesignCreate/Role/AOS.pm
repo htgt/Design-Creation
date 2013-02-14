@@ -16,9 +16,15 @@ use Moose::Role;
 use DesignCreate::Types qw( PositiveInt YesNo AOSSearchMethod );
 use Const::Fast;
 use IPC::System::Simple qw( system );
+use IPC::Run qw( run );
 use Bio::SeqIO;
 use YAML::Any qw( DumpFile );
+use Fcntl; # O_ constants
 use namespace::autoclean;
+
+requires 'aos_output_dir';
+# TODO
+# also required query_file and target_file attribute but errors are thrown when this is added
 
 #TODO install AOS in sensible place and change this
 const my $DEFAULT_AOS_LOCATION        => '/nfs/users/nfs_s/sp12/workspace/ArrayOligoSelector';
@@ -165,7 +171,13 @@ sub run_aos_script1 {
     );
 
     $self->log->debug('AOS script1 cmd: ' . join( ' ', @step1_cmd ) );
-    system( @step1_cmd );
+    my $output_log = $self->aos_output_dir->file( 'script1_output.log' );
+    my $output_log_fh = $output_log->open( O_WRONLY|O_CREAT ) or die( "Open $output_log: $!" );
+
+    # run script and redirect STDOUT and STDERR to log file
+    run( \@step1_cmd, '<', \undef, '>&', $output_log_fh )
+        or $self->log->logdie(
+            "Failed to run AOS script Pick70_script1_contig, check $output_log log file for details" );
 
     return;
 }
@@ -182,7 +194,13 @@ sub run_aos_script2 {
     );
 
     $self->log->debug('AOS script2 cmd: ' . join( ' ', @step2_cmd ) );
-    system( @step2_cmd );
+    my $output_log = $self->aos_output_dir->file( 'script2_output.log' );
+    my $output_log_fh = $output_log->open( O_WRONLY|O_CREAT ) or die( "Open $output_log: $!" );
+
+    # run script and redirect STDOUT and STDERR to log file
+    run( \@step2_cmd, '<', \undef, '>&', $output_log_fh )
+        or $self->log->logdie(
+            "Failed to run AOS script Pick70_script2, check $output_log log file for details" );
 
     return;
 }
