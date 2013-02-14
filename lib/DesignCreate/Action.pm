@@ -150,7 +150,20 @@ sub BUILD {
         : $self->verbose ? $INFO
         :                  $WARN;
 
-    Log::Log4perl->easy_init( { level => $log_level, layout => '%d %c %p %m%n' } );
+    # Log output goes to STDERR and a log file
+    Log::Log4perl->easy_init(
+        {
+            level    => $log_level,
+            file     => ">>" . $self->dir . '/design-create.log',
+            layout   => '%d %c %p %m%n',
+        },
+        {
+            level    => $log_level,
+            file     => "STDERR",
+            layout   => '%d %c %p %m%n',
+        },
+    );
+
     return;
 }
 
