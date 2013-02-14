@@ -18,7 +18,6 @@ Oligos
 
 use Moose::Role;
 use YAML::Any qw( LoadFile DumpFile );
-use Data::Dump qw( pp );
 use namespace::autoclean;
 
 with qw(
@@ -161,7 +160,6 @@ sub create_design_file {
         created_by => $self->created_by,
         oligos     => $self->picked_oligos,
     );
-    $self->log->debug( 'Design Data: ' . pp(%design_data) );
 
     #TODO make name of file a constant
     my $design_data_file = $self->dir->file('design_data.yaml');
