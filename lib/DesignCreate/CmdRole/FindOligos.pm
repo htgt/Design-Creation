@@ -25,6 +25,11 @@ DesignCreate::Role::TargetSequence
 DesignCreate::Role::Oligos
 );
 
+requires qw(
+oligo_target_regions_dir
+aos_output_dir
+);
+
 # Don't need the following attributes when running this command on its own
 __PACKAGE__->meta->remove_attribute( 'chr_strand' );
 __PACKAGE__->meta->remove_attribute( 'species' );
