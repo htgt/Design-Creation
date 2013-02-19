@@ -36,7 +36,7 @@ const my %OLIGOS => (
 );
 
 const my %SPECIES => (
-    mouse => 1,
+    Mouse => 1,
 );
 
 const my %DESIGN_METHODS => (
