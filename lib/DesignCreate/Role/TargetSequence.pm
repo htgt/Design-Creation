@@ -39,8 +39,8 @@ has species => (
     is            => 'ro',
     isa           => Species,
     traits        => [ 'Getopt' ],
-    documentation => 'The species of the design target ( default mouse )',
-    default       => 'mouse',
+    documentation => 'The species of the design target ( default Mouse )',
+    default       => 'Mouse',
 );
 
 has assembly => (
