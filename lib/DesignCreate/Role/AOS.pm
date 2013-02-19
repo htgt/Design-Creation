@@ -179,6 +179,9 @@ sub run_aos_script1 {
         or $self->log->logdie(
             "Failed to run AOS script Pick70_script1_contig, check $output_log log file for details" );
 
+    # this file takes up a lot of space, remove it
+    system('rm target.fa.nsq');
+
     return;
 }
 
