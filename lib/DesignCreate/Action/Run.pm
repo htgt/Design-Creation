@@ -55,7 +55,7 @@ for my $attribute ( @ATTRIBUTES_NO_CMD_OPTION ) {
 sub execute {
     my ( $self, $opts, $args ) = @_;
 
-    $self->log->info( 'Starting new design create run' );
+    $self->log->info( 'Starting new design create run: ' . join(',', @{ $self->target_genes } ) );
     $self->log->debug( 'Design run args: ' . pp($opts) );
 
     try {
@@ -64,10 +64,11 @@ sub execute {
         $self->filter_oligos;
         $self->pick_gap_oligos;
         $self->consolidate_design_data;
-        #$self->persist_design;
+        $self->persist_design;
+        $self->log->info( 'DESIGN DONE: ' . join(',', @{ $self->target_genes } ) );
     }
     catch {
-        $self->log->error( 'Error completing design creation run: ' . $_ );
+        $self->log->error( 'DESIGN INCOMPLETE: ' . $_ );
     };
 
     return;
