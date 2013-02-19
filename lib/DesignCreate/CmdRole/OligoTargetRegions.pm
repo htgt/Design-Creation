@@ -53,7 +53,7 @@ sub get_oligo_region_coordinates {
     my $offset = $self->get_oligo_region_offset( $oligo );
     my $length = $self->get_oligo_region_length( $oligo );
 
-    # Only works for deletion/ insertion designs
+    # TODO make this work for all design methods, currently only works for deletion/ insertion designs
     if ( $oligo =~ /5$/ ) {
         $start = $self->target_start - ( $offset + $length );
         $end   = $self->target_start - ( $offset + 1 );
@@ -63,11 +63,13 @@ sub get_oligo_region_coordinates {
         $end   = $self->target_end + ( $offset + $length );
     }
     else {
-        $self->log->error( "Invalid oligo name $oligo" );
+        #TODO throw
+        $self->log->logdie( "Invalid oligo name $oligo" );
     }
 
-    if ( $start > $end ) {
-        $self->log->error( "Start $start, greater than end $end for oligo $oligo" );
+    if ( $start >= $end ) {
+        #TODO throw
+        $self->log->logdie( "Start $start, greater than or equal to end $end for oligo $oligo" );
         return;
     }
 
@@ -79,7 +81,7 @@ sub get_oligo_region_offset {
 
     my $attribute_name = $oligo . '_region_offset';
     unless ( $self->meta->has_attribute( $attribute_name ) ) {
-        $self->log->error( "Attribute $attribute_name does not exist" );
+        $self->log->logdie( "Attribute $attribute_name does not exist" );
         return;
     }
 
@@ -91,7 +93,7 @@ sub get_oligo_region_length {
 
     my $attribute_name = $oligo . '_region_length';
     unless ( $self->meta->has_attribute( $attribute_name ) ) {
-        $self->log->error( "Attribute $attribute_name does not exist" );
+        $self->log->logdie( "Attribute $attribute_name does not exist" );
         return;
     }
 
