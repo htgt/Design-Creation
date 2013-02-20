@@ -1,4 +1,4 @@
-package Test::DesignCreate;
+package Test::ObjectRole::DesignCreate::OligoTargetRegions;
 
 use strict;
 use warnings FATAL => 'all';

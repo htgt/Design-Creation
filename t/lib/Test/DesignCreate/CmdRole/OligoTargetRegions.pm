@@ -10,7 +10,7 @@ use Path::Class qw( dir );
 use Bio::SeqIO;
 use base qw( Test::Class Class::Data::Inheritable );
 
-use Test::DesignCreate;
+use Test::ObjectRole::DesignCreate::OligoTargetRegions;
 use DesignCreate::Cmd;
 
 # Testing
@@ -21,7 +21,8 @@ use DesignCreate::Cmd;
 # DesignCreate::Role::OligoRegionParameters
 
 BEGIN {
-    __PACKAGE__->mk_classdata( 'class' => 'DesignCreate::Cmd' );
+    __PACKAGE__->mk_classdata( 'cmd_class' => 'DesignCreate::Cmd' );
+    __PACKAGE__->mk_classdata( 'test_class' => 'Test::ObjectRole::DesignCreate::OligoTargetRegions' );
 }
 
 sub valid_run_cmd : Test(no_plan) {
@@ -39,7 +40,7 @@ sub valid_run_cmd : Test(no_plan) {
         '--strand', 1,
     );
 
-    ok my $result = test_app($test->class => \@argv_contents), 'can run command';
+    ok my $result = test_app($test->cmd_class => \@argv_contents), 'can run command';
 
     is $result->stderr, '', 'no errors';
 }
@@ -49,7 +50,7 @@ sub constructor : Test(startup => 3) {
 
     my $dir = File::Temp->newdir( TMPDIR => 1, CLEANUP => 1 );
 
-    ok my $o = Test::DesignCreate->new(
+    ok my $o = $test->test_class->new(
         dir          => dir( $dir->dirname ),
         target_start => 101176328,
         target_end   => 101176428,
@@ -106,7 +107,7 @@ sub get_oligo_region_coordinates : Tests(no_plan) {
         , 'can call get_oligo_region_coordinates';
 
     my $dir = File::Temp->newdir( TMPDIR => 1 );
-    ok my $o = Test::DesignCreate->new(
+    ok my $o = $test->test_class->new(
         dir               => dir( $dir->dirname ),
         target_start      => 101176328,
         target_end        => 101176428,
