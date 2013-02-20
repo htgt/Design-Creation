@@ -24,27 +24,25 @@ BEGIN {
     __PACKAGE__->mk_classdata( 'class' => 'DesignCreate::Cmd' );
 }
 
-#sub valid_run_cmd : Test(no_plan) {
-    #my $test = shift;
+sub valid_run_cmd : Test(no_plan) {
+    my $test = shift;
 
-    ##create temp dir in standard location for temp files
-    #my $dir = File::Temp->newdir( TMPDIR => 1, CLEANUP => 1 );
+    #create temp dir in standard location for temp files
+    my $dir = File::Temp->newdir( TMPDIR => 1, CLEANUP => 1 );
 
-    #my @argv_contents = (
-        #'oligo-target-regions',
-        #'--dir', $dir->dirname,
-        #'--target-start', 101176328,
-        #'--target-end', 101176428,  
-        #'--chromosome', 11,
-        #'--strand', 1,
-    #);
+    my @argv_contents = (
+        'oligo-target-regions',
+        '--dir', $dir->dirname,
+        '--target-start', 101176328,
+        '--target-end', 101176428,  
+        '--chromosome', 11,
+        '--strand', 1,
+    );
 
-    #ok my $result = test_app($test->class => \@argv_contents), 'can run command';
+    ok my $result = test_app($test->class => \@argv_contents), 'can run command';
 
-    #is $result->stderr, '', 'no errors';
-#}
-
-#TODO : check cleanup of test temp dir
+    is $result->stderr, '', 'no errors';
+}
 
 sub constructor : Test(startup => 3) {
     my $test = shift;
@@ -123,16 +121,17 @@ sub get_oligo_region_coordinates : Tests(no_plan) {
 
 } 
 
-sub build_oligo_target_regions : Test(no_plan) {
+sub build_oligo_target_regions : Test(5) {
     my $test = shift;
 
     lives_ok {
         $test->{o}->build_oligo_target_regions
     } 'can build_oligo_target_regions';
 
-
-    #TODO test existance of files
-
+    for my $oligo ( qw( G5 U5 D3 G3 ) ) {
+        my $oligo_file = $test->{o}->oligo_target_regions_dir->file( $oligo . '.fasta' );
+        ok $test->{o}->oligo_target_regions_dir->contains( $oligo_file ), "$oligo oligo file exists";
+    }
 } 
 
 1;
