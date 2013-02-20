@@ -71,9 +71,11 @@ sub persist_design {
     my ( $self, $opts, $args ) = @_;
 
     try{
-        $self->log->info('Persisting design to LIMS2');
+        $self->log->info('Persisting design to LIMS2 for gene(s): '
+                         . join( ',', @{ $self->design_data->{gene_ids} } ) );
         $self->log->debug( pp( $self->design_data ) );
-        $self->lims2_api->POST( 'design', $self->design_data );
+        my $design = $self->lims2_api->POST( 'design', $self->design_data );
+        $self->log->info('Design persisted: ' . $design->{id} );
     }
     catch {
         $self->log->error('Unable to persist design to LIMS2: ' . $_ );
