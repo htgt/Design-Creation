@@ -13,7 +13,8 @@ use namespace::autoclean;
 with qw( MooseX::Log::Log4perl );
 
 const my $RYO => "RESULT: %qi %qal %ql %pi %s %em %tab %tae\n";
-const my $EXONERATE_CMD => '/software/team87/brave_new_world/app/exonerate-2.2.0-x86_64/bin/exonerate';
+const my $EXONERATE_CMD => $ENV{EXONERATE_CMD}
+    || '/software/team87/brave_new_world/app/exonerate-2.2.0-x86_64/bin/exonerate';
 
 #
 #Align sequence(s) against a genome to find number of hits

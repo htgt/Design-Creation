@@ -27,7 +27,8 @@ requires 'aos_output_dir';
 # also required query_file and target_file attribute but errors are thrown when this is added
 
 #TODO install AOS in sensible place and change this
-const my $DEFAULT_AOS_LOCATION        => '/nfs/users/nfs_s/sp12/workspace/ArrayOligoSelector';
+const my $DEFAULT_AOS_LOCATION => $ENV{AOS_LOCATION}
+    || '/nfs/users/nfs_s/sp12/workspace/ArrayOligoSelector';
 const my $DEFAULT_AOS_WORK_DIR_NAME   => 'aos_work';
 
 has aos_location => (
