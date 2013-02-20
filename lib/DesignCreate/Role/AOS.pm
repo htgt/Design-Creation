@@ -214,7 +214,8 @@ sub parse_aos_output {
     $self->log->info('Parsing AOS output');
 
     unless ( $self->aos_work_dir->contains( 'oligo_fasta' ) ) {
-        $self->log->error( 'Can not find oligo_fasta output file from aos' );
+        #TODO throw
+        $self->log->logdie( 'Can not find oligo_fasta output file from aos' );
         return;
     }
 
@@ -224,7 +225,9 @@ sub parse_aos_output {
     while ( my $seq = $seq_in->next_seq ) {
         $self->inc_oligo_count;
         $self->log->debug('Parsing: ' . $seq->display_id );
-        $self->parse_oligo_seq( $seq );
+        my $oligo_data = $self->parse_oligo_seq( $seq );
+        next unless $oligo_data;
+        push @{ $self->aos_oligos->{ $oligo_data->{oligo} } }, $oligo_data;
     }
 
     return;
@@ -237,10 +240,6 @@ sub parse_oligo_seq {
     unless ( $seq->display_id =~ /^(U|D|G)(3|5):\d+-\d+_\d+$/ ) {
         $self->log->warn(
             'Oligo sequence display id is not in expected format: ' . $seq->display_id );
-        $seq->display_id =~ /^(.*)_(\d+)$/;
-        push @{ $self->aos_oligos->{$1} },
-            { seq => $seq->seq, display_id => $seq->display_id, offset => $2 };
-
         return;
     }
 
@@ -259,9 +258,7 @@ sub parse_oligo_seq {
     $oligo_data{oligo}        = $oligo;
     $oligo_data{id}           = $oligo . '-' . $self->oligo_count;
 
-    push @{ $self->aos_oligos->{$oligo} }, \%oligo_data;
-
-    return;
+    return \%oligo_data;
 }
 
 sub create_oligo_files {
@@ -269,7 +266,8 @@ sub create_oligo_files {
     $self->log->info('Creating oligo output files');
 
     unless ( $self->has_oligos ) {
-        $self->log->error( 'No oligos found' );
+        #TODO throw
+        $self->log->logdie( 'No oligos found' );
         return;
     }
 
