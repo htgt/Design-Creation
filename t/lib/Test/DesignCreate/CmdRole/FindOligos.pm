@@ -19,8 +19,6 @@ use DesignCreate::Cmd;
 # DesignCreate::CmdRole::FindOligos, most of its work is done by:
 # Note, DesignCreate::Role::AOS is already tested by RunAOS
 
-use Smart::Comments;
-
 BEGIN {
     __PACKAGE__->mk_classdata( 'cmd_class' => 'DesignCreate::Cmd' );
     __PACKAGE__->mk_classdata( 'test_class' => 'Test::ObjectRole::DesignCreate::FindOligos' );
