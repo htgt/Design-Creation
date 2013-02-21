@@ -20,6 +20,7 @@ use IPC::Run qw( run );
 use Bio::SeqIO;
 use YAML::Any qw( DumpFile );
 use Fcntl; # O_ constants
+use Try::Tiny;
 use namespace::autoclean;
 
 requires 'aos_output_dir';
@@ -127,11 +128,14 @@ has aos_oligos => (
 sub run_aos {
     my $self = shift;
 
-    $self->run_aos_scripts;
-
-    $self->parse_aos_output;
-
-    $self->create_oligo_files;
+    try{
+        $self->run_aos_scripts;
+        $self->parse_aos_output;
+        $self->create_oligo_files;
+    }
+    catch {
+        $self->log->error( 'Problem running AOS scripts, check log files in this dir: ' . $self->aos_output_dir->stringify );
+    };
 
     return;
 }
