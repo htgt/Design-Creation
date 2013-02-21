@@ -4,9 +4,8 @@ use strict;
 use warnings FATAL => 'all';
 
 use Test::Most;
-use File::Temp;
 use App::Cmd::Tester;
-use Path::Class qw( dir );
+use Path::Class qw( tempdir dir );
 use Bio::SeqIO;
 use base qw( Test::Class Class::Data::Inheritable );
 
@@ -48,17 +47,17 @@ sub valid_run_cmd : Test(no_plan) {
 sub constructor : Test(startup => 3) {
     my $test = shift;
 
-    my $dir = File::Temp->newdir( TMPDIR => 1, CLEANUP => 1 );
+    my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute;
 
     ok my $o = $test->test_class->new(
-        dir          => dir( $dir->dirname ),
+        dir          => $dir,
         target_start => 101176328,
         target_end   => 101176428,
         chr_name     => 11,
         chr_strand   => 1,
     ), 'we got a object';
 
-    is $o->dir->stringify, $dir->dirname, 'correct working dir';
+    is $o->dir->stringify, $dir->stringify, 'correct working dir';
     is $o->design_method, 'deletion', 'correct design_method';
 
     $test->{o} = $o;

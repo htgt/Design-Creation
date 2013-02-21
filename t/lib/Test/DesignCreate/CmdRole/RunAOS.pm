@@ -4,9 +4,8 @@ use strict;
 use warnings FATAL => 'all';
 
 use Test::Most;
-use File::Temp;
 use App::Cmd::Tester;
-use Path::Class qw( dir );
+use Path::Class qw( tempdir dir );
 use FindBin;
 use Bio::Seq;
 use base qw( Test::Class Class::Data::Inheritable );
@@ -144,12 +143,12 @@ sub get_test_data_file {
 sub _get_test_object {
     my $test = shift;
 
-    my $dir = File::Temp->newdir( TMPDIR => 1, CLEANUP => 1 );
+    my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute;
     my $query_file  = get_test_data_file('run_aos_query_file.fasta');
     my $target_file = get_test_data_file('run_aos_target_file.fasta');
 
     return $test->test_class->new(
-        dir         => dir( $dir->dirname )->absolute,
+        dir         => $dir,
         query_file  => $query_file->stringify,
         target_file => $target_file->stringify,
     );
