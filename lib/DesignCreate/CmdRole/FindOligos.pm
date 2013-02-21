@@ -95,6 +95,7 @@ sub create_aos_query_file {
     for my $oligo ( @{ $self->expected_oligos } ) {
         my $oligo_file = $self->oligo_target_regions_dir->file( $oligo . '.fasta' );
         unless ( $self->oligo_target_regions_dir->contains( $oligo_file ) ) {
+            #TODO throw
             $self->log->logdie("Can't find $oligo target region file: $oligo_file");
         }
 
@@ -144,7 +145,6 @@ sub check_aos_output {
     $self->log->info('All oligo yaml files are present');
     return;
 }
-
 
 1;
 
