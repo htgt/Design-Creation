@@ -35,20 +35,23 @@ sub valid_run_aos_cmd : Test(2) {
         'run-aos',
         '--dir', $dir->dirname,
         '--target-file', $target_file->stringify,
-        '--query-file', $query_file->stringify,  
+        '--query-file', $query_file->stringify,
     );
 
     ok my $result = test_app($test->cmd_class => \@argv_contents), 'can run command';
 
     is $result->stderr, '', 'no errors';
+
+    #change out of tmpdir so File::Temp can delete the tmp dir
+    chdir;
 }
 
 sub run_aos_scripts : Test(5) {
     my $test = shift;
 
     ok my $o = $test->_get_test_object, 'we got a test object';
-
     #need to run aos scripts before other tests
+
     lives_ok{
         $o->run_aos_scripts
     } 'Can run_aos_script1';
@@ -56,7 +59,7 @@ sub run_aos_scripts : Test(5) {
     my $aos_work_dir = $o->aos_work_dir;
     for my $filename ( qw( target.fa query.fa oligo_fasta ) ) {
         my $file = $aos_work_dir->file( $filename );
-        ok $aos_work_dir->contains( $file ), "File $filename has been created"; 
+        ok $aos_work_dir->contains( $file ), "File $filename has been created";
     }
 }
 
@@ -110,11 +113,11 @@ sub create_oligo_files : Test(6) {
         $o->parse_aos_output;
         $o->create_oligo_files;
     } 'Can create_oligo_files';
-    
-    my $file = $o->aos_output_dir->file( 'U5.yaml' );
-    ok $o->aos_output_dir->contains( $file ), "File U5.yaml has been created"; 
 
-    #no oligos 
+    my $file = $o->aos_output_dir->file( 'U5.yaml' );
+    ok $o->aos_output_dir->contains( $file ), "File U5.yaml has been created";
+
+    #no oligos
     ok $o = $test->_get_test_object, 'can grab test object';
     ok !$o->has_oligos, '.. and we have no oligos';
     throws_ok{
