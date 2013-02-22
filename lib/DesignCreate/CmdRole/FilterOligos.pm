@@ -19,6 +19,7 @@ use YAML::Any qw( LoadFile DumpFile );
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
 use Const::Fast;
 use Fcntl; # O_ constants
+use Bio::SeqIO;
 use namespace::autoclean;
 
 with qw(
@@ -77,6 +78,13 @@ has all_oligos => (
     default => sub { {  } },
 );
 
+has exonerate_matches => (
+    is      => 'rw',
+    isa     => 'HashRef',
+    traits  => [ 'NoGetopt' ],
+    default => sub { {  } },
+);
+
 has validated_oligos => (
     is      => 'rw',
     isa     => 'HashRef',
@@ -87,10 +95,10 @@ has validated_oligos => (
 sub filter_oligos {
     my ( $self, $opts, $args ) = @_;
 
-    $self->validate_oligos or return;
-
-    $self->check_specificity_of_oligos or return;
-
+    $self->validate_oligos;
+    $self->run_exonerate;
+    $self->filter_out_non_specific_oligos;
+    $self->have_required_validated_oligos;
     $self->output_validated_oligos;
 
     return;
@@ -103,13 +111,13 @@ sub validate_oligos {
     for my $oligo_type ( @{ $self->expected_oligos } ) {
         my $oligo_file = $self->aos_output_dir->file( $oligo_type . '.yaml' );
         unless ( $self->aos_output_dir->contains( $oligo_file ) ) {
-            $self->log->error("Can't find $oligo_type oligo file: $oligo_file");
-            return;
+            #TODO throw
+            $self->log->logdie("Can't find $oligo_type oligo file: $oligo_file");
         }
 
         unless ( $self->validate_oligos_of_type( $oligo_file, $oligo_type ) ) {
-            $self->log->error("No valid $oligo_type oligos");
-            return;
+            #TODO throw
+            $self->log->logdie("No valid $oligo_type oligos");
         }
         $self->log->info("We have $oligo_type oligos that pass initial checks");
     }
@@ -122,19 +130,19 @@ sub validate_oligos_of_type {
     $self->log->debug( "Validating $oligo_type oligos" );
 
     my $oligos = LoadFile( $oligo_file );
-    unless ( @{ $oligos } ) {
-        $self->log->logdie( "No oligo data in $oligo_file for $oligo_type oligo" );
+    unless ( $oligos ) {
+        $self->log->error( "No oligo data in $oligo_file for $oligo_type oligo" );
+        return;
     }
 
-    my $valid_oligos = 0;
     for my $oligo_data ( @{ $oligos } ) {
-        if ( $self->validate_oligo( $oligo_data, $oligo_type ) ) {
-            push @{ $self->all_oligos->{$oligo_type} }, $oligo_data;
-        }
+        push @{ $self->all_oligos->{$oligo_type} }, $oligo_data
+            if $self->validate_oligo( $oligo_data, $oligo_type );
     }
 
-    unless ( @{ $self->all_oligos->{$oligo_type} } ) {
+    unless ( exists $self->all_oligos->{$oligo_type} ) {
         $self->log->error("No valid $oligo_type oligos");
+        return;
     }
 
     return 1;
@@ -145,7 +153,8 @@ sub validate_oligo {
     $self->log->debug( "$oligo_type oligo, offset: " . $oligo_data->{offset} );
 
     if ( !defined $oligo_data->{oligo} || $oligo_data->{oligo} ne $oligo_type )   {
-        $self->log->error("Oligo name mismatch, expecting $oligo_type, got: " . $oligo_data->{oligo} );
+        $self->log->error("Oligo name mismatch, expecting $oligo_type, got: "
+            . $oligo_data->{oligo} );
         return;
     }
 
@@ -200,61 +209,10 @@ sub check_oligo_length {
     return 1;
 }
 
-sub check_specificity_of_oligos {
-    my $self = shift;
-
-    $self->define_exonerate_query_file;
-    $self->define_exonerate_target_file;
-
-    my $exonerate_matches = $self->run_exonerate;
-
-    return unless $exonerate_matches;
-
-    # go through output and filter out oligos that are not specific enough
-    $self->filter_out_non_specific_oligos( $exonerate_matches );
-
-    for my $oligo_type ( @{ $self->expected_oligos } ) {
-        unless ( exists $self->validated_oligos->{$oligo_type} ) {
-            $self->log->warn( "No valid $oligo_type oligos, halting filter process" );
-            return;
-        }
-    }
-
-    return 1;
-}
-
-sub filter_out_non_specific_oligos {
-    my ( $self, $matches ) = @_;
-
-    for my $oligo_type ( keys %{ $self->all_oligos } ) {
-
-        for my $oligo ( @{ $self->all_oligos->{$oligo_type} } ) {
-            my $match_info = $matches->{ $oligo->{id} };
-
-            if ( !$match_info->{exact_matches} ) {
-                $self->log->error( 'Oligo ' . $oligo->{id} . ' does not have any exact matches, somethings wrong ' );
-                next;
-            }
-            elsif ( $match_info->{exact_matches} > 1 ) {
-                $self->log->info( 'Oligo ' . $oligo->{id} . ' is invalid, has multiple exact matches: ' . $match_info->{exact_matches} );
-                next;
-            }
-            # hit is above 80% similarity
-            elsif ( $match_info->{hits} > 1 ) {
-                $self->log->info( 'Oligo ' . $oligo->{id} . ' is invalid, has multiple hits: ' . $match_info->{hits} );
-                next;
-            }
-            #its ok
-            push @{ $self->validated_oligos->{$oligo_type} }, $oligo;
-        }
-
-    }
-
-    return;
-}
-
 sub run_exonerate {
     my $self = shift;
+    $self->define_exonerate_query_file;
+    $self->define_exonerate_target_file;
 
     # now run exonerate
     my $exonerate = DesignCreate::Util::Exonerate->new(
@@ -270,11 +228,11 @@ sub run_exonerate {
 
     my $matches = $exonerate->parse_exonerate_output;
     unless ( %{ $matches } ) {
-        $self->log->error("No output from exonerate");
-        return;
+        #TODO throw
+        $self->log->logdie("No output from exonerate");
     }
 
-    return $matches;
+    $self->exonerate_matches( $matches );
 }
 
 sub define_exonerate_query_file {
@@ -322,14 +280,74 @@ sub define_exonerate_target_file {
 #TODO this will need to be strand dependant
 sub target_flanking_region_coordinates {
     my $self = shift;
+    my ( $start, $end );
 
-    my $g5_region_start = $self->all_oligos->{'G5'}[0]{target_region_start};
-    my $g3_region_end   = $self->all_oligos->{'G3'}[0]{target_region_end};
+    if ( $self->chr_strand == 1 ) {
+        $start = $self->all_oligos->{'G5'}[0]{target_region_start};
+        $end   = $self->all_oligos->{'G3'}[0]{target_region_end};
+    }
+    else {
+        $self->log->logdie( 'Can not deal with -ve strand' );
+        #$start = $self->all_oligos->{'G3'}[0]{target_region_start};
+        #$end   = $self->all_oligos->{'G5'}[0]{target_region_end};
+    }
 
-    my $flanking_region_start = $g5_region_start - $self->flank_length;
-    my $flanking_region_end = $g3_region_end + $self->flank_length;
+    my $flanking_region_start = $start - $self->flank_length;
+    my $flanking_region_end = $end + $self->flank_length;
 
     return( $flanking_region_start, $flanking_region_end );
+}
+
+sub filter_out_non_specific_oligos {
+    my ( $self ) = @_;
+
+    for my $oligo_type ( @{ $self->expected_oligos } ) {
+        for my $oligo ( @{ $self->all_oligos->{$oligo_type} } ) {
+            next unless my $match_info = $self->exonerate_matches->{ $oligo->{id} };
+            next unless $self->check_oligo_specificity( $oligo->{id}, $match_info );
+
+            push @{ $self->validated_oligos->{$oligo_type} }, $oligo;
+        }
+    }
+
+    return;
+}
+
+sub check_oligo_specificity {
+    my ( $self, $oligo_id, $match_info ) = @_;
+
+    if ( !$match_info->{exact_matches} ) {
+        $self->log->error( 'Oligo ' . $oligo_id
+            . ' does not have any exact matches, somethings wrong ' );
+        return;
+    }
+    elsif ( $match_info->{exact_matches} > 1 ) {
+        $self->log->info( 'Oligo ' . $oligo_id
+            . ' is invalid, has multiple exact matches: ' . $match_info->{exact_matches} );
+        return;
+    }
+    # a hit is above 80% similarity
+    elsif ( $match_info->{hits} > 1 ) {
+        $self->log->info( 'Oligo ' . $oligo_id
+            . ' is invalid, has multiple hits: ' . $match_info->{hits} );
+        return;
+    }
+
+    return 1;
+}
+
+# go through output and filter out oligos that are not specific enough
+sub have_required_validated_oligos {
+    my $self = shift;
+
+    for my $oligo_type ( @{ $self->expected_oligos } ) {
+        unless ( exists $self->validated_oligos->{$oligo_type} ) {
+            #TODO throw
+            $self->log->logdie( "No valid $oligo_type oligos, halting filter process" );
+        }
+    }
+
+    return 1;
 }
 
 sub output_validated_oligos {
