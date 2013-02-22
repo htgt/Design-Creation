@@ -103,8 +103,8 @@ sub build_oligo_array {
     for my $oligo_type ( @{ $self->expected_oligos } ) {
         my $oligo_file = $self->validated_oligo_dir->file( $oligo_type . '.yaml' );
         unless ( $self->validated_oligo_dir->contains( $oligo_file ) ) {
-            $self->log->error("Can't find $oligo_type oligo file: $oligo_file");
-            return;
+            #TODO throw
+            $self->log->logdie("Can't find $oligo_type oligo file: $oligo_file");
         }
         my $oligos = LoadFile( $oligo_file );
 
