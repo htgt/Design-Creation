@@ -7,6 +7,6 @@ use lib "$FindBin::Bin/lib";
 use Log::Log4perl qw( :levels );
 use Test::DesignCreate::CmdRole::RunAOS;
 
-Log::Log4perl->easy_init( $DEBUG );
+Log::Log4perl->easy_init( $WARN );
 
 Test::Class->runtests;
