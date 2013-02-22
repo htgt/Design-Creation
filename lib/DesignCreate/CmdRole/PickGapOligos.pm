@@ -79,9 +79,10 @@ has tile_size => (
 );
 
 has tiled_oligo_seqs => (
-    is     => 'rw',
-    isa    => 'HashRef',
-    traits => [ 'NoGetopt' ],
+    is      => 'rw',
+    isa     => 'HashRef',
+    traits  => [ 'NoGetopt' ],
+    default => sub { { } },
 );
 
 has matching_oligos => (
@@ -114,25 +115,30 @@ sub pick_gap_oligos {
 
 sub generate_tiled_oligo_seqs {
     my $self = shift;
-    my %tiled_seqs;
 
     foreach my $oligo ( $self->g5_oligos, $self->g3_oligos ) {
-        my $oligo_seq = $oligo->{oligo_seq};
-
-        for (
-            my $start = 0;
-            $start < ( 1 + length($oligo_seq) - $self->tile_size );
-            $start++
-            )
-        {
-            my $subseq = substr( $oligo_seq, $start, $self->tile_size );
-            $tiled_seqs{ $subseq }{ $oligo->{id} }++;
-        }
+        $self->tile_oligo_seq( $oligo );
     }
     $self->log->debug('Generated tiled oligo sequence hash');
-    DumpFile( $self->validated_oligo_dir->file('tiled_oligo_seqs.yaml'), \%tiled_seqs );
+    DumpFile( $self->validated_oligo_dir->file('tiled_oligo_seqs.yaml'), $self->tiled_oligo_seqs );
 
-    $self->tiled_oligo_seqs( \%tiled_seqs );
+    return;
+}
+
+sub tile_oligo_seq {
+    my ( $self, $oligo ) = @_;
+    my $oligo_seq = $oligo->{oligo_seq};
+
+    for (
+        my $start = 0;
+        $start < ( 1 + length($oligo_seq) - $self->tile_size );
+        $start++
+        )
+    {
+        my $subseq = substr( $oligo_seq, $start, $self->tile_size );
+        $self->tiled_oligo_seqs->{ $subseq }{ $oligo->{id} }++;
+    }
+
     return;
 }
 
