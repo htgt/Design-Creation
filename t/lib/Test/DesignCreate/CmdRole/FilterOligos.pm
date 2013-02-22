@@ -23,7 +23,7 @@ BEGIN {
     __PACKAGE__->mk_classdata( 'test_class' => 'Test::ObjectRole::DesignCreate::FilterOligos' );
 }
 
-sub valid_find_oligos_cmd : Test(3) {
+sub valid_filter_oligos_cmd : Test(3) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
