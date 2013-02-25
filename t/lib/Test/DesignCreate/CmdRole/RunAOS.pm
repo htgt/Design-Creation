@@ -33,8 +33,8 @@ sub valid_run_aos_cmd : Test(2) {
     my @argv_contents = (
         'run-aos',
         '--dir', $dir->dirname,
-        '--target-file', $target_file->stringify,
-        '--query-file', $query_file->stringify,
+        '--target-file', get_test_data_file('run_aos_target_file.fasta'),
+        '--query-file', get_test_data_file('run_aos_query_file.fasta'),
     );
 
     ok my $result = test_app($test->cmd_class => \@argv_contents), 'can run command';
@@ -45,11 +45,9 @@ sub valid_run_aos_cmd : Test(2) {
     chdir;
 }
 
-sub run_aos_scripts : Test(5) {
+sub run_aos_scripts : Test(6) {
     my $test = shift;
-
     ok my $o = $test->_get_test_object, 'we got a test object';
-    #need to run aos scripts before other tests
 
     lives_ok{
         $o->run_aos_scripts
@@ -60,11 +58,22 @@ sub run_aos_scripts : Test(5) {
         my $file = $aos_work_dir->file( $filename );
         ok $aos_work_dir->contains( $file ), "File $filename has been created";
     }
+
+    my $dir = tempdir( TMPDIR => 1, CLEANUP => 0 )->absolute;
+    $o = $test->test_class->new(
+        dir         => $dir,
+        query_file  => get_test_data_file('run_aos_broken_query_file.fasta'),
+        target_file => get_test_data_file('run_aos_target_file.fasta'),
+    );
+
+    throws_ok{
+        $o->run_aos_scripts
+    } qr/Problem running aos scripts, check log files/
+        , 'Throws error if aos scripts fail to run properly';
 }
 
 sub parse_oligo_seq : Test(10) {
     my $test = shift;
-
     ok my $o = $test->_get_test_object, 'we got a test object';
 
     my $good_seq = Bio::Seq->new( -seq => 'ATCGA', -id => 'U5:1000-1004_10' );
@@ -78,34 +87,22 @@ sub parse_oligo_seq : Test(10) {
     is $oligo_data->{oligo_seq}, 'ATCGA', '.. oligo_seq is correct';
     is $oligo_data->{oligo}, 'U5', '.. oligo is correct';
 
-
     my $bad_seq = Bio::Seq->new( -seq => 'ATCGA', -id => 'U5' );
     ok !$o->parse_oligo_seq( $bad_seq ), 'Can parse_oligo_seq';
 }
 
-sub parse_aos_output : Test(6) {
+sub parse_aos_output : Test(3) {
     my $test = shift;
-
     ok my $o = $test->_get_test_object, 'can grab test object';
     lives_ok{
         $o->run_aos_scripts;
         $o->parse_aos_output;
     } 'Can parse_aos_output';
     ok $o->has_oligos, '.. and we have oligos';
-
-    #no oligo_fasta test
-    ok $o = $test->_get_test_object, 'can grab test object';
-
-    throws_ok{
-        $o->parse_aos_output
-    } qr/Can not find oligo_fasta/
-        , 'Can not parse_aos_output without oligo_fasta file';
-    ok !$o->has_oligos, '.. and we have no oligos';
 }
 
 sub create_oligo_files : Test(6) {
     my $test = shift;
-
     ok my $o = $test->_get_test_object, 'can grab test object';
     lives_ok{
         $o->run_aos_scripts;
@@ -123,34 +120,25 @@ sub create_oligo_files : Test(6) {
         $o->create_oligo_files
     } qr/No oligos found/
         , 'Can not create oligo files if we have not oligos';
-
 }
 
 sub get_test_data_file {
     my ( $filename ) = @_;
-
-    my $data_dir = dir($FindBin::Bin)->subdir('test_data');
-
+    my $data_dir = dir($FindBin::Bin)->subdir('test_data/run_aos_data/');
     my $file = $data_dir->file($filename);
 
-    #if ( $filename =~ m/\.yaml$/ and not $opts{raw} ) {
-        #return LoadFile($file);
-    #}
-
-    return $file;
+    return $file->stringify;
 }
 
 sub _get_test_object {
     my $test = shift;
 
     my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute;
-    my $query_file  = get_test_data_file('run_aos_query_file.fasta');
-    my $target_file = get_test_data_file('run_aos_target_file.fasta');
 
     return $test->test_class->new(
         dir         => $dir,
-        query_file  => $query_file->stringify,
-        target_file => $target_file->stringify,
+        query_file  => get_test_data_file('run_aos_query_file.fasta'),
+        target_file => get_test_data_file('run_aos_target_file.fasta'),
     );
 }
 
