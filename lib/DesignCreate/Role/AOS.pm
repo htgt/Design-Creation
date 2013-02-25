@@ -134,7 +134,8 @@ sub run_aos {
         $self->create_oligo_files;
     }
     catch {
-        $self->log->error( 'Problem running AOS scripts, check log files in this dir: ' . $self->aos_output_dir->stringify );
+        $self->log->error( 'Problem running AOS scripts, check log files in this dir: '
+            . $self->aos_output_dir->stringify );
     };
 
     return;
@@ -155,6 +156,21 @@ sub run_aos_scripts {
 
     $self->run_aos_script1;
     $self->run_aos_script2;
+
+    #unless we have this oligo_fasta file then something went wrong
+    my $oligo_fasta_aos = $self->aos_work_dir->file( 'oligo_fasta' );
+    unless ( $self->aos_work_dir->contains( $oligo_fasta_aos ) ) {
+        #TODO throw
+        $self->log->logdie( "Problem running aos scripts, check log files in: "
+            . $self->aos_output_dir->stringify  );
+    }
+
+    #oligo_fasta file should have some data in it
+    unless ( $oligo_fasta_aos->slurp ) {
+        #TODO throw
+        $self->log->logdie( "Problem running aos scripts, check log files in: "
+            . $self->aos_output_dir->stringify  );
+    }
 }
 
 sub run_aos_script1 {
@@ -185,7 +201,7 @@ sub run_aos_script1 {
             "Failed to run AOS script Pick70_script1_contig, check $output_log log file for details" );
 
     # this file takes up a lot of space, remove it
-    system('rm target.fa.nsq');
+    try{ system('rm target.fa.nsq') };
 
     return;
 }
@@ -216,12 +232,6 @@ sub run_aos_script2 {
 sub parse_aos_output {
     my $self = shift;
     $self->log->info('Parsing AOS output');
-
-    unless ( $self->aos_work_dir->contains( 'oligo_fasta' ) ) {
-        #TODO throw
-        $self->log->logdie( 'Can not find oligo_fasta output file from aos' );
-        return;
-    }
 
     my $oligos_file = $self->aos_work_dir->file( 'oligo_fasta' );
     my $seq_in = Bio::SeqIO->new( -fh => $oligos_file->openr, -format => 'fasta' );
