@@ -24,7 +24,7 @@ BEGIN {
     __PACKAGE__->mk_classdata( 'test_class' => 'Test::ObjectRole::DesignCreate::FindOligos' );
 }
 
-sub valid_find_oligos_cmd : Test(3) {
+sub valid_find_oligos_cmd : Test(4) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
@@ -40,6 +40,7 @@ sub valid_find_oligos_cmd : Test(3) {
     ok my $result = test_app($test->cmd_class => \@argv_contents), 'can run command';
 
     is $result->stderr, '', 'no errors';
+    ok !$result->error, 'no command errors';
 
     #change out of tmpdir so File::Temp can delete the tmp dir
     chdir;

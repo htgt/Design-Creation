@@ -24,7 +24,7 @@ BEGIN {
     __PACKAGE__->mk_classdata( 'test_class' => 'Test::ObjectRole::DesignCreate::OligoTargetRegions' );
 }
 
-sub valid_run_cmd : Test(2) {
+sub valid_run_cmd : Test(3) {
     my $test = shift;
 
     #create temp dir in standard location for temp files
@@ -42,6 +42,7 @@ sub valid_run_cmd : Test(2) {
     ok my $result = test_app($test->cmd_class => \@argv_contents), 'can run command';
 
     is $result->stderr, '', 'no errors';
+    ok !$result->error, 'no command errors';
 }
 
 sub constructor : Test(startup => 3) {

@@ -23,7 +23,7 @@ BEGIN {
     __PACKAGE__->mk_classdata( 'test_class' => 'Test::ObjectRole::DesignCreate::FilterOligos' );
 }
 
-sub valid_filter_oligos_cmd : Test(3) {
+sub valid_filter_oligos_cmd : Test(4) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
@@ -31,11 +31,13 @@ sub valid_filter_oligos_cmd : Test(3) {
         'filter-oligos',
         '--dir', $o->dir->stringify,
         '--chromosome', 11,
+        '--strand', 1,
     );
 
     ok my $result = test_app($test->cmd_class => \@argv_contents), 'can run command';
 
     is $result->stderr, '', 'no errors';
+    ok !$result->error, 'no command errors';
 }
 
 sub check_oligo_length : Test(4) {

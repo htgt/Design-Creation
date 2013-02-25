@@ -23,7 +23,7 @@ BEGIN {
     __PACKAGE__->mk_classdata( 'test_class' => 'Test::ObjectRole::DesignCreate::RunAOS' );
 }
 
-sub valid_run_aos_cmd : Test(2) {
+sub valid_run_aos_cmd : Test(3) {
     my $test = shift;
 
     my $dir = File::Temp->newdir( TMPDIR => 1, CLEANUP => 1 );
@@ -40,6 +40,7 @@ sub valid_run_aos_cmd : Test(2) {
     ok my $result = test_app($test->cmd_class => \@argv_contents), 'can run command';
 
     is $result->stderr, '', 'no errors';
+    ok !$result->error, 'no command errors';
 
     #change out of tmpdir so File::Temp can delete the tmp dir
     chdir;

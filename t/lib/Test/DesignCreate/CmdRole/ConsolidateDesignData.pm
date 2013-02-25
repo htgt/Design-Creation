@@ -23,18 +23,23 @@ BEGIN {
     __PACKAGE__->mk_classdata( 'test_class' => 'Test::ObjectRole::DesignCreate::ConsolidateDesignData' );
 }
 
-sub valid_consolidate_design_data_cmd : Test(3) {
+sub valid_consolidate_design_data_cmd : Test(4) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
     my @argv_contents = (
         'consolidate-design-data',
         '--dir', $o->dir->stringify,
+        '--target-gene', 'LBL-TEST',
+        '--strand', 1,
+        '--chromosome', 11,
+
     );
 
     ok my $result = test_app($test->cmd_class => \@argv_contents), 'can run command';
 
-    is $result->stderr, '', 'no errors';
+    is $result->stderr, '', 'no stdedd';
+    ok !$result->error, 'no command errors';
 }
 
 sub build_oligo_array : Test(no_plan) {
@@ -115,7 +120,7 @@ sub format_oligo_data : Test(7) {
     is $loci->{chr_start}, $test_oligo->{oligo_start}, 'correct start coordinate';
 }
 
-sub create_design_file : Test(7) {
+sub create_design_file : Test(8) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 

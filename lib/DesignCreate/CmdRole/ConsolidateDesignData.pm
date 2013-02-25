@@ -91,7 +91,7 @@ sub consolidate_design_data {
 sub get_design_phase {
     my $self = shift;
 
-    $self->log->warn( 'Code to work out design phase not in place, setting it to -1 for now' );
+    $self->log->info( 'Code to work out design phase not in place, setting it to -1 for now' );
     $self->phase( -1 );
 
     return;
