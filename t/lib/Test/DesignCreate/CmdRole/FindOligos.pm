@@ -24,9 +24,8 @@ BEGIN {
     __PACKAGE__->mk_classdata( 'test_class' => 'Test::ObjectRole::DesignCreate::FindOligos' );
 }
 
-sub valid_find_oligos_cmd : Test(2) {
+sub valid_find_oligos_cmd : Test(3) {
     my $test = shift;
-
     ok my $o = $test->_get_test_object, 'can grab test object';
 
     my @argv_contents = (
@@ -48,7 +47,6 @@ sub valid_find_oligos_cmd : Test(2) {
 
 sub create_aos_query_file : Test(9) {
     my $test = shift;
-
     ok my $o = $test->_get_test_object, 'can grab test object';
 
     lives_ok{
@@ -71,12 +69,10 @@ sub create_aos_query_file : Test(9) {
         $o->create_aos_query_file
     } qr/Can't find U5 target region file:/
         , '.. now throws error about missing file';
-
 }
 
-sub define_target_file : Test(no_plan) {
+sub define_target_file : Test(6) {
     my $test = shift;
-
     ok my $o = $test->_get_test_object, 'can grab test object';
 
     lives_ok{
@@ -84,6 +80,23 @@ sub define_target_file : Test(no_plan) {
     } 'can call define_target_file';
 
     is $o->target_file->basename, '11.fasta', '.. have correct target file';
+
+    lives_ok{
+        $o->define_target_file
+    } 'can call define_target_file again';
+    is $o->target_file->basename, '11.fasta', '.. target file should stay the same';
+
+    my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute;
+    $o = $test->test_class->new(
+        dir                 => $dir,
+        chr_name            => 11,
+        base_chromosome_dir => tempdir( TMPDIR => 1, CLEANUP => 1 ),
+    );
+
+    throws_ok{
+        $o->define_target_file
+    } qr/Unable to find target file/
+        ,'throws error if we do not have a chromosome target file';
 }
 
 sub check_aos_output : Test(6) {
@@ -105,21 +118,6 @@ sub check_aos_output : Test(6) {
     throws_ok{
         $o->check_aos_output
     } qr/Can't find U5 oligo file/, 'Throws correct error when missing oligo file';
-
-}
-
-sub get_test_data_file {
-    my ( $filename ) = @_;
-
-    my $data_dir = dir($FindBin::Bin)->subdir('test_data');
-
-    my $file = $data_dir->file($filename);
-
-    #if ( $filename =~ m/\.yaml$/ and not $opts{raw} ) {
-        #return LoadFile($file);
-    #}
-
-    return $file;
 }
 
 sub _get_test_object {
