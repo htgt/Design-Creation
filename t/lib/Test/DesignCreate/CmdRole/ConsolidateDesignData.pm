@@ -54,7 +54,7 @@ sub build_oligo_array : Test(no_plan) {
 
 }
 
-sub get_oligo : Test(no_plan) {
+sub get_oligo : Test(8) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
@@ -67,20 +67,76 @@ sub get_oligo : Test(no_plan) {
     is $oligo_data->{seq}, $all_u5_oligos[0]{oligo_seq}
         , 'have expected U5 oligo seq, first in list';
 
-    #TODO
-    # test G5 and G3 oligo pick
+    ok my $g5_file = $o->validated_oligo_dir->file( 'G5.yaml' ), 'can find G5 oligo file';
+    my $g5_oligos = LoadFile( $g5_file );
+    ok my $g5_oligo_data = $o->get_oligo( $g5_oligos, 'G5' ), 'can call get_oligo';
+    my ( $expected_g5_oligo ) = grep{ $_->{id} eq $o->gap_oligo_pair->{G5} } @{ $g5_oligos };
+
+    is $g5_oligo_data->{seq}, $expected_g5_oligo->{oligo_seq}, 'get expected G5 oligo';
+
+    throws_ok{
+        $o->get_oligo( $g5_oligos, 'G3' )
+    } qr/Can not find G3 oligo/,
+        'throws errors if we can not find oligo';
 }
 
-sub format_oligo_data : Test(no_plan) {
+sub _build_gap_oligo_pair : Test(5) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
+    my $gap_oligo_file = $o->validated_oligo_dir->file( 'gap_oligo_pairs.yaml' );
+    ok $gap_oligo_file->remove, 'can remove gap oligo pair file';
+    throws_ok{
+        $o->gap_oligo_pair
+    } qr/Can not find gap oligo file/
+        , 'throws errors if we do not have gap oligo data file';
+
+    ok $gap_oligo_file->touch, 'can create blank gap oligo file';
+    throws_ok{
+        $o->gap_oligo_pair
+    } qr/No gap oligo data/
+        , 'throws errors if no data in gap oligo file';
 }
 
-sub create_design_file : Test(no_plan) {
+sub format_oligo_data : Test(7) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
+    ok my $u5_file = $o->validated_oligo_dir->file( 'U5.yaml' ), 'can find U5 oligo file';
+    my $oligos = LoadFile( $u5_file );
+    my $test_oligo = shift @{ $oligos };
+
+    ok my $oligo_data = $o->format_oligo_data( $test_oligo ), 'can call format_oligo_data';
+
+    is $oligo_data->{type}, $test_oligo->{oligo}, 'correct oligo type';
+    is $oligo_data->{seq}, $test_oligo->{oligo_seq}, 'correct oligo seq';
+    my $loci = shift @{ $oligo_data->{loci} };
+    is $loci->{chr_name}, 11, 'correct chromosome';
+    is $loci->{chr_start}, $test_oligo->{oligo_start}, 'correct start coordinate';
+}
+
+sub create_design_file : Test(7) {
+    my $test = shift;
+    ok my $o = $test->_get_test_object, 'can grab test object';
+
+    lives_ok{
+        $o->get_design_phase;
+        $o->build_oligo_array;
+    } 'test object setup ok';
+
+    lives_ok{
+        $o->create_design_file
+    } 'can call create_design_file';
+
+    my $design_data_file = $o->dir->file( 'design_data.yaml' );
+    ok $o->dir->contains( $design_data_file ), 'design data file created';
+
+    my $design_data = LoadFile( $design_data_file );
+
+    is $design_data->{type}, 'deletion', 'correct design type';
+    is $design_data->{species}, 'Mouse', 'correct species';
+    is_deeply $design_data->{gene_ids}, [ 'LBL-1' ], 'correct gene ids';
+    is $design_data->{created_by}, 'test', 'correct created_by';
 }
 
 sub _get_test_object {
@@ -96,6 +152,7 @@ sub _get_test_object {
         target_genes => [ 'LBL-1' ],
         chr_name     => 11,
         chr_strand   => 1,
+        created_by   => 'test',
     );
 }
 
