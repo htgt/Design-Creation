@@ -62,10 +62,6 @@ sub get_oligo_region_coordinates {
         $start = $self->target_end + ( $offset + 1 );
         $end   = $self->target_end + ( $offset + $length );
     }
-    else {
-        #TODO throw
-        $self->log->logdie( "Invalid oligo name $oligo" );
-    }
 
     if ( $start >= $end ) {
         #TODO throw
