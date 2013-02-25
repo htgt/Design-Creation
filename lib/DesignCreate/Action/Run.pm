@@ -34,6 +34,14 @@ DesignCreate::CmdRole::ConsolidateDesignData
 DesignCreate::CmdRole::PersistDesign
 );
 
+has persist => (
+    is            => 'ro',
+    isa           => 'Bool',
+    traits        => [ 'Getopt' ],
+    documentation => 'Persist design to LIMS2',
+    default       => 0
+);
+
 # Turn off the following attributes command line option attribute
 # these values should be set when running the design creation process
 # end to end
@@ -52,6 +60,8 @@ for my $attribute ( @ATTRIBUTES_NO_CMD_OPTION ) {
     has '+' . $attribute => ( traits => [ 'NoGetopt' ] );
 }
 
+
+
 sub execute {
     my ( $self, $opts, $args ) = @_;
 
@@ -64,7 +74,7 @@ sub execute {
         $self->filter_oligos;
         $self->pick_gap_oligos;
         $self->consolidate_design_data;
-        $self->persist_design;
+        $self->persist_design if $self->commit;
         $self->log->info( 'DESIGN DONE: ' . join(',', @{ $self->target_genes } ) );
     }
     catch {
