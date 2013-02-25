@@ -65,9 +65,11 @@ sub _build_ensembl_util {
     return LIMS2::Util::EnsEMBL->new( species => $self->species );
 }
 
-#TODO: check valid sequence found
 sub get_sequence {
     my ( $self, $start, $end ) = @_;
+
+    $self->log->logdie( 'Start must be less than end' )
+        if $start > $end;
 
     my $slice = $self->slice_adaptor->fetch_by_region(
         'chromosome',

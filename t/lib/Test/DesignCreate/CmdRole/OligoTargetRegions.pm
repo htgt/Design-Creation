@@ -15,6 +15,7 @@ use DesignCreate::Cmd;
 # Testing
 # DesignCreate::CmdRole::OligoTargetRegions
 # DesignCreate::Action::OligoTargetRegions ( through command line )
+# DesignCreate::Role::TargetSequence
 
 # Not testing this, its just a list of attributes
 # DesignCreate::Role::OligoRegionParameters
@@ -151,6 +152,18 @@ sub build_oligo_target_regions : Test(5) {
         my $oligo_file = $test->{o}->oligo_target_regions_dir->file( $oligo . '.fasta' );
         ok $test->{o}->oligo_target_regions_dir->contains( $oligo_file ), "$oligo oligo file exists";
     }
+}
+
+sub get_sequence : Test(2) {
+    my $test = shift;
+
+    my $seq = $test->{o}->get_sequence( 1,10 );
+    is $seq, 'NNNNNNNNNN', 'sequence is correct';
+
+    throws_ok{
+        $test->{o}->get_sequence( 10, 1 );
+    } qr/Start must be less than end/
+        , 'throws error if start after end';
 }
 
 1;
