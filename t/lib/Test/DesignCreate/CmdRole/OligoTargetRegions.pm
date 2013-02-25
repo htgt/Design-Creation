@@ -34,7 +34,7 @@ sub valid_run_cmd : Test(no_plan) {
         'oligo-target-regions',
         '--dir', $dir->dirname,
         '--target-start', 101176328,
-        '--target-end', 101176428,  
+        '--target-end', 101176428,
         '--chromosome', 11,
         '--strand', 1,
     );
@@ -63,26 +63,28 @@ sub constructor : Test(startup => 3) {
     $test->{o} = $o;
 }
 
-sub get_oligo_region_offset : Tests(2) {
+sub get_oligo_region_offset : Tests(3) {
     my $test = shift;
 
-    ok $test->{o}->get_oligo_region_offset('G5'), 'can get_oligo_region_offset';
+    ok my $offset = $test->{o}->get_oligo_region_offset('G5'), 'can get_oligo_region_offset';
+    is $offset, $test->{o}->G5_region_offset, 'is expected offset value';
     throws_ok { $test->{o}->get_oligo_region_offset('M3') }
         qr/Attribute M3_region_offset does not exist/, 'throws error on unexpected oligo name';
 
-} 
+}
 
-sub get_oligo_region_length : Tests(2) {
+sub get_oligo_region_length : Tests(3) {
     my $test = shift;
 
-    ok $test->{o}->get_oligo_region_length('G5'), 'can get_oligo_region_length';
+    ok my $length = $test->{o}->get_oligo_region_length('G5'), 'can get_oligo_region_length';
+    is $length, $test->{o}->G5_region_length, 'have correct oligo region length value';
 
     throws_ok {
         $test->{o}->get_oligo_region_length('M3')
     } qr/Attribute M3_region_length does not exist/
         , 'throws error on unexpected oligo name';
 
-} 
+}
 
 sub write_sequence_file : Tests(5){
     my $test = shift;
@@ -99,14 +101,30 @@ sub write_sequence_file : Tests(5){
     is $seq_in->next_seq->seq, 'ATCG', 'file has correct sequence';
 }
 
-sub get_oligo_region_coordinates : Tests(no_plan) {
+sub get_oligo_region_coordinates : Tests(8) {
     my $test = shift;
 
-    ok my( $start, $end ) = $test->{o}->get_oligo_region_coordinates( 'U5' )
+    my $o = $test->{o};
+    ##
+    ## Deletion / Insertion
+    ##
+    ok my( $u5_start, $u5_end ) = $o->get_oligo_region_coordinates( 'U5' )
         , 'can call get_oligo_region_coordinates';
 
+    my $u5_real_start = ( $o->target_start - ( $o->U5_region_offset + $o->U5_region_length ) );
+    my $u5_real_end = ( $o->target_start - ( $o->U5_region_offset + 1 ) );
+    is $u5_start, $u5_real_start, 'correct start value';
+    is $u5_end, $u5_real_end, 'correct end value';
+
+    ok my( $u3_start, $u3_end ) = $o->get_oligo_region_coordinates( 'U3' )
+        , 'can call get_oligo_region_coordinates';
+    my $u3_real_start = ( $o->target_end + ( $o->U3_region_offset + 1 ) );
+    my $u3_real_end = ( $o->target_end + ( $o->U3_region_offset + $o->U3_region_length ) );
+    is $u3_start, $u3_real_start, 'correct start value';
+    is $u3_end, $u3_real_end, 'correct end value';
+
     my $dir = File::Temp->newdir( TMPDIR => 1 );
-    ok my $o = $test->test_class->new(
+    ok $o = $test->test_class->new(
         dir               => dir( $dir->dirname ),
         target_start      => 101176328,
         target_end        => 101176428,
@@ -119,7 +137,7 @@ sub get_oligo_region_coordinates : Tests(no_plan) {
         !$o->get_oligo_region_coordinates( 'U5' )
     } qr/Start \d+, greater than or equal to end \d+/, 'throws start greater than end error';
 
-} 
+}
 
 sub build_oligo_target_regions : Test(5) {
     my $test = shift;
@@ -132,7 +150,7 @@ sub build_oligo_target_regions : Test(5) {
         my $oligo_file = $test->{o}->oligo_target_regions_dir->file( $oligo . '.fasta' );
         ok $test->{o}->oligo_target_regions_dir->contains( $oligo_file ), "$oligo oligo file exists";
     }
-} 
+}
 
 1;
 
