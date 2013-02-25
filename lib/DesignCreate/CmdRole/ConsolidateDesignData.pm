@@ -54,9 +54,11 @@ sub _build_gap_oligo_pair {
     my $self = shift;
 
     my $gap_oligo_pair_file = $self->validated_oligo_dir->file( 'gap_oligo_pairs.yaml' );
+    $self->log->logdie( "Can not find gap oligo file $gap_oligo_pair_file" )
+        unless $self->validated_oligo_dir->contains( $gap_oligo_pair_file );
 
     my $gap_oligos = LoadFile( $gap_oligo_pair_file );
-    unless ( @{ $gap_oligos } ) {
+    if ( !$gap_oligos || !@{ $gap_oligos } ) {
         $self->log->logdie( "No gap oligo data in $gap_oligo_pair_file" );
     }
 
@@ -127,6 +129,9 @@ sub get_oligo {
     else {
         $oligo = shift @{ $oligos };
     }
+
+    $self->log->logdie( "Can not find $oligo_type oligo" )
+        unless $oligo;
 
     return $self->format_oligo_data( $oligo );
 }
