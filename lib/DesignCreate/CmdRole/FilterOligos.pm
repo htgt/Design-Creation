@@ -165,6 +165,7 @@ sub validate_oligo {
     return 1;
 }
 
+#TODO will need to change checks when dealing with conditional designs
 sub check_oligo_coordinates {
     my ( $self, $oligo_data ) = @_;
 
