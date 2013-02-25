@@ -24,7 +24,7 @@ BEGIN {
     __PACKAGE__->mk_classdata( 'test_class' => 'Test::ObjectRole::DesignCreate::OligoTargetRegions' );
 }
 
-sub valid_run_cmd : Test(no_plan) {
+sub valid_run_cmd : Test(2) {
     my $test = shift;
 
     #create temp dir in standard location for temp files
