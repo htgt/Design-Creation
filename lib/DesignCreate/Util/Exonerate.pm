@@ -83,10 +83,15 @@ has alignment_model => (
     default  => 'affine:local',
 );
 
-has exonerate_output =>  (
+has raw_output => (
+    is  => 'rw',
+    isa => 'Str'
+);
+
+has exonerate_results =>  (
     is        => 'rw',
-    isa       => 'Str',
-    predicate => 'has_exonerate_output',
+    isa       => 'ArrayRef',
+    predicate => 'has_exonerate_results',
 );
 
 has matches => (
@@ -121,9 +126,11 @@ sub run_exonerate {
         or $self->log->logdie(
             "Failed to run exonerate: $err" );
 
-    $self->exonerate_output( $out );
+    $self->raw_output( $out );
+    my @results = grep{ /^RESULT: / } split("\n", $out);
+    $self->exonerate_results( \@results );
 
-    return $self->exonerate_output;
+    return;
 }
 
 #
@@ -133,7 +140,7 @@ sub parse_exonerate_output {
     my $self = shift;
     my %matches;
 
-    unless ( $self->has_exonerate_output ) {
+    if ( !$self->has_exonerate_results || !@{ $self->exonerate_results } ) {
         $self->log->error('No exonerate output to parse');
         return;
     }
@@ -143,34 +150,32 @@ sub parse_exonerate_output {
         return;
     }
 
-    foreach my $line ( map{ chomp; $_ } split(/\n/, $self->exonerate_output) ) {
-        if ( $line =~ /^RESULT/ ) {
-            my @exonerate_output = split /\s/, $line;
+    foreach my $line ( @{ $self->exonerate_results } ) {
+        my @exonerate_output = split /\s/, $line;
 
-            my $seq_id               = $exonerate_output[1];
-            my $alignment_length     = $exonerate_output[2];
-            my $seq_length           = $exonerate_output[3];
-            my $percentage_alignment = $exonerate_output[4];
-            my $alignment_score      = $exonerate_output[5];
-            my $mismatch_bases       = $exonerate_output[6];
-            my $start                = $exonerate_output[7];
-            my $end                  = $exonerate_output[8];
+        my $seq_id               = $exonerate_output[1];
+        my $alignment_length     = $exonerate_output[2];
+        my $seq_length           = $exonerate_output[3];
+        my $percentage_alignment = $exonerate_output[4];
+        my $alignment_score      = $exonerate_output[5];
+        my $mismatch_bases       = $exonerate_output[6];
+        my $start                = $exonerate_output[7];
+        my $end                  = $exonerate_output[8];
 
-            if ($mismatch_bases) {
-                $self->log->debug("$seq_id alignment has $mismatch_bases mismatch(s) - skip");
-                next;
-            }
-            my $percentage_match = $percentage_alignment * ( $alignment_length / $seq_length );
-
-            if ($percentage_match == 100) {
-                $matches{$seq_id}{'exact_matches'}++;
-                $matches{$seq_id}{'start'} = $start;
-                $matches{$seq_id}{'end'}   = $end;
-            }
-
-            $matches{$seq_id}{'hits'}++ if $percentage_match >= $self->percentage_hit_match;
-            $self->log->debug("$seq_id - Percent Match: $percentage_match");
+        if ($mismatch_bases) {
+            $self->log->debug("$seq_id alignment has $mismatch_bases mismatch(s) - skip");
+            next;
         }
+        my $percentage_match = $percentage_alignment * ( $alignment_length / $seq_length );
+
+        if ($percentage_match == 100) {
+            $matches{$seq_id}{'exact_matches'}++;
+            $matches{$seq_id}{'start'} = $start;
+            $matches{$seq_id}{'end'}   = $end;
+        }
+
+        $matches{$seq_id}{'hits'}++ if $percentage_match >= $self->percentage_hit_match;
+        $self->log->debug("$seq_id - Percent Match: $percentage_match");
     }
 
     $self->matches( \%matches );
