@@ -18,6 +18,7 @@ Oligos
 
 use Moose::Role;
 use YAML::Any qw( LoadFile DumpFile );
+use DesignCreate::Exception;
 use namespace::autoclean;
 
 with qw(
@@ -52,14 +53,11 @@ has gap_oligo_pair => (
 
 sub _build_gap_oligo_pair {
     my $self = shift;
-
-    my $gap_oligo_pair_file = $self->validated_oligo_dir->file( 'gap_oligo_pairs.yaml' );
-    $self->log->logdie( "Can not find gap oligo file $gap_oligo_pair_file" )
-        unless $self->validated_oligo_dir->contains( $gap_oligo_pair_file );
+    my $gap_oligo_pair_file = $self->get_file( 'gap_oligo_pairs.yaml', $self->validated_oligo_dir );
 
     my $gap_oligos = LoadFile( $gap_oligo_pair_file );
     if ( !$gap_oligos || !@{ $gap_oligos } ) {
-        $self->log->logdie( "No gap oligo data in $gap_oligo_pair_file" );
+        DesignCreate::Exception->throw( "No gap oligo data in $gap_oligo_pair_file" );
     }
 
     return shift @{ $gap_oligos };
@@ -103,11 +101,7 @@ sub build_oligo_array {
 
     $self->log->info('Picking out design oligos');
     for my $oligo_type ( @{ $self->expected_oligos } ) {
-        my $oligo_file = $self->validated_oligo_dir->file( $oligo_type . '.yaml' );
-        unless ( $self->validated_oligo_dir->contains( $oligo_file ) ) {
-            #TODO throw
-            $self->log->logdie("Can't find $oligo_type oligo file: $oligo_file");
-        }
+        my $oligo_file = $self->get_file( "$oligo_type.yaml", $self->validated_oligo_dir );
         my $oligos = LoadFile( $oligo_file );
 
         push @oligos, $self->get_oligo( $oligos, $oligo_type );
@@ -130,7 +124,7 @@ sub get_oligo {
         $oligo = shift @{ $oligos };
     }
 
-    $self->log->logdie( "Can not find $oligo_type oligo" )
+    DesignCreate::Exception->throw("Can not find $oligo_type oligo")
         unless $oligo;
 
     return $self->format_oligo_data( $oligo );

@@ -4,6 +4,7 @@ use strict;
 use warnings FATAL => 'all';
 
 use Moose;
+use DesignCreate::Exception;
 use DesignCreate::Types qw( PositiveInt YesNo );
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
 use IPC::Run 'run';
@@ -123,7 +124,7 @@ sub run_exonerate {
 
     my ( $out, $err ) = ( "", "" );
     run( \@command, '<', \undef, '>', \$out, '2>', \$err )
-        or $self->log->logdie(
+        or DesignCreate::Exception->throw(
             "Failed to run exonerate: $err" );
 
     $self->raw_output( $out );
@@ -146,7 +147,7 @@ sub parse_exonerate_output {
     }
 
     if ( $self->ryo ne $RYO ) {
-        $self->log->error( 'Cannot return matches if RYO attribute is modified from default' );
+        DesignCreate::Exception->throw( 'Cannot return matches if RYO attribute is modified from default' );
         return;
     }
 

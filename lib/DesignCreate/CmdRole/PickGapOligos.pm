@@ -13,6 +13,7 @@ and pick the ones with no matching sections of sequence.
 =cut
 
 use Moose::Role;
+use DesignCreate::Exception;
 use YAML::Any qw( LoadFile DumpFile );
 use DesignCreate::Types qw( PositiveInt );
 use List::MoreUtils qw( all );
@@ -33,12 +34,7 @@ has g5_oligos_data => (
 sub _build_g5_oligos_data {
     my $self = shift;
 
-    my $g5_oligos_file = $self->validated_oligo_dir->file( 'G5.yaml' );
-    unless ( $self->validated_oligo_dir->contains( $g5_oligos_file ) ) {
-        $self->log->logdie( "Can't find validated G5 oligos file in dir: "
-                           . $self->validated_oligo_dir->stringify );
-    }
-
+    my $g5_oligos_file = $self->get_file( "G5.yaml", $self->validated_oligo_dir );
     my $data = LoadFile( $g5_oligos_file );
 
     return { map{ $_->{id} => $_ } @{ $data } };
@@ -58,12 +54,7 @@ has g3_oligos_data => (
 sub _build_g3_oligos_data {
     my $self = shift;
 
-    my $g3_oligos_file = $self->validated_oligo_dir->file( 'G3.yaml' );
-    unless ( $self->validated_oligo_dir->contains( $g3_oligos_file ) ) {
-        $self->log->logdie( "Can't find validated G3 oligos file in dir: "
-                           . $self->validated_oligo_dir->stringify );
-    }
-
+    my $g3_oligos_file = $self->get_file( "G3.yaml", $self->validated_oligo_dir );
     my $data = LoadFile( $g3_oligos_file );
 
     return { map{ $_->{id} => $_ } @{ $data } };
@@ -191,10 +182,8 @@ sub get_gap_oligo_pairs {
 sub create_oligo_pair_file {
     my $self = shift;
 
-    if ( $self->no_oligo_pairs ) {
-        $self->log->logdie('No suitable gap oligo pairs found');
-        return;
-    }
+    DesignCreate::Exception->throw('No suitable gap oligo pairs found')
+        if $self->no_oligo_pairs;
 
     my $oligo_pair_file =  $self->validated_oligo_dir->file('gap_oligo_pairs.yaml');
     DumpFile( $oligo_pair_file, $self->oligo_pairs );

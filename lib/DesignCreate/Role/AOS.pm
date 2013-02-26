@@ -13,6 +13,7 @@ target_file
 =cut
 
 use Moose::Role;
+use DesignCreate::Exception;
 use DesignCreate::Types qw( PositiveInt YesNo AOSSearchMethod );
 use Const::Fast;
 use IPC::System::Simple qw( system );
@@ -134,7 +135,7 @@ sub run_aos {
         $self->create_oligo_files;
     }
     catch {
-        $self->log->error( 'Problem running AOS scripts, check log files in this dir: '
+        DesignCreate::Exception->throw( 'Problem running AOS wrapper, check log files in this dir: '
             . $self->aos_output_dir->stringify );
     };
 
@@ -158,17 +159,11 @@ sub run_aos_scripts {
     $self->run_aos_script2;
 
     #unless we have this oligo_fasta file then something went wrong
-    my $oligo_fasta_aos = $self->aos_work_dir->file( 'oligo_fasta' );
-    unless ( $self->aos_work_dir->contains( $oligo_fasta_aos ) ) {
-        #TODO throw
-        $self->log->logdie( "Problem running aos scripts, check log files in: "
-            . $self->aos_output_dir->stringify  );
-    }
+    my $oligo_fasta_aos = $self->get_file( "oligo_fasta", $self->aos_work_dir );
 
     #oligo_fasta file should have some data in it
     unless ( $oligo_fasta_aos->slurp ) {
-        #TODO throw
-        $self->log->logdie( "Problem running aos scripts, check log files in: "
+        DesignCreate::Exception->throw( "AOS oligo_fasta file has no data in it"
             . $self->aos_output_dir->stringify  );
     }
 }
@@ -197,7 +192,7 @@ sub run_aos_script1 {
 
     # run script and redirect STDOUT and STDERR to log file
     run( \@step1_cmd, '<', \undef, '>&', $output_log_fh )
-        or $self->log->logdie(
+        or DesignCreate::Exception->throw(
             "Failed to run AOS script Pick70_script1_contig, check $output_log log file for details" );
 
     # this file takes up a lot of space, remove it
@@ -223,7 +218,7 @@ sub run_aos_script2 {
 
     # run script and redirect STDOUT and STDERR to log file
     run( \@step2_cmd, '<', \undef, '>&', $output_log_fh )
-        or $self->log->logdie(
+        or DesignCreate::Exception->throw(
             "Failed to run AOS script Pick70_script2, check $output_log log file for details" );
 
     return;
@@ -279,11 +274,8 @@ sub create_oligo_files {
     my $self = shift;
     $self->log->info('Creating oligo output files');
 
-    unless ( $self->has_oligos ) {
-        #TODO throw
-        $self->log->logdie( 'No oligos found' );
-        return;
-    }
+    DesignCreate::Exception->throw( 'No oligos found' )
+        unless $self->has_oligos;
 
     for my $oligo ( keys %{ $self->aos_oligos } ) {
         my $filename = $self->aos_output_dir->stringify . '/' . $oligo . '.yaml';

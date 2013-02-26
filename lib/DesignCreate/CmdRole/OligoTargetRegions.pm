@@ -22,6 +22,7 @@ use Moose::Role;
 use DesignCreate::Types qw( PositiveInt NaturalNumber );
 use Bio::SeqIO;
 use Bio::Seq;
+use DesignCreate::Exception;
 use Fcntl; # O_ constants
 
 with qw(
@@ -63,11 +64,8 @@ sub get_oligo_region_coordinates {
         $end   = $self->target_end + ( $offset + $length );
     }
 
-    if ( $start >= $end ) {
-        #TODO throw
-        $self->log->logdie( "Start $start, greater than or equal to end $end for oligo $oligo" );
-        return;
-    }
+    DesignCreate::Exception->throw( "Start $start, greater than or equal to end $end for oligo $oligo" )
+        if $start >= $end;
 
     return( $start, $end );
 }
@@ -76,10 +74,8 @@ sub get_oligo_region_offset {
     my ( $self, $oligo ) = @_;
 
     my $attribute_name = $oligo . '_region_offset';
-    unless ( $self->meta->has_attribute( $attribute_name ) ) {
-        $self->log->logdie( "Attribute $attribute_name does not exist" );
-        return;
-    }
+    DesignCreate::Exception->throw( "Attribute $attribute_name does not exist" )
+        unless  $self->meta->has_attribute( $attribute_name );
 
     return $self->$attribute_name;
 }
@@ -88,10 +84,8 @@ sub get_oligo_region_length {
     my ( $self, $oligo ) = @_;
 
     my $attribute_name = $oligo . '_region_length';
-    unless ( $self->meta->has_attribute( $attribute_name ) ) {
-        $self->log->logdie( "Attribute $attribute_name does not exist" );
-        return;
-    }
+    DesignCreate::Exception->throw( "Attribute $attribute_name does not exist" )
+        unless $self->meta->has_attribute( $attribute_name );
 
     return $self->$attribute_name;
 }

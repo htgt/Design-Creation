@@ -12,6 +12,7 @@ This is a wrapper around RunAOS which does the real work.
 =cut
 
 use Moose::Role;
+use DesignCreate::Exception;
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
 use Bio::SeqIO;
 use Bio::Seq;
@@ -34,6 +35,7 @@ aos_output_dir
 __PACKAGE__->meta->remove_attribute( 'chr_strand' );
 __PACKAGE__->meta->remove_attribute( 'species' );
 
+#TODO change default from scratch101
 const my $DEFAULT_CHROMOSOME_DIR => $ENV{AOS_CHROMOSOME_DIR}
     || '/lustre/scratch101/blastdb/Users/vvi/KO_MOUSE/GRCm38';
 
@@ -93,11 +95,7 @@ sub create_aos_query_file {
     my $seq_out = Bio::SeqIO->new( -fh => $fh, -format => 'fasta' );
 
     for my $oligo ( @{ $self->expected_oligos } ) {
-        my $oligo_file = $self->oligo_target_regions_dir->file( $oligo . '.fasta' );
-        unless ( $self->oligo_target_regions_dir->contains( $oligo_file ) ) {
-            #TODO throw
-            $self->log->logdie("Can't find $oligo target region file: $oligo_file");
-        }
+        my $oligo_file = $self->get_file( "$oligo.fasta", $self->oligo_target_regions_dir );
 
         my $seq_in = Bio::SeqIO->new( -fh => $oligo_file->openr, -format => 'fasta' );
         $self->log->debug( "Adding $oligo oligo target sequence to query file" );
@@ -119,15 +117,9 @@ sub define_target_file {
         return;
     }
 
-    my $chr_file = $self->base_chromosome_dir->file( $self->chr_name . '.fasta' );
-    if ( $self->base_chromosome_dir->contains( $chr_file ) ) {
-        $self->log->debug( "Target file found: $chr_file" );
-        $self->target_file( $chr_file );
-    }
-    else {
-        $self->log->logdie( "Unable to find target file $chr_file in dir: "
-                           . $self->base_chromosome_dir->stringify )
-    }
+    my $chr_file = $self->get_file( $self->chr_name . ".fasta", $self->base_chromosome_dir );
+    $self->log->debug( "Target file found: $chr_file" );
+    $self->target_file( $chr_file );
 
     return;
 }
@@ -136,10 +128,8 @@ sub check_aos_output {
     my $self = shift;
 
     for my $oligo ( @{ $self->expected_oligos } ) {
-        my $oligo_file = $self->aos_output_dir->file( $oligo . '.yaml' );
-        unless ( $self->aos_output_dir->contains( $oligo_file ) ) {
-            $self->log->logdie("Can't find $oligo oligo file: $oligo_file");
-        }
+        #this will throw a error if file does not exist
+        $self->get_file( "$oligo.yaml", $self->aos_output_dir );
     }
 
     $self->log->info('All oligo yaml files are present');

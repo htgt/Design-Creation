@@ -15,6 +15,7 @@ meet our requirments.
 use Moose::Role;
 use DesignCreate::Types qw( PositiveInt );
 use DesignCreate::Util::Exonerate;
+use DesignCreate::Exception;
 use YAML::Any qw( LoadFile DumpFile );
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
 use Const::Fast;
@@ -109,16 +110,11 @@ sub validate_oligos {
     my $self = shift;
 
     for my $oligo_type ( @{ $self->expected_oligos } ) {
-        my $oligo_file = $self->aos_output_dir->file( $oligo_type . '.yaml' );
-        unless ( $self->aos_output_dir->contains( $oligo_file ) ) {
-            #TODO throw
-            $self->log->logdie("Can't find $oligo_type oligo file: $oligo_file");
-        }
+        my $oligo_file = $self->get_file( "$oligo_type.yaml", $self->aos_output_dir );
 
-        unless ( $self->validate_oligos_of_type( $oligo_file, $oligo_type ) ) {
-            #TODO throw
-            $self->log->logdie("No valid $oligo_type oligos");
-        }
+        DesignCreate::Exception->throw("No valid $oligo_type oligos")
+            unless $self->validate_oligos_of_type( $oligo_file, $oligo_type );
+
         $self->log->info("We have $oligo_type oligos that pass initial checks");
     }
 
@@ -228,10 +224,8 @@ sub run_exonerate {
     print $fh $exonerate->raw_output;
 
     my $matches = $exonerate->parse_exonerate_output;
-    unless ( $matches ) {
-        #TODO throw
-        $self->log->logdie("No output from exonerate");
-    }
+    DesignCreate::Exception->throw("No output from exonerate")
+        unless $matches;
 
     $self->exonerate_matches( $matches );
 }
@@ -288,7 +282,7 @@ sub target_flanking_region_coordinates {
         $end   = $self->all_oligos->{'G3'}[0]{target_region_end};
     }
     else {
-        $self->log->logdie( 'Can not deal with -ve strand' );
+        DesignCreate::Exception->throw( 'Can not deal with -ve strand' )
         #$start = $self->all_oligos->{'G3'}[0]{target_region_start};
         #$end   = $self->all_oligos->{'G5'}[0]{target_region_end};
     }
@@ -342,10 +336,8 @@ sub have_required_validated_oligos {
     my $self = shift;
 
     for my $oligo_type ( @{ $self->expected_oligos } ) {
-        unless ( exists $self->validated_oligos->{$oligo_type} ) {
-            #TODO throw
-            $self->log->logdie( "No valid $oligo_type oligos, halting filter process" );
-        }
+        DesignCreate::Exception->throw( "No valid $oligo_type oligos, halting filter process" )
+            unless exists $self->validated_oligos->{$oligo_type};
     }
 
     return 1;
