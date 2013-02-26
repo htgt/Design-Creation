@@ -20,31 +20,6 @@ MooseX::Log::Log4perl
 #TODO use SimpleConfig,
 #MooseX::SimpleConfig
 
-const my $DEFAULT_VALIDATED_OLIGO_DIR_NAME      => 'validated_oligos';
-const my $DEFAULT_AOS_OUTPUT_DIR_NAME           => 'aos_output';
-const my $DEFAULT_OLIGO_TARGET_REGIONS_DIR_NAME => 'oligo_target_regions';
-
-has validated_oligo_dir_name => (
-    is      => 'ro',
-    isa     => 'Str',
-    default => $DEFAULT_VALIDATED_OLIGO_DIR_NAME,
-    traits  => [ 'NoGetopt' ],
-);
-
-has aos_output_dir_name => (
-    is      => 'ro',
-    isa     => 'Str',
-    default => $DEFAULT_AOS_OUTPUT_DIR_NAME,
-    traits  => [ 'NoGetopt' ],
-);
-
-has oligo_target_regions_dir_name => (
-    is      => 'ro',
-    isa     => 'Str',
-    default => $DEFAULT_OLIGO_TARGET_REGIONS_DIR_NAME,
-    traits  => [ 'NoGetopt' ],
-);
-
 has trace => (
     is            => 'ro',
     isa           => 'Bool',
@@ -82,6 +57,39 @@ has design_method => (
 #
 # Directories common to multiple commands
 #
+
+const my $DEFAULT_VALIDATED_OLIGO_DIR_NAME      => 'validated_oligos';
+const my $DEFAULT_AOS_OUTPUT_DIR_NAME           => 'aos_output';
+const my $DEFAULT_OLIGO_TARGET_REGIONS_DIR_NAME => 'oligo_target_regions';
+const my $DEFAULT_DESIGN_DATA_FILE_NAME         => 'design_data.yaml';
+
+has validated_oligo_dir_name => (
+    is      => 'ro',
+    isa     => 'Str',
+    default => $DEFAULT_VALIDATED_OLIGO_DIR_NAME,
+    traits  => [ 'NoGetopt' ],
+);
+
+has aos_output_dir_name => (
+    is      => 'ro',
+    isa     => 'Str',
+    default => $DEFAULT_AOS_OUTPUT_DIR_NAME,
+    traits  => [ 'NoGetopt' ],
+);
+
+has oligo_target_regions_dir_name => (
+    is      => 'ro',
+    isa     => 'Str',
+    default => $DEFAULT_OLIGO_TARGET_REGIONS_DIR_NAME,
+    traits  => [ 'NoGetopt' ],
+);
+
+has design_data_file_name => (
+   is      => 'ro',
+   isa     => 'Str',
+   default => $DEFAULT_DESIGN_DATA_FILE_NAME,
+   traits  => [ 'NoGetopt' ],
+);
 
 has dir => (
     is            => 'ro',

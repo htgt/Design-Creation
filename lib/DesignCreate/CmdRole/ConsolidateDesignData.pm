@@ -160,8 +160,7 @@ sub create_design_file {
         oligos     => $self->picked_oligos,
     );
 
-    #TODO make name of file a constant
-    my $design_data_file = $self->dir->file('design_data.yaml');
+    my $design_data_file = $self->dir->file( $self->design_data_file_name );
     $self->log->info( "Creating design file: $design_data_file" );
     DumpFile( $design_data_file, \%design_data );
 

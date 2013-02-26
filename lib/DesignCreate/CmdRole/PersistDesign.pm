@@ -41,11 +41,10 @@ has design_data_file => (
     cmd_flag      => 'design-data-file'
 );
 
-#TODO don't code done the file name here
 sub _build_design_data_file {
     my $self = shift;
 
-    my $file = $self->dir->file( 'design_data.yaml' );
+    my $file = $self->dir->file( $self->design_data_file_name );
 
     return $file->absolute;
 }
@@ -57,16 +56,12 @@ has design_data => (
     lazy_build => 1,
 );
 
-#TODO validate we have all oligos required in design data
-# rest of the validation should be done on the LIMS2 side
-
 sub _build_design_data {
     my $self = shift;
 
     return YAML::Any::LoadFile( $self->design_data_file );
 }
 
-#TODO return design_id
 sub persist_design {
     my ( $self, $opts, $args ) = @_;
 

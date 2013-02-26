@@ -20,6 +20,12 @@ has dir => (
     isa => 'Path::Class::Dir',
 );
 
+has design_data_file_name => (
+   is      => 'ro',
+   isa     => 'Str',
+   default => 'design_data.yaml',
+);
+
 has validated_oligo_dir => (
     is         => 'ro',
     isa        => 'Path::Class::Dir',
