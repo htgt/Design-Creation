@@ -221,14 +221,14 @@ sub run_exonerate {
         query_file  => $self->exonerate_query_file->stringify,
     );
 
-    my $output = $exonerate->run_exonerate;
+    $exonerate->run_exonerate;
     # put exonerate output in a log file
     my $exonerate_output = $self->exonerate_oligo_dir->file('exonerate_output.log');
     my $fh = $exonerate_output->open( O_WRONLY|O_CREAT ) or die( "Open $exonerate_output: $!" );
-    print $fh $output;
+    print $fh $exonerate->raw_output;
 
     my $matches = $exonerate->parse_exonerate_output;
-    unless ( %{ $matches } ) {
+    unless ( $matches ) {
         #TODO throw
         $self->log->logdie("No output from exonerate");
     }
