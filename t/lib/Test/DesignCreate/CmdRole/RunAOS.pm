@@ -67,7 +67,7 @@ sub run_aos_scripts : Test(6) {
 
     throws_ok{
         $o->run_aos_scripts
-    } qr/Problem running aos scripts, check log files/
+    } qr/AOS oligo_fasta file has no data in it/
         , 'Throws error if aos scripts fail to run properly';
 }
 

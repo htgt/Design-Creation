@@ -55,7 +55,7 @@ sub build_oligo_array : Test(no_plan) {
     ok $o->validated_oligo_dir->file( 'G5.yaml' )->remove, 'can remove G5 oligo file';
     throws_ok{
         $o->build_oligo_array
-    } qr/Can't find G5 oligo file/ , 'throws error on missing oligo file';
+    } qr/Can not find file/ , 'throws error on missing oligo file';
 
 }
 
@@ -93,7 +93,7 @@ sub _build_gap_oligo_pair : Test(5) {
     ok $gap_oligo_file->remove, 'can remove gap oligo pair file';
     throws_ok{
         $o->gap_oligo_pair
-    } qr/Can not find gap oligo file/
+    } qr/Can not find file/
         , 'throws errors if we do not have gap oligo data file';
 
     ok $gap_oligo_file->touch, 'can create blank gap oligo file';

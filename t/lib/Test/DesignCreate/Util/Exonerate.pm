@@ -91,10 +91,12 @@ sub parse_exonerate_output : Test(11) {
 
     lives_ok{
         $o->run_exonerate;
-        $o->parse_exonerate_output;
-    } 'can run_exonerate and parse_exonerate_output';
+    } 'can run_exonerate';
 
-    ok !$o->matches, 'no matches, when specifying own ryo';
+    throws_ok{
+        $o->parse_exonerate_output
+    } qr/Cannot return matches if RYO attribute/
+        ,'can not call parse_exonerate_output when specifying custon ryo value'
 }
 
 sub _get_test_data_file {
