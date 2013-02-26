@@ -27,8 +27,6 @@ sub valid_run_aos_cmd : Test(3) {
     my $test = shift;
 
     my $dir = File::Temp->newdir( TMPDIR => 1, CLEANUP => 1 );
-    my $query_file  = get_test_data_file('run_aos_query_file.fasta');
-    my $target_file = get_test_data_file('run_aos_target_file.fasta');
 
     my @argv_contents = (
         'run-aos',
