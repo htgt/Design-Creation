@@ -6,6 +6,7 @@ use warnings FATAL => 'all';
 use Moose;
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsDir/;
 use DesignCreate::Exception;
+use DesignCreate::Exception::MissingFile;
 use DesignCreate::Types qw( DesignMethod );
 use Log::Log4perl qw( :levels );
 use Try::Tiny;
@@ -191,8 +192,7 @@ sub get_file {
     my ( $self, $filename, $dir ) = @_;
 
     my $file = $dir->file( $filename );
-#TODO custom exception class
-    DesignCreate::Exception->throw("Can not find gap oligo file $file" )
+    DesignCreate::Exception::MissingFile->throw( file => $file, dir => $dir )
         unless $dir->contains( $file );
 
     return $file;
