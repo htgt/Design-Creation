@@ -14,6 +14,7 @@ use strict;
 use warnings FATAL => 'all';
 
 use Moose;
+use Try::Tiny;
 use namespace::autoclean;
 
 extends qw( DesignCreate::Action );
@@ -22,7 +23,12 @@ with 'DesignCreate::CmdRole::PersistDesign';
 sub execute {
     my ( $self, $opts, $args ) = @_;
 
-    $self->persist_design;
+    try{
+        $self->persist_design;
+    }
+    catch{
+        $self->log->error( "Error persisting design to LIMS2:\n" . $_ );
+    };
 
     return;
 }
@@ -32,4 +38,3 @@ __PACKAGE__->meta->make_immutable;
 1;
 
 __END__
-

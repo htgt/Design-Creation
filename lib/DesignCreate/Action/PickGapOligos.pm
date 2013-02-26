@@ -17,18 +17,21 @@ use warnings FATAL => 'all';
 
 use Moose;
 use Const::Fast;
+use Try::Tiny;
 use namespace::autoclean;
 
 extends qw( DesignCreate::Action );
 with 'DesignCreate::CmdRole::PickGapOligos';
 
-#TODO move this to somewhere global
-const my $DEFAULT_VALIDATED_OLIGO_DIR_NAME => 'validated_oligos';
-
 sub execute {
     my ( $self, $opts, $args ) = @_;
 
-    $self->pick_gap_oligos;
+    try{
+        $self->pick_gap_oligos;
+    }
+    catch{
+        $self->log->error( "Error picking gap oligos:\n" . $_ );
+    };
 
     return;
 }
@@ -38,7 +41,7 @@ sub execute {
 override _build_validated_oligo_dir => sub {
     my $self = shift;
 
-    my $validated_oligo_dir = $self->dir->subdir( $DEFAULT_VALIDATED_OLIGO_DIR_NAME );
+    my $validated_oligo_dir = $self->dir->subdir( $self->validated_oligo_dir_name );
     unless ( $self->dir->contains( $validated_oligo_dir ) ) {
         $self->log->logdie( "Can't find validated oligo file dir: "
                            . $validated_oligo_dir->stringify );

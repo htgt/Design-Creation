@@ -15,6 +15,7 @@ use strict;
 use warnings FATAL => 'all';
 
 use Moose;
+use Try::Tiny;
 use namespace::autoclean;
 
 extends qw( DesignCreate::Action );
@@ -23,7 +24,12 @@ with 'DesignCreate::CmdRole::OligoTargetRegions';
 sub execute {
     my ( $self, $opts, $args ) = @_;
 
-    $self->build_oligo_target_regions;
+    try{
+        $self->build_oligo_target_regions;
+    }
+    catch{
+        $self->log->error( "Failed to generate oligo target regions:\n" . $_ );
+    };
 
     return;
 }

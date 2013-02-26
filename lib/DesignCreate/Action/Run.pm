@@ -60,8 +60,6 @@ for my $attribute ( @ATTRIBUTES_NO_CMD_OPTION ) {
     has '+' . $attribute => ( traits => [ 'NoGetopt' ] );
 }
 
-
-
 sub execute {
     my ( $self, $opts, $args ) = @_;
 

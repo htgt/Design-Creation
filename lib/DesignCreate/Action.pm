@@ -15,14 +15,33 @@ extends qw( MooseX::App::Cmd::Command );
 with qw(
 MooseX::Log::Log4perl
 );
-#MooseX::SimpleConfig
-
 #TODO use SimpleConfig,
-#with 'MooseX::SimpleConfig';
+#MooseX::SimpleConfig
 
 const my $DEFAULT_VALIDATED_OLIGO_DIR_NAME      => 'validated_oligos';
 const my $DEFAULT_AOS_OUTPUT_DIR_NAME           => 'aos_output';
 const my $DEFAULT_OLIGO_TARGET_REGIONS_DIR_NAME => 'oligo_target_regions';
+
+has validated_oligo_dir_name => (
+    is      => 'ro',
+    isa     => 'Str',
+    default => $DEFAULT_VALIDATED_OLIGO_DIR_NAME,
+    traits  => [ 'NoGetopt' ],
+);
+
+has aos_output_dir_name => (
+    is      => 'ro',
+    isa     => 'Str',
+    default => $DEFAULT_AOS_OUTPUT_DIR_NAME,
+    traits  => [ 'NoGetopt' ],
+);
+
+has oligo_target_regions_dir_name => (
+    is      => 'ro',
+    isa     => 'Str',
+    default => $DEFAULT_OLIGO_TARGET_REGIONS_DIR_NAME,
+    traits  => [ 'NoGetopt' ],
+);
 
 has trace => (
     is            => 'ro',
@@ -92,7 +111,7 @@ has validated_oligo_dir => (
 sub _build_validated_oligo_dir {
     my $self = shift;
 
-    my $validated_oligo_dir = $self->dir->subdir( $DEFAULT_VALIDATED_OLIGO_DIR_NAME )->absolute;
+    my $validated_oligo_dir = $self->dir->subdir( $self->validated_oligo_dir_name )->absolute;
     $validated_oligo_dir->rmtree();
     $validated_oligo_dir->mkpath();
 
@@ -113,7 +132,7 @@ has aos_output_dir => (
 sub _build_aos_output_dir {
     my $self = shift;
 
-    my $aos_output_dir = $self->dir->subdir( $DEFAULT_AOS_OUTPUT_DIR_NAME )->absolute;
+    my $aos_output_dir = $self->dir->subdir( $self->aos_output_dir_name )->absolute;
     $aos_output_dir->rmtree();
     $aos_output_dir->mkpath();
 
@@ -134,7 +153,7 @@ has oligo_target_regions_dir => (
 sub _build_oligo_target_regions_dir {
     my $self = shift;
 
-    my $oligo_target_regions_dir = $self->dir->subdir( $DEFAULT_OLIGO_TARGET_REGIONS_DIR_NAME )->absolute;
+    my $oligo_target_regions_dir = $self->dir->subdir( $self->oligo_target_regions_dir_name )->absolute;
     $oligo_target_regions_dir->rmtree();
     $oligo_target_regions_dir->mkpath();
 

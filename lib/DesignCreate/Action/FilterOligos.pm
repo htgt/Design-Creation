@@ -17,18 +17,21 @@ use warnings FATAL => 'all';
 
 use Moose;
 use Const::Fast;
+use Try::Tiny;
 use namespace::autoclean;
 
 extends qw( DesignCreate::Action );
 with 'DesignCreate::CmdRole::FilterOligos';
 
-#TODO move this
-const my $DEFAULT_AOS_OUTPUT_DIR_NAME => 'aos_output';
-
 sub execute {
     my ( $self, $opts, $args ) = @_;
 
-    $self->filter_oligos;
+    try{
+        $self->filter_oligos;
+    }
+    catch{
+        $self->log->error( "Error filtering oligos:\n" . $_ );
+    };
 
     return;
 }
@@ -38,7 +41,7 @@ sub execute {
 override _build_aos_output_dir => sub {
     my $self = shift;
 
-    my $aos_output_dir = $self->dir->subdir( $DEFAULT_AOS_OUTPUT_DIR_NAME );
+    my $aos_output_dir = $self->dir->subdir( $self->aos_output_dir_name );
     unless ( $self->dir->contains( $aos_output_dir ) ) {
         $self->log->logdie( "Can't find aos output dir: "
                            . $aos_output_dir->stringify );

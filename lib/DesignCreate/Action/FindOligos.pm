@@ -16,19 +16,22 @@ use warnings FATAL => 'all';
 
 use Moose;
 use Const::Fast;
+use Try::Tiny;
 use Fcntl; # O_ constants
 use namespace::autoclean;
 
 extends qw( DesignCreate::Action );
 with 'DesignCreate::CmdRole::FindOligos';
 
-#TODO move this
-const my $DEFAULT_OLIGO_TARGET_REGIONS_DIR_NAME => 'oligo_target_regions';
-
 sub execute {
     my ( $self, $opts, $args ) = @_;
 
-    $self->find_oligos;
+    try{
+        $self->find_oligos;
+    }
+    catch{
+        $self->log->error( "Error finding oligos:\n" . $_ );
+    };
 
     return;
 }
@@ -38,7 +41,7 @@ sub execute {
 override _build_oligo_target_regions_dir => sub {
     my $self = shift;
 
-    my $target_regions_dir = $self->dir->subdir( $DEFAULT_OLIGO_TARGET_REGIONS_DIR_NAME );
+    my $target_regions_dir = $self->dir->subdir( $self->oligo_target_regions_dir_name );
     unless ( $self->dir->contains( $target_regions_dir ) ) {
         $self->log->logdie( "Can't find aos output dir: "
                            . $target_regions_dir->stringify );
