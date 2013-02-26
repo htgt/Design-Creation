@@ -52,14 +52,14 @@ sub generate_tiled_oligo_seqs : Test(9) {
     ok $o->validated_oligo_dir->file( 'G3.yaml' )->remove, 'remove G3.yaml oligo file';
     throws_ok{
         $o->generate_tiled_oligo_seqs
-    } qr/Can not find file/
+    } qr/Cannot find file/
         ,'throws error if no G3.yaml file';
 
     ok $o = $test->_get_test_object, 'can grab another test object';
     ok $o->validated_oligo_dir->file( 'G5.yaml' )->remove, 'remove G5.yaml oligo file';
     throws_ok{
         $o->generate_tiled_oligo_seqs
-    } qr/Can not find file/
+    } qr/Cannot find file/
         ,'throws error if no G5.yaml file';
 
 }

@@ -6,6 +6,7 @@ use warnings FATAL => 'all';
 use Moose;
 use DesignCreate::Types qw( DesignMethod );
 use DesignCreate::Exception;
+use DesignCreate::Exception::MissingFile;
 use namespace::autoclean;
 
 has design_method => (
@@ -68,7 +69,7 @@ sub get_file {
     my ( $self, $filename, $dir ) = @_;
 
     my $file = $dir->file( $filename );
-    DesignCreate::Exception->throw("Can not find file $file" )
+    DesignCreate::Exception::MissingFile->throw( file => $file, dir => $dir )
         unless $dir->contains( $file );
 
     return $file;

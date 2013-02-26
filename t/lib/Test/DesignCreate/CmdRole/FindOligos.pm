@@ -68,7 +68,7 @@ sub create_aos_query_file : Test(9) {
 
     throws_ok{
         $o->create_aos_query_file
-    } qr/Can not find file/
+    } qr/Cannot find file/
         , '.. now throws error about missing file';
 }
 
@@ -96,7 +96,7 @@ sub define_target_file : Test(6) {
 
     throws_ok{
         $o->define_target_file
-    } qr/Can not find file/
+    } qr/Cannot find file/
         ,'throws error if we do not have a chromosome target file';
 }
 
@@ -118,7 +118,7 @@ sub check_aos_output : Test(6) {
 
     throws_ok{
         $o->check_aos_output
-    } qr/Can not find file/, 'Throws correct error when missing oligo file';
+    } qr/Cannot find file/, 'Throws correct error when missing oligo file';
 }
 
 sub _get_test_object {

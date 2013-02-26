@@ -126,7 +126,7 @@ sub validate_oligos : Test(5) {
 
     throws_ok{
         $o->validate_oligos()
-    } qr/Can not find file/, 'throws error when no U5.yaml file';
+    } qr/Cannot find file/, 'throws error when no U5.yaml file';
 
     $o->aos_output_dir->file( 'U5.yaml' )->touch;
 
