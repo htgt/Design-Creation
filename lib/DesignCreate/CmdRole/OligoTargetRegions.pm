@@ -7,7 +7,7 @@ DesignCreate::CmdRole::OligoTargetRegions - Produce fasta files of the oligo tar
 =head1 DESCRIPTION
 
 For given target coordinates and a oligo region parameters produce target region sequence file
-for each oligo we must find.
+for each oligo we must find. ( Also called candidate region )
 
 =cut
 
@@ -55,13 +55,25 @@ sub get_oligo_region_coordinates {
     my $length = $self->get_oligo_region_length( $oligo );
 
     # TODO make this work for all design methods, currently only works for deletion/ insertion designs
-    if ( $oligo =~ /5$/ ) {
-        $start = $self->target_start - ( $offset + $length );
-        $end   = $self->target_start - ( $offset + 1 );
+    if ( $self->chr_strand == 1 ) {
+        if ( $oligo =~ /5$/ ) {
+            $start = $self->target_start - ( $offset + $length );
+            $end   = $self->target_start - ( $offset + 1 );
+        }
+        elsif ( $oligo =~ /3$/ ) {
+            $start = $self->target_end + ( $offset + 1 );
+            $end   = $self->target_end + ( $offset + $length );
+        }
     }
-    elsif ( $oligo =~ /3$/ ) {
-        $start = $self->target_end + ( $offset + 1 );
-        $end   = $self->target_end + ( $offset + $length );
+    else {
+        if ( $oligo =~ /5$/ ) {
+            $start = $self->target_end + ( $offset + 1 );
+            $end   = $self->target_end + ( $offset + $length );
+        }
+        elsif ( $oligo =~ /3$/ ) {
+            $start = $self->target_start - ( $offset + $length );
+            $end   = $self->target_start - ( $offset + 1 );
+        }
     }
 
     DesignCreate::Exception->throw( "Start $start, greater than or equal to end $end for oligo $oligo" )

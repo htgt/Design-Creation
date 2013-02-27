@@ -71,12 +71,12 @@ sub get_sequence {
     $self->log->logdie( 'Start must be less than end' )
         if $start > $end;
 
+    # We always get sequence on the +ve strand
     my $slice = $self->slice_adaptor->fetch_by_region(
         'chromosome',
         $self->chr_name,
         $start,
         $end,
-        $self->chr_strand,
     );
 
     return $slice->seq;

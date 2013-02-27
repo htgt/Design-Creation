@@ -272,7 +272,6 @@ sub define_exonerate_target_file {
     return;
 }
 
-#TODO this will need to be strand dependant
 sub target_flanking_region_coordinates {
     my $self = shift;
     my ( $start, $end );
@@ -282,9 +281,8 @@ sub target_flanking_region_coordinates {
         $end   = $self->all_oligos->{'G3'}[0]{target_region_end};
     }
     else {
-        DesignCreate::Exception->throw( 'Can not deal with -ve strand' )
-        #$start = $self->all_oligos->{'G3'}[0]{target_region_start};
-        #$end   = $self->all_oligos->{'G5'}[0]{target_region_end};
+        $start = $self->all_oligos->{'G3'}[0]{target_region_start};
+        $end   = $self->all_oligos->{'G5'}[0]{target_region_end};
     }
 
     my $flanking_region_start = $start - $self->flank_length;
