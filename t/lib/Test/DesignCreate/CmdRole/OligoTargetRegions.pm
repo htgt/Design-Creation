@@ -88,7 +88,7 @@ sub write_sequence_file : Tests(6){
     is $seq_in->next_seq->seq, 'ATCG', 'file has correct sequence';
 }
 
-sub get_oligo_region_coordinates : Tests(9) {
+sub get_oligo_region_coordinates : Tests(16) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
@@ -103,12 +103,31 @@ sub get_oligo_region_coordinates : Tests(9) {
     is $u5_start, $u5_real_start, 'correct start value';
     is $u5_end, $u5_real_end, 'correct end value';
 
-    ok my( $u3_start, $u3_end ) = $o->get_oligo_region_coordinates( 'U3' )
+    ok my( $g3_start, $g3_end ) = $o->get_oligo_region_coordinates( 'G3' )
         , 'can call get_oligo_region_coordinates';
-    my $u3_real_start = ( $o->target_end + ( $o->U3_region_offset + 1 ) );
-    my $u3_real_end = ( $o->target_end + ( $o->U3_region_offset + $o->U3_region_length ) );
-    is $u3_start, $u3_real_start, 'correct start value';
-    is $u3_end, $u3_real_end, 'correct end value';
+    my $g3_real_start = ( $o->target_end + ( $o->G3_region_offset + 1 ) );
+    my $g3_real_end = ( $o->target_end + ( $o->G3_region_offset + $o->G3_region_length ) );
+    is $g3_start, $g3_real_start, 'correct start value';
+    is $g3_end, $g3_real_end, 'correct end value';
+
+    # -ve stranded design
+    ok $o = $test->_get_test_object( -1 ), 'can grab test object';
+
+    ok my( $d3_start, $d3_end ) = $o->get_oligo_region_coordinates( 'D3' )
+        , 'can call get_oligo_region_coordinates';
+
+    #because these -ve and +ve strand deletion designs are symmetric the coordinates:
+    #   U5 region on the +ve design should be the same as D3 region on the -ve design
+    #   G5 region on the +ve design should be the same as G3 region on the -ve design
+
+    is $d3_start, $u5_real_start, 'correct start value';
+    is $d3_end, $u5_real_end, 'correct end value';
+
+    ok my( $g5_start, $g5_end ) = $o->get_oligo_region_coordinates( 'G5' )
+        , 'can call get_oligo_region_coordinates';
+
+    is $g5_start, $g3_real_start, 'correct start value';
+    is $g5_end, $g3_real_end, 'correct end value';
 
     ok $o = $test->test_class->new(
         dir               => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute, 
@@ -122,7 +141,6 @@ sub get_oligo_region_coordinates : Tests(9) {
     throws_ok {
         !$o->get_oligo_region_coordinates( 'U5' )
     } qr/Start \d+, greater than or equal to end \d+/, 'throws start greater than end error';
-
 }
 
 sub build_oligo_target_regions : Test(6) {
