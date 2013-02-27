@@ -136,7 +136,7 @@ sub validate_oligos : Test(5) {
 
 }
 
-sub target_flanking_region_coordinates : Test(5){
+sub target_flanking_region_coordinates : Test(11){
     my $test = shift;
 
     ok my $o = $test->_get_test_object, 'can grab test object';
@@ -144,12 +144,28 @@ sub target_flanking_region_coordinates : Test(5){
         $o->validate_oligos;
     } 'setup test object';
 
-    ok my( $start, $end ) = $o->target_flanking_region_coordinates
+    ok my( $plus_start, $plus_end ) = $o->target_flanking_region_coordinates
         , 'can call target_flanking_region_coordinates';
 
-    is $start, ( 101171328 - 100000 ), 'start is correct';
-    is $end, ( 101181428 + 100000 ), 'end is correct';
+    # plus and minus strand designs are symmetric so values should be the same
+    my $start = ( 101171328 - 100000 );
+    my $end = ( 101181428 + 100000 );
 
+    is $plus_start, $start , 'start is correct';
+    is $plus_end, $end , 'end is correct';
+
+    ok $o = $test->_get_test_object( -1 ), 'can grab another test object';
+    is $o->chr_strand, -1, 'strand is correct';
+
+    lives_ok{
+        $o->validate_oligos;
+    } 'setup test object';
+
+    ok my( $minus_start, $minus_end ) = $o->target_flanking_region_coordinates
+        , 'can call target_flanking_region_coordinates';
+
+    is $minus_start, $start, 'start is correct';
+    is $minus_end, $end , 'end is correct';
 }
 
 sub define_exonerate_target_file : Test(4){
@@ -281,10 +297,17 @@ sub output_validated_oligos : Test(7){
 }
 
 sub _get_test_object {
-    my $test = shift;
+    my ( $test, $strand ) = @_;
+    $strand //= 1;
 
     my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute;
-    my $data_dir = dir($FindBin::Bin)->absolute->subdir('test_data/filter_oligos_data');
+    my $data_dir;
+    if ( $strand == 1 ) {
+        $data_dir = dir($FindBin::Bin)->absolute->subdir('test_data/filter_oligos_data_plus');
+    }
+    elsif ( $strand == -1 ) {
+        $data_dir = dir($FindBin::Bin)->absolute->subdir('test_data/filter_oligos_data_minus');
+    }
 
     # need 4 aos oligo files to test against, in aos_output dir
     dircopy( $data_dir->stringify, $dir->stringify . '/aos_output' );
@@ -292,7 +315,7 @@ sub _get_test_object {
     return $test->test_class->new(
         dir        => $dir,
         chr_name   => 11,
-        chr_strand => 1,
+        chr_strand => $strand,
     );
 }
 

@@ -1,0 +1,19 @@
+---
+- id: D3-1
+  offset: 102
+  oligo: D3
+  oligo_end: 101176279
+  oligo_length: 50
+  oligo_seq: GCTGACACCCAGCGTTGGTCAGCTCCGCATGATGAGTCTCCGGCTCTTCA
+  oligo_start: 101176230
+  target_region_end: 101176327
+  target_region_start: 101176128
+- id: D3-2
+  offset: 1
+  oligo: D3
+  oligo_end: 101176178
+  oligo_length: 50
+  oligo_seq: GGGAAGGGTGGATAAGGACGGAAAAAAGCTTTGGTCAGCCGTGAACCCAG
+  oligo_start: 101176129
+  target_region_end: 101176327
+  target_region_start: 101176128
