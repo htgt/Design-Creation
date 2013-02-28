@@ -1,10 +1,10 @@
-package Test::ObjectRole::DesignCreate::OligoTargetRegions;
+package Test::ObjectRole::DesignCreate::OligoRegionsInsDel;
 
 use Moose;
 use namespace::autoclean;
 
 extends 'Test::ObjectRole::DesignCreate';
-with 'DesignCreate::CmdRole::OligoTargetRegions';
+with 'DesignCreate::CmdRole::OligoRegionsInsDel';
 
 __PACKAGE__->meta->make_immutable;
 

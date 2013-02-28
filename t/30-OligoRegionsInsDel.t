@@ -5,7 +5,7 @@ use warnings FATAL => 'all';
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use Log::Log4perl qw( :levels );
-use Test::DesignCreate::CmdRole::OligoTargetRegions;
+use Test::DesignCreate::CmdRole::OligoRegionsInsDel;
 
 Log::Log4perl->easy_init( $WARN );
 

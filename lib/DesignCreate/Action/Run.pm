@@ -25,10 +25,9 @@ use Moose;
 
 extends qw( DesignCreate::Action );
 with qw(
-DesignCreate::CmdRole::OligoTargetRegions
+DesignCreate::CmdRole::OligoRegionsInsDel
 DesignCreate::CmdRole::FindOligos
 DesignCreate::CmdRole::FilterOligos
-DesignCreate::CmdRole::PickGapOligos
 DesignCreate::CmdRole::PickGapOligos
 DesignCreate::CmdRole::ConsolidateDesignData
 DesignCreate::CmdRole::PersistDesign

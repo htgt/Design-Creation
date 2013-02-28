@@ -1,4 +1,4 @@
-package Test::DesignCreate::CmdRole::OligoTargetRegions;
+package Test::DesignCreate::CmdRole::OligoRegionsInsDel;
 
 use strict;
 use warnings FATAL => 'all';
@@ -9,20 +9,16 @@ use Path::Class qw( tempdir dir );
 use Bio::SeqIO;
 use base qw( Test::Class Class::Data::Inheritable );
 
-use Test::ObjectRole::DesignCreate::OligoTargetRegions;
+use Test::ObjectRole::DesignCreate::OligoRegionsInsDel;
 use DesignCreate::Cmd;
 
 # Testing
-# DesignCreate::CmdRole::OligoTargetRegions
-# DesignCreate::Action::OligoTargetRegions ( through command line )
-# DesignCreate::Role::TargetSequence
-
-# Not testing this, its just a list of attributes
-# DesignCreate::Role::OligoRegionParameters
+# DesignCreate::CmdRole::OligoRegionsInsDel
+# DesignCreate::Action::OligoRegionsInsDel ( through command line )
 
 BEGIN {
     __PACKAGE__->mk_classdata( 'cmd_class' => 'DesignCreate::Cmd' );
-    __PACKAGE__->mk_classdata( 'test_class' => 'Test::ObjectRole::DesignCreate::OligoTargetRegions' );
+    __PACKAGE__->mk_classdata( 'test_class' => 'Test::ObjectRole::DesignCreate::OligoRegionsInsDel' );
 }
 
 sub valid_run_cmd : Test(3) {
@@ -32,7 +28,7 @@ sub valid_run_cmd : Test(3) {
     my $dir = File::Temp->newdir( TMPDIR => 1, CLEANUP => 1 );
 
     my @argv_contents = (
-        'oligo-target-regions',
+        'oligo-regions-ins-del',
         '--dir', $dir->dirname,
         '--target-start', 101176328,
         '--target-end', 101176428,
@@ -92,9 +88,6 @@ sub get_oligo_region_coordinates : Tests(16) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
-    ##
-    ## Deletion / Insertion
-    ##
     ok my( $u5_start, $u5_end ) = $o->get_oligo_region_coordinates( 'U5' )
         , 'can call get_oligo_region_coordinates';
 
