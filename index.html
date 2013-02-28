@@ -39,6 +39,9 @@
 <li>Produce oligo target ( candidate ) region sequences.</li>
 <li>Produce list of possible oligos, using AOS.</li>
 <li>Filter and rank oligos, pick the best one of each type.</li>
+<li>Find Valid U/D Region Oligo Pairs ( conditional designs only )</li>
+<li>Find Best Gap Oligo Pair</li>
+<li>Consolidate Design Data</li>
 <li>Persist design with oligos to LIMS2.</li>
 </ol><hr><h1>INPUT DATA</h1>
 
@@ -74,7 +77,7 @@ PLUS</li>
 <ul>
 <li>oligo parameters</li>
 <li>define region oligos must be located in</li>
-</ul><h3>Conventional Deletion</h3>
+</ul><h3>Conventional Deletion / Insertion</h3>
 
 <pre><code>   G5               U5       TARGET       D3               G3
 |======|---------|======|-|          |-|======|---------|======|
@@ -90,20 +93,16 @@ PLUS</li>
 
 <h3>Conventional Conditional</h3>
 
-<pre><code>   G5            U5      U-REGION      U3         D5      D-REGION      D3            G3
-|======|------|======|-|          |-|======|---|======|-|          |-|======|------|======|
-|------|                                                                                     &gt; G5 Region Length
-       |---------------|                                                                     &gt; G5 Region Offset
-              |------|                                                                       &gt; U5 Region Length
-                     |-|                                                                     &gt; U5 Region Offset
-                                    |------|                                                 &gt; U3 Region Length
-                                  |-|                                                        &gt; U3 Region Offset
-                                               |------|                                      &gt; D5 Region Length
-                                                      |-|                                    &gt; D5 Region Offset
-                                                                     |------|                &gt; D3 Region Length
-                                                                   |-|                       &gt; D3 Region Offset
-                                                                                   |------|  &gt; G3 Region Length
-                                                                   |---------------|         &gt; G3 Region Offset
+<pre><code>   G5              U-REGION           D-REGION             G3
+|======|---------|==========|-------|==========|--------|======|
+|------|                                                           &gt; G5 Region Length
+       |---------|                                                 &gt; G5 Region Offset
+                      |-|                                          &gt; U Oligo Min Gap 
+                    |-----|                                        &gt; U Oligo Max Gap 
+                                         |-|                       &gt; D Oligo Min Gap 
+                                       |-----|                     &gt; D Oligo Max Gap 
+                                                        |------|   &gt; G3 Region Length
+                                             |-----------------|   &gt; G3 Region Offset
 </code></pre>
 
 <hr><h1>WORKFLOW</h1>
@@ -127,12 +126,14 @@ a set of coordinates for the target region(s);</p>
 <li>design coordinates</li>
 </ul><hr><h1>2: Oligo Target Regions</h1>
 
+<p>NOTE: Current program start at this step</p>
+
 <p>Given the target coordinates for the design plus the parameters for the oligos
 produce oligo target region sequence files ( input to aos ).
-For deletion designs just one target region ( region to delete ).
-For knockout designs we will have 2 ( cassette insertion point plus loxp insertion point ).</p>
+For deletion designs just one target region ( region to delete ).</p>
 
-<p>Validate that we have the right design parameters for the given design type?</p>
+<p>For knockout designs we will have 2 ( U region and D region ).
+Need to split these regions in half to get a region for each oligo.</p>
 
 <h3>input:</h3>
 
@@ -244,7 +245,31 @@ the assembly coordinates for the oligos.</p>
 
 <p>inside bac ( but use genomes flanking sequence, 100k by default )</p>
 
-<hr><h1>5: Find Best Gap Oligo Pair</h1>
+<hr><h1>5: Find Valid U/D Region Oligo Pairs ( conditional designs )</h1>
+
+<p>The pair of oligos from the U and D regions of conditional designs were produced
+by splitting the respective regions in two and getting the appropriate oligo from each half.</p>
+
+<p>We must find the best pairs of U and D oligos that fit the gap criteria for those oligos.
+They may have a minimum gap distance between the oligos, and a optional maximum gap distance too.</p>
+
+<p>The closer the oligos are to the minimum gap distance the better.</p>
+
+<h3>input:</h3>
+
+<ul>
+<li>U5 and U3 oligos</li>
+<li>D5 and D3 oligos</li>
+<li>U Oligo Min Gap</li>
+<li>U Oligo Max Gap ( optional )</li>
+<li>D Oligo Min Gap ( optional )</li>
+<li>D Oligo Max Gap</li>
+</ul><h3>output</h3>
+
+<ul>
+<li>Best pair of U5 and U3 oligos</li>
+<li>Best pair of D5 and D3 oligos</li>
+</ul><hr><h1>6: Find Best Gap Oligo Pair</h1>
 
 <p>We need to carry out additional checks on the G5 and G3 oligos and then
 find the best pair of oligos to use.</p>
@@ -261,7 +286,7 @@ then it is not a good oligo pair.</p>
 
 <ul>
 <li>Best pair of G5 and G3 oligos</li>
-</ul><hr><h1>6: Create Design File</h1>
+</ul><hr><h1>7: Consolidate Design Data</h1>
 
 <p>Create the yaml design file, that will be used in the next persist step.
 Brings together all the data from the previous steps and formats it correctly.
@@ -298,7 +323,7 @@ Also calls seperate module to work out phase of design.</p>
 
 <p>To work our the phase the target transcript and oligo coordinates are required.</p>
 
-<hr><h1>7: Persist Design</h1>
+<hr><h1>8: Persist Design</h1>
 
 <p>Once we have valid oligos for the target we persist it, to LIMS2.
 Use the LIMS2 api to insert design.</p>
