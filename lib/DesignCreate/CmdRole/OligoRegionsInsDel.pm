@@ -1,21 +1,27 @@
-package DesignCreate::Role::OligoRegionParameters;
+package DesignCreate::CmdRole::OligoRegionsInsDel;
 
 =head1 NAME
 
-DesignCreate::Role::Deletion
+DesignCreate::CmdRole::OligoRegionsInsDel -Create seq files for oligo region, insertion or deletion designs
 
 =head1 DESCRIPTION
 
-Oligo Target Region attributes for deletion type designs
+For given target coordinates and a oligo region parameters produce target region sequence file
+for each oligo we must find for deletion or insertion designs.
+
+These attributes and code is specific to Insertion / Deletion designs, code generic to all
+design types is found in DesignCreate::Role::OligoTargetRegions.
 
 =cut
-
-#TODO setup config files to set some values below, don't use defaults
 
 use Moose::Role;
 use DesignCreate::Exception;
 use DesignCreate::Types qw( PositiveInt NaturalNumber );
 use namespace::autoclean;
+
+with qw(
+DesignCreate::Role::OligoTargetRegions
+);
 
 has target_start => (
     is            => 'ro',
@@ -35,23 +41,10 @@ has target_end => (
     cmd_flag      => 'target-end'
 );
 
-has G5_region_length => (
-    is            => 'ro',
-    isa           => PositiveInt,
-    traits        => [ 'Getopt' ],
-    default       => 1000,
-    documentation => 'Length of G5 oligo candidate region',
-    cmd_flag      => 'g5-region-length'
-);
-
-has G5_region_offset => (
-    is            => 'ro',
-    isa           => PositiveInt,
-    traits        => [ 'Getopt' ],
-    default       => 4000,
-    documentation => 'Offset from target region of G5 oligo candidate region',
-    cmd_flag      => 'g5-region-offset'
-);
+#
+# Oligo Region Parameters
+# Gap Oligo Parameter attributes in DesignCreate::Role::OligoTargetRegions
+#
 
 has U5_region_length => (
     is            => 'ro',
@@ -89,24 +82,13 @@ has D3_region_offset => (
     cmd_flag      => 'd3-region-offset'
 );
 
-has G3_region_length => (
-    is            => 'ro',
-    isa           => PositiveInt,
-    traits        => [ 'Getopt' ],
-    default       => 1000,
-    documentation => 'Length of G3 oligo candidate region',
-    cmd_flag      => 'g3-region-length'
-);
+sub build_ins_del_oligo_target_regions {
+    my $self = shift;
 
-has G3_region_offset => (
-    is            => 'ro',
-    isa           => PositiveInt,
-    traits        => [ 'Getopt' ],
-    default       => 4000,
-    documentation => 'Offset from target region of G3 oligo candidate region',
-    cmd_flag      => 'g3-region-offset'
-);
+    $self->build_oligo_target_regions;
+}
 
+# work out coordinates for ins / del designs
 sub get_oligo_region_coordinates {
     my ( $self, $oligo ) = @_;
     my ( $start, $end );
@@ -114,7 +96,6 @@ sub get_oligo_region_coordinates {
     my $offset = $self->get_oligo_region_offset( $oligo );
     my $length = $self->get_oligo_region_length( $oligo );
 
-    # TODO make this work for all design methods, currently only works for deletion/ insertion designs
     if ( $self->chr_strand == 1 ) {
         if ( $oligo =~ /5$/ ) {
             $start = $self->target_start - ( $offset + $length );
@@ -142,25 +123,6 @@ sub get_oligo_region_coordinates {
     return( $start, $end );
 }
 
-sub get_oligo_region_offset {
-    my ( $self, $oligo ) = @_;
-
-    my $attribute_name = $oligo . '_region_offset';
-    DesignCreate::Exception->throw( "Attribute $attribute_name does not exist" )
-        unless  $self->meta->has_attribute( $attribute_name );
-
-    return $self->$attribute_name;
-}
-
-sub get_oligo_region_length {
-    my ( $self, $oligo ) = @_;
-
-    my $attribute_name = $oligo . '_region_length';
-    DesignCreate::Exception->throw( "Attribute $attribute_name does not exist" )
-        unless $self->meta->has_attribute( $attribute_name );
-
-    return $self->$attribute_name;
-}
 
 1;
 
