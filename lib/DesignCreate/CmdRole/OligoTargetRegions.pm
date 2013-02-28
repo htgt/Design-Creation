@@ -16,10 +16,8 @@ for each oligo we must find. ( Also called candidate region )
 #
 
 #TODO setup config files to set some values below, don't use defaults
-#TODO work with conditional designs too
 
 use Moose::Role;
-use DesignCreate::Types qw( PositiveInt NaturalNumber );
 use Bio::SeqIO;
 use Bio::Seq;
 use DesignCreate::Exception;
@@ -45,61 +43,6 @@ sub build_oligo_target_regions {
     }
 
     return;
-}
-
-sub get_oligo_region_coordinates {
-    my ( $self, $oligo ) = @_;
-    my ( $start, $end );
-
-    my $offset = $self->get_oligo_region_offset( $oligo );
-    my $length = $self->get_oligo_region_length( $oligo );
-
-    # TODO make this work for all design methods, currently only works for deletion/ insertion designs
-    if ( $self->chr_strand == 1 ) {
-        if ( $oligo =~ /5$/ ) {
-            $start = $self->target_start - ( $offset + $length );
-            $end   = $self->target_start - ( $offset + 1 );
-        }
-        elsif ( $oligo =~ /3$/ ) {
-            $start = $self->target_end + ( $offset + 1 );
-            $end   = $self->target_end + ( $offset + $length );
-        }
-    }
-    else {
-        if ( $oligo =~ /5$/ ) {
-            $start = $self->target_end + ( $offset + 1 );
-            $end   = $self->target_end + ( $offset + $length );
-        }
-        elsif ( $oligo =~ /3$/ ) {
-            $start = $self->target_start - ( $offset + $length );
-            $end   = $self->target_start - ( $offset + 1 );
-        }
-    }
-
-    DesignCreate::Exception->throw( "Start $start, greater than or equal to end $end for oligo $oligo" )
-        if $start >= $end;
-
-    return( $start, $end );
-}
-
-sub get_oligo_region_offset {
-    my ( $self, $oligo ) = @_;
-
-    my $attribute_name = $oligo . '_region_offset';
-    DesignCreate::Exception->throw( "Attribute $attribute_name does not exist" )
-        unless  $self->meta->has_attribute( $attribute_name );
-
-    return $self->$attribute_name;
-}
-
-sub get_oligo_region_length {
-    my ( $self, $oligo ) = @_;
-
-    my $attribute_name = $oligo . '_region_length';
-    DesignCreate::Exception->throw( "Attribute $attribute_name does not exist" )
-        unless $self->meta->has_attribute( $attribute_name );
-
-    return $self->$attribute_name;
 }
 
 sub create_oligo_id {
