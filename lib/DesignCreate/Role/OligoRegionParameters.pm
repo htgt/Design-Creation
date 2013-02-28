@@ -10,7 +10,10 @@ Oligo Target Region attributes for deletion type designs
 
 =cut
 
+#TODO setup config files to set some values below, don't use defaults
+
 use Moose::Role;
+use DesignCreate::Exception;
 use DesignCreate::Types qw( PositiveInt NaturalNumber );
 use namespace::autoclean;
 
