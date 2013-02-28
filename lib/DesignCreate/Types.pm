@@ -40,7 +40,9 @@ const my %SPECIES => (
 );
 
 const my %DESIGN_METHODS => (
-    deletion => 1,
+    deletion    => 1,
+    insertion   => 1,
+    conditional => 1,
 );
 
 const my %AOS_SEARCH_METHODS => (

@@ -50,7 +50,7 @@ has design_method => (
     traits        => [ 'Getopt' ],
     required      => 1,
     default       => 'deletion',
-    documentation => 'Design type, Deletion, Insertion or Conditional ( default deletion )',
+    documentation => 'Design type, deletion, insertion or conditional ( default deletion )',
     cmd_flag      => 'design-method',
 );
 
