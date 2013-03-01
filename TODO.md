@@ -6,6 +6,13 @@ Can no longer use this list for everything, needs to be split up depending on:
 * conditional / non conditional design
 * block or location specified
 
+### Need Config files for certain parameters:
+* Need some sort of profile for different design types
+* Oligo Target Region Definitions mainly
+* Can use MooseX::SimpleConfig but:
+    * only really use it with one log file
+    * seems to suppress the --help option
+
 Conditional Designs
 -------------------
 
@@ -46,23 +53,27 @@ Oligos should end up in validated oligo dir.
 
 
 * * *
-
-ISSUES
+CHECKS
 ======
-
-### Need Config files for certain parameters:
-* Need some sort of profile for different design types 
-* Oligo Target Region Definitions mainly
-* Can use MooseX::SimpleConfig but:
-    * only really use it with one log file
-    * seems to suppress the --help option
-
-### AOS speedup
-* run aos with a smaller target file ( maybe the same one we send exonerate )
-* check results against when the target file is the whole chromosome
-* see if the speed up is worth it
 
 ### Required Attributes Roles
 * a consuming class must provide to required attributes / methods not another role
     * slight danger that a role is assuming the existance of a method / attribute
 
+### Coordinate Checks
+* InsDel design, check start before end for target region coordinates
+* Conditional, for each block:
+    * start before end
+    * block length > 100 ( actually 100 is bad, min should be 102 assuming oligos are 50 bases )
+    * U block before D block on +ve strand, vice versa on -ve strand
+
+
+* * *
+
+WOULD BE NICE
+=============
+
+### AOS speedup
+* run aos with a smaller target file ( maybe the same one we send exonerate )
+* check results against when the target file is the whole chromosome
+* see if the speed up is worth it
