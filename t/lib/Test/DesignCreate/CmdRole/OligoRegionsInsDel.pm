@@ -34,6 +34,7 @@ sub valid_run_cmd : Test(3) {
         '--target-end', 101176428,
         '--chromosome', 11,
         '--strand', 1,
+        '--design-method', 'deletion',
     );
 
     ok my $result = test_app($test->cmd_class => \@argv_contents), 'can run command';

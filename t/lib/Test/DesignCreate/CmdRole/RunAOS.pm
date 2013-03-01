@@ -33,6 +33,7 @@ sub valid_run_aos_cmd : Test(3) {
         '--dir', $dir->dirname,
         '--target-file', get_test_data_file('run_aos_target_file.fasta'),
         '--query-file', get_test_data_file('run_aos_query_file.fasta'),
+        '--design-method', 'deletion',
     );
 
     ok my $result = test_app($test->cmd_class => \@argv_contents), 'can run command';

@@ -32,6 +32,7 @@ sub valid_find_oligos_cmd : Test(4) {
         'find-oligos',
         '--dir', $o->dir->stringify,
         '--chromosome', 11,
+        '--design-method', 'deletion',
     );
 
     note('############################################');

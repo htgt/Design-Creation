@@ -30,6 +30,7 @@ sub valid_pick_gap_oligos_cmd : Test(4) {
     my @argv_contents = (
         'pick-gap-oligos',
         '--dir', $o->dir->stringify,
+        '--design-method', 'deletion',
     );
 
     ok my $result = test_app($test->cmd_class => \@argv_contents), 'can run command';

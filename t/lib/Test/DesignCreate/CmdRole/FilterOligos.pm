@@ -32,6 +32,7 @@ sub valid_filter_oligos_cmd : Test(4) {
         '--dir', $o->dir->stringify,
         '--chromosome', 11,
         '--strand', 1,
+        '--design-method', 'deletion',
     );
 
     ok my $result = test_app($test->cmd_class => \@argv_contents), 'can run command';

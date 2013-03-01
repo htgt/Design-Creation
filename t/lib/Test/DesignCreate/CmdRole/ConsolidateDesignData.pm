@@ -33,7 +33,7 @@ sub valid_consolidate_design_data_cmd : Test(4) {
         '--target-gene', 'LBL-TEST',
         '--strand', 1,
         '--chromosome', 11,
-
+        '--design-method', 'deletion',
     );
 
     ok my $result = test_app($test->cmd_class => \@argv_contents), 'can run command';
