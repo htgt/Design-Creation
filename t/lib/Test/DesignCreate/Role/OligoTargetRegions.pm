@@ -15,7 +15,7 @@ use DesignCreate::Cmd;
 # DesignCreate::Role::OligoTargetRegions
 
 BEGIN {
-    __PACKAGE__->mk_classdata( 'test_class' => 'Test::ObjectRole::DesignCreate::OligoRegionsInsDel' );
+    __PACKAGE__->mk_classdata( 'test_class' => 'Test::ObjectRole::DesignCreate::OligoTargetRegions' );
 }
 
 sub get_oligo_region_offset : Tests(4) {

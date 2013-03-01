@@ -1,4 +1,4 @@
-package Test::ObjectRole::DesignCreate::OligoRegionsInsDel;
+package Test::ObjectRole::DesignCreate::OligoTargetRegions;
 
 use Moose;
 use namespace::autoclean;
