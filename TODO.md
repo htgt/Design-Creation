@@ -67,6 +67,10 @@ CHECKS
     * block length > 100 ( actually 100 is bad, min should be 102 assuming oligos are 50 bases )
     * U block before D block on +ve strand, vice versa on -ve strand
 
+### Surplus Command Options
+* We need to specify options such as design type for commands where that information is not needed
+* Find these commands and remove them
+
 
 * * *
 
