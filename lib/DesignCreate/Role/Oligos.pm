@@ -25,8 +25,11 @@ has expected_oligos => (
 sub _build_expected_oligos {
     my $self = shift;
 
-    if ( $self->design_method eq 'deletion' ) {
+    if ( $self->design_method eq 'deletion' || $self->design_method eq 'insertion' ) {
         return [ qw( G5 U5 D3 G3 ) ];
+    }
+    elsif ( $self->design_method eq 'conditional' ) {
+        return [ qw( G5 U5 U3 D5 D3 G3 ) ];
     }
     else {
         die( 'Unknown design method ' . $self->design_method );
