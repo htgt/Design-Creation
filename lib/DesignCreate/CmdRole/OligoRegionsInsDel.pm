@@ -85,6 +85,8 @@ has D3_region_offset => (
 sub build_ins_del_oligo_target_regions {
     my $self = shift;
 
+    #TODO check target start before target end
+
     $self->build_oligo_target_regions;
 }
 
@@ -122,7 +124,6 @@ sub get_oligo_region_coordinates {
 
     return( $start, $end );
 }
-
 
 1;
 
