@@ -49,7 +49,6 @@ has design_method => (
     isa           => DesignMethod,
     traits        => [ 'Getopt' ],
     required      => 1,
-    default       => 'deletion',
     documentation => 'Design type, deletion, insertion or conditional ( default deletion )',
     cmd_flag      => 'design-method',
 );
