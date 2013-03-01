@@ -71,6 +71,9 @@ CHECKS
 * We need to specify options such as design type for commands where that information is not needed
 * Find these commands and remove them
 
+### Combine t files
+* Can run groups of tests through one test file, ( ask t file to run all tests in specific folder )
+
 
 * * *
 
