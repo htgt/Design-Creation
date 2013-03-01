@@ -82,12 +82,12 @@ has D3_region_offset => (
     cmd_flag      => 'd3-region-offset'
 );
 
-sub build_ins_del_oligo_target_regions {
+sub build_oligo_target_regions {
     my $self = shift;
 
     #TODO check target start before target end
 
-    $self->build_oligo_target_regions;
+    $self->_build_oligo_target_regions;
 }
 
 # work out coordinates for ins / del designs

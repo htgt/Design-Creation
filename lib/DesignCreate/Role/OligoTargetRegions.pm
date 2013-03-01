@@ -63,7 +63,7 @@ has G3_region_offset => (
     cmd_flag      => 'g3-region-offset'
 );
 
-sub build_oligo_target_regions {
+sub _build_oligo_target_regions {
     my ( $self, $opts, $args ) = @_;
 
     for my $oligo ( @{ $self->expected_oligos } ) {

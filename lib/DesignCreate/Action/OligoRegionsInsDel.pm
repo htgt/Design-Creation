@@ -25,7 +25,7 @@ sub execute {
     my ( $self, $opts, $args ) = @_;
 
     try{
-        $self->build_ins_del_oligo_target_regions;
+        $self->build_oligo_target_regions;
     }
     catch{
         $self->log->error( "Failed to generate oligo target regions:\n" . $_ );
