@@ -17,11 +17,14 @@ design types is found in DesignCreate::Role::OligoTargetRegions.
 use Moose::Role;
 use DesignCreate::Exception;
 use DesignCreate::Types qw( PositiveInt NaturalNumber );
+use Const::Fast;
 use namespace::autoclean;
 
 with qw(
 DesignCreate::Role::OligoTargetRegions
 );
+
+const my $MIN_BLOCK_LENGTH => 102;
 
 #
 # Oligo Region Parameters
@@ -64,16 +67,47 @@ has D_block_end => (
     cmd_flag      => 'd-block-end'
 );
 
-#TODO - check U and D block coordinates are valid ( min length, start before end, U before D etc )
-
 # consider method overriding / renaming here
-sub build_conditional_oligo_target_regions {
+sub build_oligo_target_regions {
     my $self = shift;
 
-    $self->build_oligo_target_regions;
+    $self->check_oligo_block_coordinates;
+    $self->_build_oligo_target_regions;
 }
 
-use Smart::Comments;
+sub check_oligo_block_coordinates {
+    my $self = shift;
+
+    for my $block_type ( qw( U D ) ) {
+        my $start_attribute = $block_type . '_block_start';
+        my $end_attribute = $block_type . '_block_end';
+
+        my $start = $self->$start_attribute;
+        my $end = $self->$end_attribute;
+        DesignCreate::Exception->throw(
+            "$block_type block start, $start, is greater than its end, $end"
+        ) if $start > $end;
+
+        my $length = ( $end - $start ) + 1;
+        DesignCreate::Exception->throw(
+            "$block_type block has only $length bases, must have minimum of $MIN_BLOCK_LENGTH bases"
+        ) if $length < $MIN_BLOCK_LENGTH;
+    }
+
+    if ( $self->chr_strand == 1 ) {
+        DesignCreate::Exception->throw(
+            'U block end: ' . $self->U_block_end . ' can not be greater than D block start: '
+            . $self->D_block_start . ' on designs on the +ve strand'
+        ) if $self->U_block_end > $self->D_block_start;
+    }
+    else {
+        DesignCreate::Exception->throw(
+            'D block end: ' . $self->D_block_end . ' can not be greater than U block start: '
+            . $self->U_block_start . ' on designs on the -ve strand'
+        ) if $self->D_block_end > $self->U_block_start;
+    }
+}
+
 # work out coordinates for block specified conditional designs
 sub get_oligo_region_coordinates {
     my ( $self, $oligo ) = @_;
