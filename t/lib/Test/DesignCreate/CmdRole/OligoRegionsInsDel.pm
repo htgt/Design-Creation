@@ -82,7 +82,7 @@ sub get_oligo_region_coordinates : Tests(16) {
     is $g5_end, $g3_real_end, 'correct end value';
 
     ok $o = $test->test_class->new(
-        dir               => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute, 
+        dir               => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
         target_start      => 101176328,
         target_end        => 101176428,
         chr_name          => 11,
