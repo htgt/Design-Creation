@@ -193,7 +193,7 @@ sub get_oligo_block_left_half_coords {
     my $start = $block_start;
     my $end;
 
-    if ( $block_length % 2 ) { # divisible by 2
+    if ( $block_length % 2 ) { # not divisible by 2
         $end = $start + ( ( $block_length - 1 ) / 2 );
     }
     else {
@@ -209,7 +209,7 @@ sub get_oligo_block_right_half_coords {
     my $end = $block_end;
     my $start;
 
-    if ( $block_length % 2 ) { # divisible by 2
+    if ( $block_length % 2 ) { # not divisible by 2
         $start = $block_start + ( ( $block_length + 1 ) / 2 );
     }
     else {
@@ -221,8 +221,14 @@ sub get_oligo_block_right_half_coords {
 
 sub get_oligo_block_coordinate {
     my ( $self, $oligo, $start_or_end ) = @_;
+    DesignCreate::Exception->throw( "Must specify start or end block coordinate" )
+        if !$start_or_end || $start_or_end !~ /start|end/;
 
-    my $block_type = $oligo =~ /^U/ ? 'U' : 'D';
+    my $block_type = $oligo =~ /^U/ ? 'U' :
+                     $oligo =~ /^D/ ? 'D' : undef;
+    DesignCreate::Exception->throw( "Block oligo type must be U or D, not $oligo" )
+        unless  $block_type;
+
     my $attribute_name = $block_type . '_block_' . $start_or_end;
 
     DesignCreate::Exception->throw( "Attribute $attribute_name does not exist" )
