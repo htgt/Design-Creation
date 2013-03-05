@@ -1,0 +1,10 @@
+---
+- id: D3-1
+  offset: 33
+  oligo: D3
+  oligo_end: 10000683
+  oligo_length: 50
+  oligo_seq: GAGCATTGTTATAAAACCAGCTATAGAATCACATTGTCACTGTCCATTGA
+  oligo_start: 10000560
+  target_region_end: 10000700
+  target_region_start: 10000601
