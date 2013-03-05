@@ -214,8 +214,8 @@ The closer the oligos are to the minimum gap distance the better.
 * D5 and D3 oligos
 * U Oligo Min Gap
 * U Oligo Max Gap ( optional )
-* D Oligo Min Gap ( optional )
-* D Oligo Max Gap
+* D Oligo Min Gap
+* D Oligo Max Gap ( optional )
 
 ###output
 * Best pair of U5 and U3 oligos
