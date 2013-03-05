@@ -2,7 +2,7 @@ package DesignCreate::Action::OligoRegionsConditional;
 
 =head1 NAME
 
-DesignCreate::Action::OligoRegionConditional - Create seq files for oligo region, insertion or deletion designs 
+DesignCreate::Action::OligoRegionsConditional - Create seq files for oligo region, insertion or deletion designs 
 
 =head1 DESCRIPTION
 

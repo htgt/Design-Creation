@@ -2,7 +2,7 @@ package DesignCreate::Action::OligoRegionsInsDel;
 
 =head1 NAME
 
-DesignCreate::Action::OligoRegionInsDels - Create seq files for oligo region, insertion or deletion designs 
+DesignCreate::Action::OligoRegionsInsDel - Create seq files for oligo region, insertion or deletion designs 
 
 =head1 DESCRIPTION
 
