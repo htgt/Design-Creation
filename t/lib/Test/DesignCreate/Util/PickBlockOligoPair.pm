@@ -114,7 +114,7 @@ sub get_test_object {
 
 sub _get_test_data_file {
     my ( $filename ) = @_;
-    my $data_dir = dir($FindBin::Bin)->subdir('test_data/pick_block_oligos_data/');
+    my $data_dir = dir($FindBin::Bin)->subdir('test_data/pick_block_oligo_pair_data/');
     my $file = $data_dir->file($filename);
 
     return $file;
