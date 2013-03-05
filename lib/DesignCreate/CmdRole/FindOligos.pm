@@ -35,9 +35,8 @@ aos_output_dir
 __PACKAGE__->meta->remove_attribute( 'chr_strand' );
 __PACKAGE__->meta->remove_attribute( 'species' );
 
-#TODO change default from scratch101
 const my $DEFAULT_CHROMOSOME_DIR => $ENV{AOS_CHROMOSOME_DIR}
-    || '/lustre/scratch101/blastdb/Users/vvi/KO_MOUSE/GRCm38';
+    || '/lustre/scratch110/blastdb/Users/vvi/KO_MOUSE/GRCm38';
 
 has query_file => (
     is         => 'ro',
