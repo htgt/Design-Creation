@@ -1,11 +1,6 @@
 FUNCTIONALITY
 =============
 
-### Expected Oligos
-Can no longer use this list for everything, needs to be split up depending on:
-* conditional / non conditional design
-* block or location specified
-
 ### Need Config files for certain parameters:
 * Need some sort of profile for different design types
 * Oligo Target Region Definitions mainly
@@ -15,17 +10,6 @@ Can no longer use this list for everything, needs to be split up depending on:
 
 Conditional Designs
 -------------------
-
-### Target Region Finder
-Must take coordinates for U and D regions and split these regions in two.
-These will be the individual U5, U3, D5 and D3 target regions.
-
-### Expected Oligos
-Add U3 and D5 to list for conditionals
-
-### Find Valid U & D Region Oligos
-Use min / max gap between U / D oligo params to get valid oligo pairs.
-Need to balance between best aos oligos and oligo pair with smallest gap between themselves.
 
 ### Consolidate Design Data
 Needs to look at U and D oligo pairs files, if they exist, to pick oligos now,
@@ -38,6 +22,10 @@ Location Specified Designs
 * Only interested in finding G5 and G3 oligos.
 * But will need to produce sequence for the specified other oligos.
 * Conditional designs skip the U / D oligo pair finder step.
+
+### Expected Oligos
+Can no longer use this list for everything, needs to be split up depending on:
+* block or location specified
 
 ### Target Region Finder
 All the U / D oligos will have been specified, only need to find the G oligos.
@@ -53,8 +41,8 @@ Oligos should end up in validated oligo dir.
 
 
 * * *
-CHECKS
-======
+CHANGES
+=======
 
 ### Required Attributes Roles
 * a consuming class must provide to required attributes / methods not another role
@@ -71,14 +59,30 @@ CHECKS
 * We need to specify options such as design type for commands where that information is not needed
 * Find these commands and remove them
 
+* * *
+TESTING
+=======
+
 ### Combine t files
 * Can run groups of tests through one test file, ( ask t file to run all tests in specific folder )
 
+### Test Objects
+* Find a way to automate the creation of test objects, should not need to create a test object for every CmdRole I want to test
+
+### Test::Class
+* Use Test::Class framework to get some base tests written and factor out common code
+    * base class would be Action.pm
 
 * * *
 
 WOULD BE NICE
 =============
+
+### Chr and Strand
+* Can I store the chromosome and strand in the oligo file?
+    * stop having to pass it in as a command line option
+    * do not have to keep consuming TargetSequence role
+    * BUT - makes oligo file parsing a little more complicated
 
 ### AOS speedup
 * run aos with a smaller target file ( maybe the same one we send exonerate )
