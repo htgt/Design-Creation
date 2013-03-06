@@ -18,6 +18,7 @@ Oligos
 
 use Moose::Role;
 use YAML::Any qw( LoadFile DumpFile );
+use List::Util qw( first );
 use DesignCreate::Exception;
 use namespace::autoclean;
 
@@ -44,23 +45,37 @@ has created_by => (
     cmd_flag      => 'created-by',
 );
 
-has gap_oligo_pair => (
+has U_oligo_pair => (
     is         => 'ro',
     isa        => 'HashRef',
     traits     => [ 'NoGetopt' ],
     lazy_build => 1,
 );
 
-sub _build_gap_oligo_pair {
-    my $self = shift;
-    my $gap_oligo_pair_file = $self->get_file( 'gap_oligo_pairs.yaml', $self->validated_oligo_dir );
+sub _build_U_oligo_pair {
+    return shift->get_oligo_pair( 'U' );
+}
 
-    my $gap_oligos = LoadFile( $gap_oligo_pair_file );
-    if ( !$gap_oligos || !@{ $gap_oligos } ) {
-        DesignCreate::Exception->throw( "No gap oligo data in $gap_oligo_pair_file" );
-    }
+has D_oligo_pair => (
+    is         => 'ro',
+    isa        => 'HashRef',
+    traits     => [ 'NoGetopt' ],
+    lazy_build => 1,
+);
 
-    return shift @{ $gap_oligos };
+sub _build_D_oligo_pair {
+    return shift->get_oligo_pair( 'D' );
+}
+
+has G_oligo_pair => (
+    is         => 'ro',
+    isa        => 'HashRef',
+    traits     => [ 'NoGetopt' ],
+    lazy_build => 1,
+);
+
+sub _build_G_oligo_pair {
+    return shift->get_oligo_pair( 'G' );
 }
 
 has phase => (
@@ -116,9 +131,8 @@ sub get_oligo {
     my ( $self, $oligos, $oligo_type ) = @_;
     my $oligo;
 
-    if ( $oligo_type =~ /^G(5|3)$/ ) {
-        my $gap_oligo_id = $self->gap_oligo_pair->{$oligo_type};
-        ( $oligo ) = grep{ $_->{id} eq $gap_oligo_id } @{ $oligos };
+    if ( $oligo_type =~ /^G/ || $self->design_method eq 'conditional' ) {
+        $oligo = $self->pick_oligo_from_pair( $oligos, $oligo_type );
     }
     else {
         $oligo = shift @{ $oligos };
@@ -165,6 +179,36 @@ sub create_design_file {
     DumpFile( $design_data_file, \%design_data );
 
     return;
+}
+
+sub get_oligo_pair {
+    my ( $self, $type ) = @_;
+
+    my $oligo_pair_file = $self->get_file( $type . '_oligo_pairs.yaml', $self->validated_oligo_dir );
+
+    my $oligos = LoadFile( $oligo_pair_file );
+    if ( !$oligos || !@{ $oligos } ) {
+        DesignCreate::Exception->throw( "No oligo data in $oligo_pair_file" );
+    }
+
+    return shift @{ $oligos };
+}
+
+sub pick_oligo_from_pair {
+    my ( $self, $oligos, $oligo_type ) = @_;
+
+    my $oligo_region = substr( $oligo_type, 0,1 );
+    my $pair_attribute = $oligo_region . '_oligo_pair';
+    DesignCreate::Exception->throw( "Attribute $pair_attribute does not exist" )
+        unless $self->meta->has_attribute( $pair_attribute );
+
+    my $oligo_id = $self->$pair_attribute->{$oligo_type};
+    my $oligo = first{ $_->{id} eq $oligo_id } @{ $oligos };
+
+    DesignCreate::Exception->throw( "Unable to find $oligo_type oligo: " . $oligo_id )
+        unless $oligo;
+
+    return $oligo;
 }
 
 1;
