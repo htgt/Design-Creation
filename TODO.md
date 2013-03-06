@@ -54,9 +54,6 @@ Oligos should end up in validated oligo dir.
 CHANGES
 =======
 
-### Attribute Exception Class
-* Add exception class when attribute does not exist for a given object
-
 ### Required Attributes Roles
 * a consuming class must provide to required attributes / methods not another role
     * slight danger that a role is assuming the existance of a method / attribute
