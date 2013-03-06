@@ -1,0 +1,10 @@
+---
+- id: D5-2
+  offset: 1
+  oligo: D5
+  oligo_end: 10000550
+  oligo_length: 50
+  oligo_seq: AGGATACCAATCAGAATCAAGAGCAAACCCTATGAGTCAGGAGGAGCAAC
+  oligo_start: 10000501
+  target_region_end: 10000600
+  target_region_start: 10000500

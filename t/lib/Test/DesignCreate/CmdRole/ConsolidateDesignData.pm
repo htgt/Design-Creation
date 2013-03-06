@@ -16,10 +16,10 @@ use DesignCreate::Cmd;
 
 # Testing
 # DesignCreate::Action::ConsolidateDesignData ( through command line )
-# DesignCreate::CmdRole::ConsolidateDesignData, most of its work is done by:
+# DesignCreate::CmdRole::ConsolidateDesignData
 
 BEGIN {
-    __PACKAGE__->mk_classdata( 'cmd_class' => 'DesignCreate::Cmd' );
+    __PACKAGE__->mk_classdata( 'cmd_class'  => 'DesignCreate::Cmd' );
     __PACKAGE__->mk_classdata( 'test_class' => 'Test::ObjectRole::DesignCreate::ConsolidateDesignData' );
 }
 
@@ -42,7 +42,7 @@ sub valid_consolidate_design_data_cmd : Test(4) {
     ok !$result->error, 'no command errors';
 }
 
-sub build_oligo_array : Test(no_plan) {
+sub build_oligo_array : Test(18) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
@@ -50,24 +50,39 @@ sub build_oligo_array : Test(no_plan) {
         $o->build_oligo_array
     } 'can call build_oligo_array';
 
-    ok $o->picked_oligos, 'have array of picked oligos';
+    ok my $picked_oligos = $o->picked_oligos, 'have array of picked oligos';
+
+    for my $oligo_type ( qw( G5 U5 D3 G3 ) ) {
+        my ( $oligo ) = grep { $_->{type} eq $oligo_type } @{ $picked_oligos };
+        ok $oligo, "have $oligo_type oligo";
+    }
 
     ok $o->validated_oligo_dir->file( 'G5.yaml' )->remove, 'can remove G5 oligo file';
     throws_ok{
         $o->build_oligo_array
     } qr/Cannot find file/ , 'throws error on missing oligo file';
 
+    ok my $c_o = $test->_get_test_object( { design_method => 'conditional' } ), 'can grab test object';
+    lives_ok{
+        $c_o->build_oligo_array
+    } 'can call build_oligo_array';
+
+    ok my $cond_picked_oligos = $c_o->picked_oligos, 'have array of conditional picked oligos';
+    for my $oligo_type ( qw( G5 U5 U3 D5 D3 G3 ) ) {
+        my ( $oligo ) = grep { $_->{type} eq $oligo_type } @{ $cond_picked_oligos };
+        ok $oligo, "have $oligo_type oligo";
+    }
 }
 
-sub get_oligo : Test(8) {
+sub get_oligo : Test(11) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
     ok my $u5_file = $o->validated_oligo_dir->file( 'U5.yaml' ), 'can find U5 oligo file';
-    my $oligos = LoadFile( $u5_file );
-    my @all_u5_oligos = @{ $oligos };
+    my $u5_oligos = LoadFile( $u5_file );
+    my @all_u5_oligos = @{ $u5_oligos };
 
-    ok my $oligo_data = $o->get_oligo( $oligos, 'U5' ), 'can call get_oligo';
+    ok my $oligo_data = $o->get_oligo( $u5_oligos, 'U5' ), 'can call get_oligo';
 
     is $oligo_data->{seq}, $all_u5_oligos[0]{oligo_seq}
         , 'have expected U5 oligo seq, first in list';
@@ -75,32 +90,67 @@ sub get_oligo : Test(8) {
     ok my $g5_file = $o->validated_oligo_dir->file( 'G5.yaml' ), 'can find G5 oligo file';
     my $g5_oligos = LoadFile( $g5_file );
     ok my $g5_oligo_data = $o->get_oligo( $g5_oligos, 'G5' ), 'can call get_oligo';
-    my ( $expected_g5_oligo ) = grep{ $_->{id} eq $o->gap_oligo_pair->{G5} } @{ $g5_oligos };
+    my ( $expected_g5_oligo ) = grep{ $_->{id} eq $o->G_oligo_pair->{G5} } @{ $g5_oligos };
 
     is $g5_oligo_data->{seq}, $expected_g5_oligo->{oligo_seq}, 'get expected G5 oligo';
 
     throws_ok{
-        $o->get_oligo( $g5_oligos, 'G3' )
-    } qr/Can not find G3 oligo/,
+        $o->get_oligo( [], 'U3' )
+    } qr/Can not find U3 oligo/,
         'throws errors if we can not find oligo';
+
+    #conditional design, U / D oligos from best pair, not just best individual oligo
+    ok my $c_o = $test->_get_test_object( { design_method => 'conditional' } ), 'can grab test object';
+    ok my $u5_oligo_data = $c_o->get_oligo( $u5_oligos, 'U5' ), 'can call get_oligo';
+    my ( $expected_u5_oligo ) = grep{ $_->{id} eq $o->U_oligo_pair->{U5} } @{ $u5_oligos };
+
+    is $u5_oligo_data->{seq}, $expected_u5_oligo->{oligo_seq}, 'get expected U5 oligo for condition design';
+
 }
 
-sub _build_gap_oligo_pair : Test(5) {
+sub get_oligo_pair : Test(6) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
-    my $gap_oligo_file = $o->validated_oligo_dir->file( 'gap_oligo_pairs.yaml' );
+    ok my $oligos = $o->get_oligo_pair( 'G' ), 'can call get_oligo_pair';
+
+    my $gap_oligo_file = $o->validated_oligo_dir->file( 'G_oligo_pairs.yaml' );
     ok $gap_oligo_file->remove, 'can remove gap oligo pair file';
     throws_ok{
-        $o->gap_oligo_pair
+        $o->get_oligo_pair( 'G' )
     } qr/Cannot find file/
         , 'throws errors if we do not have gap oligo data file';
 
     ok $gap_oligo_file->touch, 'can create blank gap oligo file';
     throws_ok{
-        $o->gap_oligo_pair
-    } qr/No gap oligo data/
+        $o->get_oligo_pair( 'G' )
+    } qr/No oligo data/
         , 'throws errors if no data in gap oligo file';
+}
+
+sub pick_oligo_from_pair : Test(9) {
+    my $test = shift;
+    ok my $o = $test->_get_test_object, 'can grab test object';
+
+    ok my $u5_file = $o->validated_oligo_dir->file( 'U5.yaml' ), 'can find U5 oligo file';
+    my $u5_oligos = LoadFile( $u5_file );
+    ok my $oligo = $o->pick_oligo_from_pair( $u5_oligos, 'U5' );
+    is $oligo->{id}, 'U5-11', 'picked right U5 oligo';
+
+    ok my $u3_file = $o->validated_oligo_dir->file( 'U3.yaml' ), 'can find U3 oligo file';
+    my $u3_oligos = LoadFile( $u3_file );
+    ok $oligo = $o->pick_oligo_from_pair( $u3_oligos, 'U3' );
+    is $oligo->{id}, 'U3-10', 'picked right U3 oligo';
+
+    throws_ok{
+        $o->pick_oligo_from_pair( $u3_oligos, 'U5' )
+    } qr/Unable to find U5 oligo:/
+        ,'throws error when we can not find specified oligo';
+
+    throws_ok{
+        $o->pick_oligo_from_pair( $u3_oligos, 'X5' )
+    } qr/Attribute X_oligo_pair does not exist/
+        ,'throws error with invalid oligo type';
 }
 
 sub format_oligo_data : Test(7) {
@@ -145,7 +195,8 @@ sub create_design_file : Test(8) {
 }
 
 sub _get_test_object {
-    my $test = shift;
+    my ( $test, $params ) = @_;
+    my $design_method = $params->{design_method} || 'deletion';
 
     my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute;
     my $data_dir = dir($FindBin::Bin)->absolute->subdir('test_data/consolidate_design_data');
@@ -153,11 +204,12 @@ sub _get_test_object {
     dircopy( $data_dir->stringify, $dir->stringify . '/validated_oligos' );
 
     return $test->test_class->new(
-        dir          => $dir,
-        target_genes => [ 'LBL-1' ],
-        chr_name     => 11,
-        chr_strand   => 1,
-        created_by   => 'test',
+        dir           => $dir,
+        target_genes  => [ 'LBL-1' ],
+        chr_name      => 11,
+        chr_strand    => 1,
+        created_by    => 'test',
+        design_method => $design_method,
     );
 }
 
