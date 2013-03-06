@@ -11,18 +11,15 @@ Persists the design to LIMS2 if persist option given.
 
 =cut
 
-#
-# Initial version will be setup for standard deletion design only
-#
-
 use strict;
+use warnings FATAL => 'all';
+
+use Moose;
 use Const::Fast;
 use Try::Tiny;
 use Fcntl; # O_ constants
 use Data::Dump qw( pp );
-use warnings FATAL => 'all';
 
-use Moose;
 
 extends qw( DesignCreate::Action );
 with qw(
