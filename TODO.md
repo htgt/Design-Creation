@@ -1,13 +1,13 @@
 FUNCTIONALITY
 =============
 
-### Phase Finding Code : IMPORTANT
+### Phase Finding Code
+* For now just specify a phase of -1000 or something clearly not correct
 * Add code to find phase for given design
     * not all designs will have a phase, like the enhancer region designs
 * What information do I need to work out phase:
     * Transcript
     * Target Exon
-    * ?
 
 ### Need Config files for certain parameters:
 * Need some sort of profile for different design types
@@ -24,13 +24,6 @@ FUNCTIONALITY
 ### Design Coordinate Pre-Check
 * Additional check on coordinates to make sure they are sane
 * Talk to Mark about what these checks may be.
-
-Conditional Designs
--------------------
-
-### Create Conditional Design Command
-* Need one command to create a conditional design
-* Modify the name of the run command which creates Ins / Del designs
 
 Location Specified Designs
 --------------------------
