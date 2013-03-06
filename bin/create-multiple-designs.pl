@@ -25,7 +25,7 @@ for my $line ( @lines ) {
         '--verbose',
     );
 
-    push @args, @{ $params }; 
+    push @args, @{ $params };
     my $output;
 
     try{
