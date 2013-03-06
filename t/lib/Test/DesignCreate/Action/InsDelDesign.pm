@@ -1,4 +1,4 @@
-package Test::DesignCreate::Action::Run;
+package Test::DesignCreate::Action::InsDelDesign;
 
 use strict;
 use warnings FATAL => 'all';
@@ -11,25 +11,26 @@ use base qw( Test::Class Class::Data::Inheritable );
 use DesignCreate::Cmd;
 
 # Testing
-# DesignCreate::Action::Run ( through command line )
+# DesignCreate::Action::InsDelDesign ( through command line )
 
 BEGIN {
     __PACKAGE__->mk_classdata( 'cmd_class' => 'DesignCreate::Cmd' );
 }
 
-sub valid_run_aos_cmd : Test(3) {
+sub valid_ins_del_design_aos_cmd : Test(3) {
     my $test = shift;
 
     my $dir = File::Temp->newdir( TMPDIR => 1, CLEANUP => 1 );
 
     my @argv_contents = (
-        'run',
+        'ins-del-design',
         '--dir', $dir->dirname,
         '--target-start', 101176328,
         '--target-end', 101176428,
         '--chromosome', 11,
         '--strand', 1,
         '--target-gene', 'LBL-TEST',
+        '--design-method', 'deletion',
     );
 
     note('############################################');
