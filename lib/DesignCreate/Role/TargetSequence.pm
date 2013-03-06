@@ -38,7 +38,7 @@ has chr_strand => (
 has species => (
     is            => 'ro',
     isa           => Species,
-    traits        => [ 'Getopt' ],
+    traits        => [ 'NoGetopt' ],
     documentation => 'The species of the design target ( default Mouse )',
     default       => 'Mouse',
 );

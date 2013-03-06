@@ -28,9 +28,9 @@ FUNCTIONALITY
 Conditional Designs
 -------------------
 
-### Consolidate Design Data
-Needs to look at U and D oligo pairs files, if they exist, to pick oligos now,
-like it currently does for G oligos.
+### Create Conditional Design Command
+* Need one command to create a conditional design
+* Modify the name of the run command which creates Ins / Del designs
 
 Location Specified Designs
 --------------------------
