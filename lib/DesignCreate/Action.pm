@@ -104,6 +104,7 @@ sub _init_output_dir {
     my ( $self, $dir ) = @_;
 
     $dir->mkpath();
+    return;
 }
 
 has validated_oligo_dir => (

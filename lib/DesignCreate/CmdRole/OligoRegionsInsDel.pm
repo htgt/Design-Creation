@@ -88,6 +88,7 @@ sub build_oligo_target_regions {
     #TODO check target start before target end
 
     $self->_build_oligo_target_regions;
+    return;
 }
 
 # work out coordinates for ins / del designs

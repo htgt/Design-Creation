@@ -75,6 +75,8 @@ sub persist_design {
     catch {
         $self->log->error('Unable to persist design to LIMS2: ' . $_ );
     };
+
+    return;
 }
 
 1;

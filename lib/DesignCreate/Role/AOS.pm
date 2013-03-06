@@ -166,6 +166,8 @@ sub run_aos_scripts {
         DesignCreate::Exception->throw( "AOS oligo_fasta file has no data in it"
             . $self->aos_output_dir->stringify  );
     }
+
+    return;
 }
 
 sub run_aos_script1 {

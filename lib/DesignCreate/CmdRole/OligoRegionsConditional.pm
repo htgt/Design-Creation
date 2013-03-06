@@ -68,12 +68,14 @@ has D_block_end => (
     cmd_flag      => 'd-block-end'
 );
 
-# consider method overriding / renaming here
+#TODO consider method overriding / renaming here
 sub build_oligo_target_regions {
     my $self = shift;
 
     $self->check_oligo_block_coordinates;
     $self->_build_oligo_target_regions;
+
+    return;
 }
 
 sub check_oligo_block_coordinates {
@@ -107,6 +109,8 @@ sub check_oligo_block_coordinates {
             . $self->U_block_start . ' on designs on the -ve strand'
         ) if $self->D_block_end > $self->U_block_start;
     }
+
+    return;
 }
 
 # work out coordinates for block specified conditional designs

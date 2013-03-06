@@ -228,6 +228,8 @@ sub run_exonerate {
         unless $matches;
 
     $self->exonerate_matches( $matches );
+
+    return;
 }
 
 sub define_exonerate_query_file {
@@ -348,6 +350,8 @@ sub output_validated_oligos {
         my $filename = $self->validated_oligo_dir->stringify . '/' . $oligo_type . '.yaml';
         DumpFile( $filename, $self->validated_oligos->{$oligo_type} );
     }
+
+    return;
 }
 
 1;

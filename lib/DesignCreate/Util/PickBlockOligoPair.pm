@@ -6,7 +6,7 @@ DesignCreate::Util::PickBlockOligos - Pick the best block oligo pair
 
 =head1 DESCRIPTION
 
-Pick the best pair of oligos from a block region. 
+Pick the best pair of oligos from a block region.
 Pair must be a minimum distance apart.
 Best pair has smallest distance seperating them, that is bigger than the minimum distance.
 
@@ -113,7 +113,7 @@ sub get_oligo_pairs {
             };
         }
     }
-    
+
     return \@oligo_pairs;
 }
 
