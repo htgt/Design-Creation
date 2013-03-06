@@ -17,20 +17,20 @@ BEGIN {
     __PACKAGE__->mk_classdata( 'cmd_class' => 'DesignCreate::Cmd' );
 }
 
-sub valid_ins_del_design_aos_cmd : Test(3) {
+sub valid_ins_del_design_aos_cmd : Test(4) {
     my $test = shift;
 
-    my $dir = File::Temp->newdir( TMPDIR => 1, CLEANUP => 1 );
+    my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute;
 
     my @argv_contents = (
-        'ins-del-design',
-        '--dir', $dir->dirname,
-        '--target-start', 101176328,
-        '--target-end', 101176428,
-        '--chromosome', 11,
-        '--strand', 1,
-        '--target-gene', 'LBL-TEST',
-        '--design-method', 'deletion',
+        'ins-del-design'  ,
+        '--dir'           , $dir->stringify,
+        '--target-start'  , 101176328,
+        '--target-end'    , 101176428,
+        '--chromosome'    , 11,
+        '--strand'        , 1,
+        '--target-gene'   , 'LBL-TEST',
+        '--design-method' , 'deletion',
     );
 
     note('############################################');
@@ -40,6 +40,9 @@ sub valid_ins_del_design_aos_cmd : Test(3) {
 
     is $result->stderr, '', 'no errors';
     ok !$result->error, 'no command errors';
+
+    my $data_file = $dir->file('design_data.yaml');
+    ok $dir->contains( $data_file ), 'design data file exists';
 
     #change out of tmpdir so File::Temp can delete the tmp dir
     chdir;
