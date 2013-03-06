@@ -1,27 +1,25 @@
-package DesignCreate::Action::Run;
+package DesignCreate::Action::InsDelDesign;
 
 =head1 NAME
 
-DesignCreate::Action::Run - Run design creation end to end
+DesignCreate::Action::InsDelDesign - Run design creation for Ins / Del designs end to end
 
 =head1 DESCRIPTION
 
-Runs all the seperate steps used to create a design.
+Runs all the seperate steps used to create a Insertion of Deletion design.
+Persists the design to LIMS2 if persist option given.
 
 =cut
 
-#
-# Initial version will be setup for standard deletion design only
-#
-
 use strict;
+use warnings FATAL => 'all';
+
+use Moose;
 use Const::Fast;
 use Try::Tiny;
 use Fcntl; # O_ constants
 use Data::Dump qw( pp );
-use warnings FATAL => 'all';
 
-use Moose;
 
 extends qw( DesignCreate::Action );
 with qw(
@@ -53,6 +51,7 @@ aos_output_dir
 oligo_target_regions_dir
 aos_location
 base_chromosome_dir
+genomic_search_method
 );
 
 for my $attribute ( @ATTRIBUTES_NO_CMD_OPTION ) {
