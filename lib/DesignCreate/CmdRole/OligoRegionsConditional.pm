@@ -16,6 +16,7 @@ design types is found in DesignCreate::Role::OligoTargetRegions.
 
 use Moose::Role;
 use DesignCreate::Exception;
+use DesignCreate::Exception::NonExistantAttribute;
 use DesignCreate::Types qw( PositiveInt NaturalNumber );
 use Const::Fast;
 use namespace::autoclean;
@@ -231,8 +232,10 @@ sub get_oligo_block_coordinate {
 
     my $attribute_name = $block_type . '_block_' . $start_or_end;
 
-    DesignCreate::Exception->throw( "Attribute $attribute_name does not exist" )
-        unless  $self->meta->has_attribute( $attribute_name );
+    DesignCreate::Exception::NonExistantAttribute->throw(
+        attribute_name => $attribute_name,
+        class          => $self->meta->name
+    ) unless $self->meta->has_attribute($attribute_name);
 
     return $self->$attribute_name;
 }

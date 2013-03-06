@@ -14,6 +14,7 @@ Best pair has smallest distance seperating them, that is bigger than the minimum
 
 use Moose::Role;
 use DesignCreate::Exception;
+use DesignCreate::Exception::NonExistantAttribute;
 use DesignCreate::Types qw( PositiveInt );
 use YAML::Any qw( DumpFile );
 use DesignCreate::Util::PickBlockOligoPair;
@@ -53,8 +54,10 @@ sub pick_block_oligo_pair {
     my ( $self, $oligo_type ) = @_;
 
     my $min_gap_attribute = 'min_' . $oligo_type . '_oligo_gap';
-    DesignCreate::Exception->throw( "Attribute $min_gap_attribute does not exist" )
-        unless $self->meta->has_attribute( $min_gap_attribute );
+    DesignCreate::Exception::NonExistantAttribute->throw(
+        attribute_name => $min_gap_attribute,
+        class          => $self->meta->name
+    ) unless $self->meta->has_attribute($min_gap_attribute);
 
     my $five_prime_oligo_file = $self->get_file( $oligo_type . '5.yaml' , $self->validated_oligo_dir );
     my $three_prime_oligo_file = $self->get_file( $oligo_type . '3.yaml', $self->validated_oligo_dir );

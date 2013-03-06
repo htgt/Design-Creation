@@ -12,6 +12,7 @@ Common code for oligo target region finding commands.
 
 use Moose::Role;
 use DesignCreate::Exception;
+use DesignCreate::Exception::NonExistantAttribute;
 use DesignCreate::Types qw( PositiveInt NaturalNumber );
 use Bio::SeqIO;
 use Bio::Seq;
@@ -104,8 +105,10 @@ sub get_oligo_region_offset {
     my ( $self, $oligo ) = @_;
 
     my $attribute_name = $oligo . '_region_offset';
-    DesignCreate::Exception->throw( "Attribute $attribute_name does not exist" )
-        unless  $self->meta->has_attribute( $attribute_name );
+    DesignCreate::Exception::NonExistantAttribute->throw(
+        attribute_name => $attribute_name,
+        class          => $self->meta->name
+    ) unless $self->meta->has_attribute($attribute_name);
 
     return $self->$attribute_name;
 }
@@ -114,8 +117,10 @@ sub get_oligo_region_length {
     my ( $self, $oligo ) = @_;
 
     my $attribute_name = $oligo . '_region_length';
-    DesignCreate::Exception->throw( "Attribute $attribute_name does not exist" )
-        unless $self->meta->has_attribute( $attribute_name );
+    DesignCreate::Exception::NonExistantAttribute->throw(
+        attribute_name => $attribute_name,
+        class          => $self->meta->name
+    ) unless $self->meta->has_attribute($attribute_name);
 
     return $self->$attribute_name;
 }

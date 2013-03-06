@@ -17,6 +17,7 @@ Oligos
 =cut
 
 use Moose::Role;
+use DesignCreate::Exception::NonExistantAttribute;
 use YAML::Any qw( LoadFile DumpFile );
 use List::Util qw( first );
 use DesignCreate::Exception;
@@ -199,8 +200,10 @@ sub pick_oligo_from_pair {
 
     my $oligo_region = substr( $oligo_type, 0,1 );
     my $pair_attribute = $oligo_region . '_oligo_pair';
-    DesignCreate::Exception->throw( "Attribute $pair_attribute does not exist" )
-        unless $self->meta->has_attribute( $pair_attribute );
+    DesignCreate::Exception::NonExistantAttribute->throw(
+        attribute_name => $pair_attribute,
+        class          => $self->meta->name
+    ) unless $self->meta->has_attribute($pair_attribute);
 
     my $oligo_id = $self->$pair_attribute->{$oligo_type};
     my $oligo = first{ $_->{id} eq $oligo_id } @{ $oligos };
