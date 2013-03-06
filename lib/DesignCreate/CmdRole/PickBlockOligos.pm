@@ -72,6 +72,7 @@ sub pick_block_oligo_pair {
 
     my $oligo_pair_file =  $self->validated_oligo_dir->file( $oligo_type . '_oligo_pairs.yaml');
     DumpFile( $oligo_pair_file, $oligo_pairs );
+    $self->log->info( "Picked $oligo_type oligo pairs" );
 
     return;
 }
