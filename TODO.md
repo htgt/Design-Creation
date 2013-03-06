@@ -1,12 +1,29 @@
 FUNCTIONALITY
 =============
 
+### Phase Finding Code : IMPORTANT
+* Add code to find phase for given design
+    * not all designs will have a phase, like the enhancer region designs
+* What information do I need to work out phase:
+    * Transcript
+    * Target Exon
+    * ?
+
 ### Need Config files for certain parameters:
 * Need some sort of profile for different design types
 * Oligo Target Region Definitions mainly
 * Can use MooseX::SimpleConfig but:
     * only really use it with one log file
     * seems to suppress the --help option
+
+### Automatically re-run oligo finding - WOULD BE NICE
+* We may not find a good pair of G,D or U oligos
+* Can we automatically re-run but ask AOS to increase number of oligos it outputs
+* Another option is to tweak oligo region coordiantes automatically - but this would be MUCH harder
+
+### Design Coordinate Pre-Check
+* Additional check on coordinates to make sure they are sane
+* Talk to Mark about what these checks may be.
 
 Conditional Designs
 -------------------
@@ -44,20 +61,22 @@ Oligos should end up in validated oligo dir.
 CHANGES
 =======
 
+### Attribute Exception Class
+* Add exception class when attribute does not exist for a given object
+
 ### Required Attributes Roles
 * a consuming class must provide to required attributes / methods not another role
     * slight danger that a role is assuming the existance of a method / attribute
 
 ### Coordinate Checks
 * InsDel design, check start before end for target region coordinates
-* Conditional, for each block:
-    * start before end
-    * block length > 100 ( actually 100 is bad, min should be 102 assuming oligos are 50 bases )
-    * U block before D block on +ve strand, vice versa on -ve strand
 
 ### Surplus Command Options
 * We need to specify options such as design type for commands where that information is not needed
 * Find these commands and remove them
+
+### Gap Oligo Pair Finder
+* move log output to another folder
 
 * * *
 TESTING
@@ -72,6 +91,10 @@ TESTING
 ### Test::Class
 * Use Test::Class framework to get some base tests written and factor out common code
     * base class would be Action.pm
+
+### Design Method
+* Specify deletion as design method in test objects
+* Remove deletion method as default for this attribute
 
 * * *
 
