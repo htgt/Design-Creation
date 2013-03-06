@@ -26,11 +26,11 @@ BEGIN {
 sub valid_run_aos_cmd : Test(3) {
     my $test = shift;
 
-    my $dir = File::Temp->newdir( TMPDIR => 1, CLEANUP => 1 );
+    my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 );
 
     my @argv_contents = (
         'run-aos',
-        '--dir', $dir->dirname,
+        '--dir', $dir->stringify,
         '--target-file', get_test_data_file('run_aos_target_file.fasta'),
         '--query-file', get_test_data_file('run_aos_query_file.fasta'),
         '--design-method', 'deletion',

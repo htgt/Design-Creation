@@ -25,11 +25,11 @@ sub valid_run_cmd : Test(3) {
     my $test = shift;
 
     #create temp dir in standard location for temp files
-    my $dir = File::Temp->newdir( TMPDIR => 1, CLEANUP => 1 );
+    my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 );
 
     my @argv_contents = (
         'oligo-regions-ins-del',
-        '--dir', $dir->dirname,
+        '--dir', $dir->stringify,
         '--target-start', 101176328,
         '--target-end', 101176428,
         '--chromosome', 11,

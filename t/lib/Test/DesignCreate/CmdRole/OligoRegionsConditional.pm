@@ -25,11 +25,11 @@ sub valid_run_cmd : Test(3) {
     my $test = shift;
 
     #create temp dir in standard location for temp files
-    my $dir = File::Temp->newdir( TMPDIR => 1, CLEANUP => 1 );
+    my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 );
 
     my @argv_contents = (
         'oligo-regions-conditional',
-        '--dir'           ,$dir->dirname,
+        '--dir'           ,$dir->stringify,
         '--u-block-start' ,101176328,
         '--u-block-end'   ,101176528,
         '--d-block-start' ,101177328,
