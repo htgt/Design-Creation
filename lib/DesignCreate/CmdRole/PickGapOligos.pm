@@ -185,7 +185,7 @@ sub create_oligo_pair_file {
     DesignCreate::Exception->throw('No suitable gap oligo pairs found')
         if $self->no_oligo_pairs;
 
-    my $oligo_pair_file =  $self->validated_oligo_dir->file('gap_oligo_pairs.yaml');
+    my $oligo_pair_file =  $self->validated_oligo_dir->file('G_oligo_pairs.yaml');
     DumpFile( $oligo_pair_file, $self->oligo_pairs );
 
     return;

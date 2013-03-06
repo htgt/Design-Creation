@@ -165,7 +165,7 @@ sub create_oligo_pair_file : Test(5) {
         $o->create_oligo_pair_file
     } 'can call create_oligo_pair_file';
 
-    my $oligo_pair_file = $o->validated_oligo_dir->file('gap_oligo_pairs.yaml');
+    my $oligo_pair_file = $o->validated_oligo_dir->file('G_oligo_pairs.yaml');
     ok $o->validated_oligo_dir->contains( $oligo_pair_file ), 'created oligo pair file';
 
 }
