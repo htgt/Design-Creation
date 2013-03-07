@@ -1,29 +1,12 @@
 FUNCTIONALITY
 =============
 
-### Phase Finding Code
-* For now just specify a phase of -1000 or something clearly not correct
-* Add code to find phase for given design
-    * not all designs will have a phase, like the enhancer region designs
-* What information do I need to work out phase:
-    * Transcript
-    * Target Exon
-
 ### Need Config files for certain parameters:
 * Need some sort of profile for different design types
 * Oligo Target Region Definitions mainly
 * Can use MooseX::SimpleConfig but:
     * only really use it with one log file
     * seems to suppress the --help option
-
-### Automatically re-run oligo finding - WOULD BE NICE
-* We may not find a good pair of G,D or U oligos
-* Can we automatically re-run but ask AOS to increase number of oligos it outputs
-* Another option is to tweak oligo region coordiantes automatically - but this would be MUCH harder
-
-### Design Coordinate Pre-Check
-* Additional check on coordinates to make sure they are sane
-* Talk to Mark about what these checks may be.
 
 Location Specified Designs
 --------------------------
@@ -49,17 +32,14 @@ Use the U and D coordinates to pull down sequence from ensemble for each oligo.
 Do we need to validate these oligos? check this.
 Oligos should end up in validated oligo dir.
 
-
 * * *
-CHANGES
-=======
+
+PROBLEMS
+========
 
 ### Required Attributes Roles
 * a consuming class must provide to required attributes / methods not another role
     * slight danger that a role is assuming the existance of a method / attribute
-
-### Coordinate Checks
-* InsDel design, check start before end for target region coordinates
 
 ### Surplus Command Options
 * We need to specify options such as design type for commands where that information is not needed
@@ -69,6 +49,7 @@ CHANGES
 * move log output to another folder
 
 * * *
+
 TESTING
 =======
 
@@ -85,6 +66,28 @@ TESTING
 ### Design Method
 * Specify deletion as design method in test objects
 * Remove deletion method as default for this attribute
+
+* * *
+
+FUTURE FUNCTIONALITY
+====================
+
+### Phase Finding Code
+* For now just specify a phase of -1000 or something clearly not correct
+* Add code to find phase for given design
+    * not all designs will have a phase, like the enhancer region designs
+* What information do I need to work out phase:
+    * Transcript
+    * Target Exon
+
+### Automatically re-run oligo finding - WOULD BE NICE
+* We may not find a good pair of G,D or U oligos
+* Can we automatically re-run but ask AOS to increase number of oligos it outputs
+* Another option is to tweak oligo region coordiantes automatically - but this would be MUCH harder
+
+### Design Coordinate Pre-Check
+* Additional check on coordinates to make sure they are sane
+* Talk to Mark about what these checks may be.
 
 * * *
 

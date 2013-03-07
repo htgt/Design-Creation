@@ -95,7 +95,7 @@ sub get_oligo_region_coordinates : Tests(16) {
     } qr/Start \d+, greater than or equal to end \d+/, 'throws start greater than end error';
 }
 
-sub build_oligo_target_regions : Test(6) {
+sub build_oligo_target_regions : Test(8) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
@@ -107,6 +107,19 @@ sub build_oligo_target_regions : Test(6) {
         my $oligo_file = $o->oligo_target_regions_dir->file( $oligo . '.fasta' );
         ok $o->oligo_target_regions_dir->contains( $oligo_file ), "$oligo oligo file exists";
     }
+
+    ok $o = $test->test_class->new(
+        dir          => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
+        target_start => 101176428,
+        target_end   => 101176328,
+        chr_name     => 11,
+        chr_strand   => 1,
+    ), 'can create another test object';
+
+    throws_ok {
+        $o->build_oligo_target_regions
+    } qr/Target start \d+, greater than target end \d+/
+        ,'throws error when target start greater than target end';
 }
 
 sub _get_test_object {

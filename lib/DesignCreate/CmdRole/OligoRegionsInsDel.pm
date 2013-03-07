@@ -85,7 +85,9 @@ has D3_region_offset => (
 sub build_oligo_target_regions {
     my $self = shift;
 
-    #TODO check target start before target end
+    DesignCreate::Exception->throw(
+        "Target start " . $self->target_start . ", greater than target end " . $self->target_end
+    ) if $self->target_start > $self->target_end;
 
     $self->_build_oligo_target_regions;
     return;
