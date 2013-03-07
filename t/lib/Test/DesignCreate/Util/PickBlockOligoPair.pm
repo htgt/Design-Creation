@@ -76,7 +76,7 @@ sub get_oligo_pairs : Test(11) {
     my $best_pair = shift @{ $oligo_pairs };
     is_deeply $best_pair, { U5 => 'U5-13', U3 => 'U3-9' }, 'have correct best pair';
 
-    #min_gap 10 makes teh U3-10, U5-13 pair valid, their gap is 14
+    #min_gap 10 makes the U3-10, U5-13 pair valid, their gap is 14
     ok $o = $test->get_test_object( { min_gap => 10 } ), 'can get another test object';
     ok $oligo_pairs = $o->get_oligo_pairs,  'can call get_oligo_pairs';
 
@@ -89,10 +89,38 @@ sub get_oligo_pairs : Test(11) {
     ok my $d_oligo_pairs = $d_o->get_oligo_pairs,  'can call get_oligo_pairs';
     is_deeply $d_oligo_pairs, [], 'no valid pairs';
 
-    ok my $f_o = $test->get_test_object( { strand => -1 } ), 'can get test object with wrong strand';
+    ok my $f_o = $test->get_test_object( { strand => -1 } )
+        , 'can get test object with wrong strand';
     throws_ok{
         $f_o->get_oligo_pairs
     } qr/Invalid input/, 'throws error when 5 and 3 oligos wrong way around for given strand';
+}
+
+sub check_oligo_pair : Test(7) {
+    my $test = shift;
+    ok my $o = $test->get_test_object, 'can get test object';
+
+    my $left_oligo = shift @{ $o->left_oligo_data };
+    my $right_oligo = shift @{ $o->right_oligo_data };
+    my @pairs;
+
+    $right_oligo->{oligo_start} = 10000079;
+    lives_ok{
+        $o->check_oligo_pair( $left_oligo, $right_oligo, \@pairs )
+    } 'can call check_oligo_pair';
+    ok !scalar(@pairs), 'pairs array has no a value';
+
+    $right_oligo->{oligo_start} = 10000132;
+    lives_ok{
+        $o->check_oligo_pair( $left_oligo, $right_oligo, \@pairs )
+    } 'can call check_oligo_pair';
+    ok scalar(@pairs), 'pairs array has a value';
+
+    @pairs = ();
+    throws_ok{
+        $o->check_oligo_pair( $right_oligo, $left_oligo, \@pairs )
+    } qr/Invalid input/,  'throws error if oligos in wrong order';
+    ok !scalar(@pairs), 'pairs array has no a value';
 }
 
 sub get_test_object {

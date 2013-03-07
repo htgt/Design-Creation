@@ -80,6 +80,17 @@ sub _build_right_oligo_data {
     return LoadFile( $oligo_file );
 }
 
+has pick_log => (
+    is      => 'rw',
+    isa     => 'ArrayRef',
+    traits  => [ 'Array' ],
+    default => sub{ [] },
+    handles => {
+        add_log         => 'push',
+        join_output_log => 'join',
+    },
+);
+
 # left oligos ranked from closest to 3' end to furthest
 # right oligos ranked from cloesest to 5' end to furthest
 # subroutine will list pairs from closest together to furthest apart
@@ -94,27 +105,38 @@ sub get_oligo_pairs {
 
     for my $left_oligo ( $self->left_oligos ) {
         for my $right_oligo ( $self->right_oligos ) {
-            DesignCreate::Exception->throw( 'Invalid input '
-                    . $left_oligo->{id} . ' and ' . $right_oligo->{id}
-                    . ' overlap, error with input' )
-                if $left_oligo->{oligo_end} > $right_oligo->{oligo_start};
-
-            my $oligo_gap = ( $right_oligo->{oligo_start} - $left_oligo->{oligo_end} ) - 1;
-            if ( $oligo_gap < $self->min_gap ) {
-                $self->log->debug( $left_oligo->{id} . ' and '
-                        . $right_oligo->{id} . " have a gap of $oligo_gap,"
-                        . " minimum gap is " . $self->min_gap );
-                next;
-            }
-
-            push @oligo_pairs, {
-                $left_oligo->{oligo}  => $left_oligo->{id},
-                $right_oligo->{oligo} => $right_oligo->{id}
-            };
+            $self->check_oligo_pair( $left_oligo, $right_oligo, \@oligo_pairs );
         }
     }
 
     return \@oligo_pairs;
+}
+
+sub check_oligo_pair {
+    my ( $self, $left_oligo, $right_oligo, $oligo_pairs ) = @_;
+
+    DesignCreate::Exception->throw(
+        'Invalid input ' . $left_oligo->{id} . ' and '
+        . $right_oligo->{id} . ' overlap, error with input'
+    ) if $left_oligo->{oligo_end} > $right_oligo->{oligo_start};
+
+    my $oligo_gap = ( $right_oligo->{oligo_start} - $left_oligo->{oligo_end} ) - 1;
+    my $log_str = $left_oligo->{id} . ' and ' . $right_oligo->{id} . " gap is $oligo_gap";
+
+    if ( $oligo_gap < $self->min_gap ) {
+        $log_str .= ' - REJECT, minimum gap is ' . $self->min_gap;
+        $self->log->debug( $log_str );
+    }
+    else {
+        $log_str .= ' - PASS';
+        push @{ $oligo_pairs }, {
+            $left_oligo->{oligo}  => $left_oligo->{id},
+            $right_oligo->{oligo} => $right_oligo->{id}
+        };
+    }
+    $self->add_log( $log_str );
+
+    return;
 }
 
 __PACKAGE__->meta->make_immutable;

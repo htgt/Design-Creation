@@ -46,16 +46,10 @@ PROBLEMS
 * Find these commands and remove them - by removing attributes
 * CHECK - will this cause problems when we run design end-to-end
 
-### Gap Oligo Pair Finder
-* move log output to another folder
-
 * * *
 
 TESTING
 =======
-
-### Combine t files
-* Can run groups of tests through one test file, ( ask t file to run all tests in specific folder )
 
 ### Test Objects
 * Find a way to automate the creation of test objects, should not need to create a test object for every CmdRole I want to test
