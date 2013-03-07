@@ -50,7 +50,8 @@ has flank_length => (
     is            => 'ro',
     isa           => PositiveInt,
     traits        => [ 'Getopt' ],
-    documentation => 'Number of bases to either side of G5 and G3 where we check for oligo specificity ( default 100000 )',
+    documentation => 'Number of bases to either side of G5 and G3 where we check for oligo specificity'
+                     . ' ( default 100000 )',
     cmd_flag      => 'flank-length',
     default       => 100000
 );
@@ -161,7 +162,6 @@ sub validate_oligo {
     return 1;
 }
 
-#TODO will need to change checks when dealing with conditional designs
 sub check_oligo_coordinates {
     my ( $self, $oligo_data ) = @_;
 
