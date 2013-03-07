@@ -17,10 +17,10 @@ Oligos
 =cut
 
 use Moose::Role;
+use DesignCreate::Exception;
 use DesignCreate::Exception::NonExistantAttribute;
 use YAML::Any qw( LoadFile DumpFile );
 use List::Util qw( first );
-use DesignCreate::Exception;
 use namespace::autoclean;
 
 with qw(
@@ -105,8 +105,8 @@ sub consolidate_design_data {
 sub get_design_phase {
     my $self = shift;
 
-    $self->log->info( 'Code to work out design phase not in place, setting it to -1 for now' );
-    $self->phase( -1 );
+    $self->log->info( 'Code to work out design phase not in place, setting it to -10 for now' );
+    $self->phase( -10 );
 
     return;
 }

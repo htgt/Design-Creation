@@ -43,7 +43,8 @@ PROBLEMS
 
 ### Surplus Command Options
 * We need to specify options such as design type for commands where that information is not needed
-* Find these commands and remove them
+* Find these commands and remove them - by removing attributes
+* CHECK - will this cause problems when we run design end-to-end
 
 ### Gap Oligo Pair Finder
 * move log output to another folder

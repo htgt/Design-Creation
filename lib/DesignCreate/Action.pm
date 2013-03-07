@@ -9,7 +9,6 @@ use DesignCreate::Exception;
 use DesignCreate::Exception::MissingFile;
 use DesignCreate::Types qw( DesignMethod );
 use Log::Log4perl qw( :levels );
-use Try::Tiny;
 use Const::Fast;
 use namespace::autoclean;
 
@@ -17,8 +16,6 @@ extends qw( MooseX::App::Cmd::Command );
 with qw(
 MooseX::Log::Log4perl
 );
-#TODO use SimpleConfig,
-#MooseX::SimpleConfig
 
 has trace => (
     is            => 'ro',

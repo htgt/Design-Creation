@@ -24,6 +24,10 @@ with qw(
 DesignCreate::Role::TargetSequence
 );
 
+# Don't need the following attributes when running this command on its own
+__PACKAGE__->meta->remove_attribute( 'chr_name' );
+__PACKAGE__->meta->remove_attribute( 'species' );
+
 has min_U_oligo_gap => (
     is            => 'ro',
     isa           => PositiveInt,
