@@ -18,6 +18,8 @@ use DesignCreate::Exception::NonExistantAttribute;
 use DesignCreate::Types qw( PositiveInt );
 use YAML::Any qw( DumpFile );
 use DesignCreate::Util::PickBlockOligoPair;
+use Const::Fast;
+use Fcntl; # O_ constants
 use namespace::autoclean;
 
 with qw(
@@ -27,6 +29,8 @@ DesignCreate::Role::TargetSequence
 # Don't need the following attributes when running this command on its own
 __PACKAGE__->meta->remove_attribute( 'chr_name' );
 __PACKAGE__->meta->remove_attribute( 'species' );
+
+const my $DEFAULT_BLOCK_OLIGO_LOG_DIR_NAME => 'block_oligo_logs';
 
 has min_U_oligo_gap => (
     is            => 'ro',
@@ -46,6 +50,23 @@ has min_D_oligo_gap => (
     cmd_flag      => 'min-D-oligo-gap',
 );
 
+has block_oligo_log_dir => (
+    is         => 'ro',
+    isa        => 'Path::Class::Dir',
+    traits     => [ 'NoGetopt' ],
+    lazy_build => 1,
+);
+
+sub _build_block_oligo_log_dir {
+    my $self = shift;
+
+    my $dir = $self->validated_oligo_dir->subdir( $DEFAULT_BLOCK_OLIGO_LOG_DIR_NAME )->absolute;
+    $dir->rmtree();
+    $dir->mkpath();
+
+    return $dir;
+}
+
 sub pick_block_oligos {
     my ( $self, $opts, $args ) = @_;
 
@@ -63,8 +84,10 @@ sub pick_block_oligo_pair {
         class          => $self->meta->name
     ) unless $self->meta->has_attribute($min_gap_attribute);
 
-    my $five_prime_oligo_file = $self->get_file( $oligo_type . '5.yaml' , $self->validated_oligo_dir );
-    my $three_prime_oligo_file = $self->get_file( $oligo_type . '3.yaml', $self->validated_oligo_dir );
+    my $five_prime_oligo_file
+        = $self->get_file( $oligo_type . '5.yaml', $self->validated_oligo_dir );
+    my $three_prime_oligo_file
+        = $self->get_file( $oligo_type . '3.yaml', $self->validated_oligo_dir );
 
     my $oligo_picker = DesignCreate::Util::PickBlockOligoPair->new(
         five_prime_oligo_file  => $five_prime_oligo_file,
@@ -76,6 +99,12 @@ sub pick_block_oligo_pair {
     my $oligo_pairs = $oligo_picker->get_oligo_pairs;
     DesignCreate::Exception->throw( "No valid oligo pairs for $oligo_type oligo region" )
         unless @{ $oligo_pairs };
+
+    #Log output
+    my $block_pick_output = $self->block_oligo_log_dir->file( $oligo_type . '_block_pick.log');
+    my $fh = $block_pick_output->open( O_WRONLY|O_CREAT )
+        or die( "Open $block_pick_output: $!" );
+    print $fh $oligo_picker->join_output_log( "\n" );
 
     my $oligo_pair_file =  $self->validated_oligo_dir->file( $oligo_type . '_oligo_pairs.yaml');
     DumpFile( $oligo_pair_file, $oligo_pairs );
