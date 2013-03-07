@@ -195,7 +195,7 @@ sub get_gap_oligo_pairs {
         }
     }
 
-    $self->log->info( 'Found oligo pairs: ' . pp($self->oligo_pairs) );
+    $self->log->info( 'Found G oligo pairs: ' . pp($self->oligo_pairs) );
     return;
 }
 
