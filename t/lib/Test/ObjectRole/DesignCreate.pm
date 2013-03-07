@@ -7,12 +7,13 @@ use Moose;
 use DesignCreate::Types qw( DesignMethod );
 use DesignCreate::Exception;
 use DesignCreate::Exception::MissingFile;
+use Fcntl; # O_ constants
 use namespace::autoclean;
 
 has design_method => (
     is       => 'ro',
     isa      => DesignMethod,
-    default  => 'deletion',
+    required => 1,
 );
 
 has dir => (

@@ -9,10 +9,7 @@ use Bio::Seq;
 use Path::Class qw( tempdir dir );
 use File::Copy::Recursive qw( dircopy );
 use FindBin;
-use base qw( Test::Class Class::Data::Inheritable );
-
-use Test::ObjectRole::DesignCreate::FindOligos;
-use DesignCreate::Cmd;
+use base qw( Test::DesignCreate::Class Class::Data::Inheritable );
 
 # Testing
 # DesignCreate::Action::FindOligos ( through command line )
@@ -20,8 +17,7 @@ use DesignCreate::Cmd;
 # Note, DesignCreate::Role::AOS is already tested by RunAOS
 
 BEGIN {
-    __PACKAGE__->mk_classdata( 'cmd_class' => 'DesignCreate::Cmd' );
-    __PACKAGE__->mk_classdata( 'test_class' => 'Test::ObjectRole::DesignCreate::FindOligos' );
+    __PACKAGE__->mk_classdata( 'test_role' => 'DesignCreate::CmdRole::FindOligos' );
 }
 
 sub valid_find_oligos_cmd : Test(4) {
@@ -89,10 +85,12 @@ sub define_target_file : Test(6) {
     is $o->target_file->basename, '11.fasta', '.. target file should stay the same';
 
     my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute;
-    $o = $test->test_class->new(
+    my $metaclass = $test->get_test_object_metaclass();
+    $o = $metaclass->new_object(
         dir                 => $dir,
         chr_name            => 11,
         base_chromosome_dir => tempdir( TMPDIR => 1, CLEANUP => 1 ),
+        design_method       => 'deletion',
     );
 
     throws_ok{
@@ -131,9 +129,11 @@ sub _get_test_object {
     # need 4 oligo target region files to test against, in oligo_target_regions dir
     dircopy( $data_dir->stringify, $dir->stringify . '/oligo_target_regions' );
 
-    return $test->test_class->new(
-        dir      => $dir,
-        chr_name => 11,
+    my $metaclass = $test->get_test_object_metaclass();
+    return $metaclass->new_object(
+        dir           => $dir,
+        chr_name      => 11,
+        design_method => 'deletion',
     );
 }
 

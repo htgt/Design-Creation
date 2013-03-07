@@ -6,16 +6,13 @@ use warnings FATAL => 'all';
 use Test::Most;
 use Path::Class qw( tempdir dir );
 use Bio::SeqIO;
-use base qw( Test::Class Class::Data::Inheritable );
-
-use Test::ObjectRole::DesignCreate::OligoTargetRegions;
-use DesignCreate::Cmd;
+use base qw( Test::DesignCreate::Class Class::Data::Inheritable );
 
 # Testing
 # DesignCreate::Role::OligoTargetRegions
 
 BEGIN {
-    __PACKAGE__->mk_classdata( 'test_class' => 'Test::ObjectRole::DesignCreate::OligoTargetRegions' );
+    __PACKAGE__->mk_classdata( 'test_role' => 'DesignCreate::Role::OligoTargetRegions' );
 }
 
 sub get_oligo_region_offset : Tests(4) {
@@ -77,12 +74,14 @@ sub _get_test_object {
     my ( $test, $strand ) = @_;
     $strand //= 1;
 
-    return $test->test_class->new(
-        dir          => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
-        target_start => 101176328,
-        target_end   => 101176428,
-        chr_name     => 11,
-        chr_strand   => $strand,
+    my $metaclass = $test->get_test_object_metaclass();
+    return $metaclass->new_object(
+        dir           => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
+        target_start  => 101176328,
+        target_end    => 101176428,
+        chr_name      => 11,
+        chr_strand    => $strand,
+        design_method => 'deletion',
     );
 }
 

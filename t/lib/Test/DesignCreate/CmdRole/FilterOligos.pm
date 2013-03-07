@@ -9,18 +9,14 @@ use Path::Class qw( tempdir dir );
 use File::Copy::Recursive qw( dircopy );
 use YAML::Any qw( LoadFile );
 use FindBin;
-use base qw( Test::Class Class::Data::Inheritable );
-
-use Test::ObjectRole::DesignCreate::FilterOligos;
-use DesignCreate::Cmd;
+use base qw( Test::DesignCreate::Class Class::Data::Inheritable );
 
 # Testing
 # DesignCreate::Action::FilterOligos ( through command line )
 # DesignCreate::CmdRole::FilterOligos, most of its work is done by:
 
 BEGIN {
-    __PACKAGE__->mk_classdata( 'cmd_class' => 'DesignCreate::Cmd' );
-    __PACKAGE__->mk_classdata( 'test_class' => 'Test::ObjectRole::DesignCreate::FilterOligos' );
+    __PACKAGE__->mk_classdata( 'test_role' => 'DesignCreate::CmdRole::FilterOligos' );
 }
 
 sub valid_filter_oligos_cmd : Test(4) {
@@ -313,10 +309,12 @@ sub _get_test_object {
     # need 4 aos oligo files to test against, in aos_output dir
     dircopy( $data_dir->stringify, $dir->stringify . '/aos_output' );
 
-    return $test->test_class->new(
+    my $metaclass = $test->get_test_object_metaclass();
+    return $metaclass->new_object(
         dir        => $dir,
         chr_name   => 11,
         chr_strand => $strand,
+        design_method => 'deletion',
     );
 }
 

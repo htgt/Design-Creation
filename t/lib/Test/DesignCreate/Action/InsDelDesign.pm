@@ -6,16 +6,10 @@ use warnings FATAL => 'all';
 use Test::Most;
 use App::Cmd::Tester;
 use Path::Class qw( tempdir );
-use base qw( Test::Class Class::Data::Inheritable );
-
-use DesignCreate::Cmd;
+use base qw( Test::DesignCreate::Class Class::Data::Inheritable );
 
 # Testing
 # DesignCreate::Action::InsDelDesign ( through command line )
-
-BEGIN {
-    __PACKAGE__->mk_classdata( 'cmd_class' => 'DesignCreate::Cmd' );
-}
 
 sub valid_ins_del_design_aos_cmd : Test(4) {
     my $test = shift;

@@ -7,18 +7,14 @@ use Test::Most;
 use App::Cmd::Tester;
 use Path::Class qw( tempdir dir );
 use Bio::SeqIO;
-use base qw( Test::Class Class::Data::Inheritable );
-
-use Test::ObjectRole::DesignCreate::OligoRegionsConditional;
-use DesignCreate::Cmd;
+use base qw( Test::DesignCreate::Class Class::Data::Inheritable );
 
 # Testing
 # DesignCreate::CmdRole::OligoRegionsConditional
 # DesignCreate::Action::OligoRegionsConditional ( through command line )
 
 BEGIN {
-    __PACKAGE__->mk_classdata( 'cmd_class' => 'DesignCreate::Cmd' );
-    __PACKAGE__->mk_classdata( 'test_class' => 'Test::ObjectRole::DesignCreate::OligoRegionsConditional' );
+    __PACKAGE__->mk_classdata( 'test_role' => 'DesignCreate::CmdRole::OligoRegionsConditional' );
 }
 
 sub valid_run_cmd : Test(3) {
@@ -47,9 +43,10 @@ sub valid_run_cmd : Test(3) {
 
 sub check_oligo_block_coordinates : Test(4) {
     my $test = shift;
+    my $metaclass = $test->get_test_object_metaclass();
 
     throws_ok {
-        $test->test_class->new(
+        $metaclass->new_object(
             dir           => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
             U_block_start => 101177528, U_block_end => 101177428,
             D_block_start => 101176328, D_block_end => 101176528,
@@ -60,7 +57,7 @@ sub check_oligo_block_coordinates : Test(4) {
         , 'throws error when block start coordinate greater than its end coordinate';
 
     throws_ok {
-        $test->test_class->new(
+        $metaclass->new_object(
             dir           => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
             U_block_start => 101177328, U_block_end => 101177428,
             D_block_start => 101176328, D_block_end => 101176528,
@@ -71,7 +68,7 @@ sub check_oligo_block_coordinates : Test(4) {
         , 'throws error when U or D block is too small';
 
     throws_ok {
-        $test->test_class->new(
+        $metaclass->new_object(
             dir           => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
             U_block_start => 101178328, U_block_end => 101178528,
             D_block_start => 101176328, D_block_end => 101176528,
@@ -82,7 +79,7 @@ sub check_oligo_block_coordinates : Test(4) {
         , 'throws error when U block end is greater than D block start, +ve strand';
 
     throws_ok {
-        $test->test_class->new(
+        $metaclass->new_object(
             dir           => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
             U_block_start => 101176328, U_block_end => 101176528,
             D_block_start => 101178328, D_block_end => 101178528,
@@ -172,7 +169,8 @@ sub get_oligo_region_gap_oligo : Test(15) {
         , 'correct G3 start value';
     is $g3_end_minus, $o->D_block_start - ( $o->G3_region_offset + 1 ), 'correct G3 end value';
 
-    $o = $test->test_class->new(
+    my $metaclass = $test->get_test_object_metaclass();
+    $o = $metaclass->new_object(
         dir           => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
         U_block_start => 101177328,     U_block_end      => 101177428,
         D_block_start => 101176328,     D_block_end      => 101176428,
@@ -224,7 +222,8 @@ sub get_oligo_region_u_or_d_oligo : Test(15) {
     is $d5_start_minus, $o->D_block_start + 51, 'correct D5 start value';
     is $d5_end_minus, $o->D_block_end, 'correct D5 end value';
 
-    $o = $test->test_class->new(
+    my $metaclass = $test->get_test_object_metaclass();
+    $o = $metaclass->new_object(
         dir           => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
         U_block_start => 101177328,     U_block_end      => 101177329,
         D_block_start => 101176328,     D_block_end      => 101176428,
@@ -308,7 +307,8 @@ sub _get_test_object {
     my ( $test, $strand ) = @_;
     $strand //= 1;
 
-    return $test->test_class->new(
+    my $metaclass = $test->get_test_object_metaclass();
+    return $metaclass->new_object(
         dir           => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
         U_block_start => $strand == 1 ? 101176328 : 101177328,
         U_block_end   => $strand == 1 ? 101176528 : 101177428,

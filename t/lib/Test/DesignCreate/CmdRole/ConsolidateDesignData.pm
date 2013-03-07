@@ -9,18 +9,14 @@ use Path::Class qw( tempdir dir );
 use File::Copy::Recursive qw( dircopy );
 use YAML::Any qw( LoadFile );
 use FindBin;
-use base qw( Test::Class Class::Data::Inheritable );
-
-use Test::ObjectRole::DesignCreate::ConsolidateDesignData;
-use DesignCreate::Cmd;
+use base qw( Test::DesignCreate::Class Class::Data::Inheritable );
 
 # Testing
 # DesignCreate::Action::ConsolidateDesignData ( through command line )
 # DesignCreate::CmdRole::ConsolidateDesignData
 
 BEGIN {
-    __PACKAGE__->mk_classdata( 'cmd_class'  => 'DesignCreate::Cmd' );
-    __PACKAGE__->mk_classdata( 'test_class' => 'Test::ObjectRole::DesignCreate::ConsolidateDesignData' );
+    __PACKAGE__->mk_classdata( 'test_role' => 'DesignCreate::CmdRole::ConsolidateDesignData' );
 }
 
 sub valid_consolidate_design_data_cmd : Test(4) {
@@ -203,7 +199,8 @@ sub _get_test_object {
 
     dircopy( $data_dir->stringify, $dir->stringify . '/validated_oligos' );
 
-    return $test->test_class->new(
+    my $metaclass = $test->get_test_object_metaclass();
+    return $metaclass->new_object(
         dir           => $dir,
         target_genes  => [ 'LBL-1' ],
         chr_name      => 11,
