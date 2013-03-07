@@ -51,16 +51,9 @@ PROBLEMS
 TESTING
 =======
 
-### Test Objects
-* Find a way to automate the creation of test objects, should not need to create a test object for every CmdRole I want to test
-
-### Test::Class
-* Use Test::Class framework to get some base tests written and factor out common code
-    * base class would be Action.pm
-
-### Design Method
-* Specify deletion as design method in test objects
-* Remove deletion method as default for this attribute
+### Test Action.pm
+* Consider using this as the base class instead of the cut down version
+    * would need to remove certain roles, methods etc?
 
 * * *
 
