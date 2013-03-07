@@ -24,7 +24,6 @@ has file => (
     required => 1,
 );
 
-
 override as_string => sub {
     my $self = shift;
 

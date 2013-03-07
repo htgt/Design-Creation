@@ -31,6 +31,7 @@ oligo_target_regions_dir
 aos_output_dir
 );
 
+#TODO check how this works when running find-oligos as part of whole design creation
 # Don't need the following attributes when running this command on its own
 __PACKAGE__->meta->remove_attribute( 'chr_strand' );
 __PACKAGE__->meta->remove_attribute( 'species' );
