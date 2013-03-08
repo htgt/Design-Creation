@@ -23,6 +23,11 @@ use namespace::autoclean;
 extends qw( DesignCreate::Action );
 with 'DesignCreate::CmdRole::PickBlockOligos';
 
+has '+design_method' => (
+    traits  => [ 'NoGetopt' ],
+    default => 'conditional',
+);
+
 sub execute {
     my ( $self, $opts, $args ) = @_;
 

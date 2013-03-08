@@ -37,14 +37,18 @@ Oligos should end up in validated oligo dir.
 PROBLEMS
 ========
 
+### Chr and Strand
+* Store the chromosome and strand in the oligo file
+    * stop having to pass it in as a command line option
+    * do not have to keep consuming TargetSequence role
+    * BUT - makes oligo file parsing a little more complicated
+* Need to do this to avoid errors when running commands by hand
+    * need to specify chr / strand in steps, eg consolidate-design-data command
+    * we could put in completely different chr / strand info here, it would be valid
+
 ### Required Attributes Roles
 * a consuming class must provide to required attributes / methods not another role
     * slight danger that a role is assuming the existance of a method / attribute
-
-### Surplus Command Options
-* We need to specify options such as design type for commands where that information is not needed
-* Find these commands and remove them - by removing attributes
-* CHECK - will this cause problems when we run design end-to-end
 
 * * *
 
@@ -82,11 +86,6 @@ FUTURE FUNCTIONALITY
 WOULD BE NICE
 =============
 
-### Chr and Strand
-* Can I store the chromosome and strand in the oligo file?
-    * stop having to pass it in as a command line option
-    * do not have to keep consuming TargetSequence role
-    * BUT - makes oligo file parsing a little more complicated
 
 ### AOS speedup
 * run aos with a smaller target file ( maybe the same one we send exonerate )

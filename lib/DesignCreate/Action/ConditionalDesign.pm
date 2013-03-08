@@ -60,7 +60,7 @@ for my $attribute ( @ATTRIBUTES_NO_CMD_OPTION ) {
 }
 
 has '+design_method' => (
-    traits => [ 'NoGetopt' ],
+    traits  => [ 'NoGetopt' ],
     default => 'conditional',
 );
 
