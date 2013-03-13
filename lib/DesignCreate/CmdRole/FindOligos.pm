@@ -54,6 +54,18 @@ sub _build_query_file {
     return $file;
 }
 
+has repeat_masked_oligo_regions => (
+    is      => 'ro',
+    isa     => 'ArrayRef',
+    default => sub { [] },
+    traits  => [ 'NoGetopt', 'Array' ],
+    handles => {
+        add_repeat_masked_oligo_region   => 'push',
+        has_repeat_masked_oligo_regions  => 'count',
+        list_repeat_masked_oligo_regions => 'join',
+    },
+);
+
 has target_file => (
     is            => 'rw',
     isa           => AbsFile,
@@ -100,11 +112,31 @@ sub create_aos_query_file {
         my $seq_in = Bio::SeqIO->new( -fh => $oligo_file->openr, -format => 'fasta' );
         $self->log->debug( "Adding $oligo oligo target sequence to query file" );
 
-        while ( my $seq = $seq_in->next_seq ) {
-            $seq_out->write_seq( $seq );
+        while ( my $seq_obj = $seq_in->next_seq ) {
+            $self->check_masked_seq( $seq_obj, $oligo ) if $self->mask_by_lower_case eq 'yes';
+            $seq_out->write_seq( $seq_obj );
         }
     }
+
+    if ( $self->has_repeat_masked_oligo_regions ) {
+        DesignCreate::Exception->throw(
+            'Following oligo regions are completely repeat masked: '
+            . $self->list_repeat_masked_oligo_regions( ',' )
+        );
+    }
+
     $self->log->debug('AOS query file created: ' . $self->query_file->stringify );
+
+    return;
+}
+
+sub check_masked_seq {
+    my ( $self, $seq_obj, $oligo ) = @_;
+    my $seq = $seq_obj->seq;
+
+    if ( $seq =~ /^[actg]+$/ ) {
+        $self->add_repeat_masked_oligo_region( $oligo );
+    }
 
     return;
 }
