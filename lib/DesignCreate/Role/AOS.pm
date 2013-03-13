@@ -92,7 +92,7 @@ has mask_by_lower_case => (
     isa           => YesNo,
     traits        => [ 'Getopt' ],
     documentation => 'Should AOS mask lowercase sequence in its calculations ( default no )',
-    default       => 'no',
+    default       => 'yes',
     cmd_flag      => 'mask-by-lower-case',
 );
 
