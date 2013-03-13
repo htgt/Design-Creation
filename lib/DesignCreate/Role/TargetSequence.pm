@@ -69,6 +69,26 @@ sub _build_ensembl_util {
 
 sub get_sequence {
     my ( $self, $start, $end ) = @_;
+
+    my $slice = $self->_get_sequence( $start, $end );
+
+    return $slice->seq;
+}
+
+sub get_repeat_masked_sequence {
+    my ( $self, $start, $end ) = @_;
+
+    my $slice = $self->_get_sequence( $start, $end );
+
+    # softmasked
+    my $repeat_masked_slice = $slice->get_repeatmasked_seq( undef , 1 );
+
+    return $repeat_masked_slice->seq;
+}
+
+sub _get_sequence {
+    my ( $self, $start, $end ) = @_;
+
     my $slice;
 
     $self->log->logdie( 'Start must be less than end' )
@@ -87,7 +107,7 @@ sub get_sequence {
         DesignCreate::Exception->throw( 'Error fetching Ensembl slice: ' . $_ );
     };
 
-    return $slice->seq;
+    return $slice;
 }
 
 1;
