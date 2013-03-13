@@ -117,7 +117,8 @@ sub check_aos_output : Test(6) {
 
     throws_ok{
         $o->check_aos_output
-    } qr/Cannot find file/, 'Throws correct error when missing oligo file';
+    } qr/AOS was unable to find any of the following oligos: U5/
+        , 'Throws correct error when missing oligos';
 }
 
 sub _get_test_object {
