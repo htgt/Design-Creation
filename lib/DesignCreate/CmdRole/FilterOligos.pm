@@ -151,7 +151,7 @@ sub validate_oligo {
 
     if ( !defined $oligo_data->{oligo} || $oligo_data->{oligo} ne $oligo_type )   {
         $self->log->error("Oligo name mismatch, expecting $oligo_type, got: "
-            . $oligo_data->{oligo} );
+            . $oligo_data->{oligo} . 'for: ' . $oligo_data->{id} );
         return;
     }
 
@@ -166,12 +166,12 @@ sub check_oligo_coordinates {
     my ( $self, $oligo_data ) = @_;
 
     if ( $oligo_data->{oligo_start} != ( $oligo_data->{target_region_start} + $oligo_data->{offset} ) ) {
-        $self->log->error('Oligo start coordinates incorrect');
+        $self->log->error('Oligo start coordinates incorrect: ' . $oligo_data->{id} );
         return 0;
     }
 
     if ( $oligo_data->{oligo_end} != ( $oligo_data->{oligo_start} + ( $oligo_data->{oligo_length} - 1 ) ) ) {
-        $self->log->error('Oligo end coordinates incorrect');
+        $self->log->error('Oligo end coordinates incorrect: ' . $oligo_data->{id} );
         return 0;
     }
 
@@ -184,12 +184,12 @@ sub check_oligo_sequence {
 
     my $ensembl_seq = $self->get_sequence( $oligo_data->{oligo_start}, $oligo_data->{oligo_end} );
 
-    if ( $ensembl_seq ne $oligo_data->{oligo_seq} ) {
-        $self->log->error( 'Oligo seq does not match coordinate sequence' );
+    if ( $ensembl_seq ne uc( $oligo_data->{oligo_seq} ) ) {
+        $self->log->error( 'Oligo seq does not match coordinate sequence: ' . $oligo_data->{id} );
         return 0;
     }
 
-    $self->log->debug('Sequence for coordinates matches oligo sequence');
+    $self->log->debug('Sequence for coordinates matches oligo sequence: ' . $oligo_data->{id} );
     return 1;
 }
 
@@ -198,11 +198,11 @@ sub check_oligo_length {
 
     my $oligo_length = length($oligo_data->{oligo_seq});
     if ( $oligo_length != $oligo_data->{oligo_length} ) {
-        $self->log->error("Oligo length is $oligo_length, should be " . $oligo_data->{oligo_length} );
+        $self->log->error("Oligo length is $oligo_length, should be " . $oligo_data->{oligo_length} . ' for: ' . $oligo_data->{id} );
         return 0;
     }
 
-    $self->log->debug('Oligo length correct');
+    $self->log->debug('Oligo length correct for: ' . $oligo_data->{id} );
     return 1;
 }
 
