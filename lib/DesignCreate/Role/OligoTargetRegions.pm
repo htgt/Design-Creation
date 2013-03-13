@@ -72,7 +72,7 @@ sub _build_oligo_target_regions {
         my ( $start, $end ) = $self->get_oligo_region_coordinates( $oligo );
         next if !defined $start || !defined $end;
 
-        my $oligo_seq = $self->get_sequence( $start, $end );
+        my $oligo_seq = $self->get_repeat_masked_sequence( $start, $end );
         my $oligo_id = $self->create_oligo_id( $oligo, $start, $end );
         $self->write_sequence_file( $oligo, $oligo_id, $oligo_seq );
     }
