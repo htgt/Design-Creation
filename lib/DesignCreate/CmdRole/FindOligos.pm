@@ -114,7 +114,7 @@ sub create_aos_query_file {
         $self->log->debug( "Adding $oligo oligo target sequence to query file" );
 
         while ( my $seq_obj = $seq_in->next_seq ) {
-            $self->check_masked_seq( $seq_obj, $oligo ) if $self->mask_by_lower_case eq 'yes';
+            $self->check_masked_seq( $seq_obj->seq, $oligo ) if $self->mask_by_lower_case eq 'yes';
             $seq_out->write_seq( $seq_obj );
         }
     }
@@ -132,8 +132,7 @@ sub create_aos_query_file {
 }
 
 sub check_masked_seq {
-    my ( $self, $seq_obj, $oligo ) = @_;
-    my $seq = $seq_obj->seq;
+    my ( $self, $seq, $oligo ) = @_;
 
     if ( $seq =~ /^[actg]+$/ ) {
         $self->add_repeat_masked_oligo_region( $oligo );
