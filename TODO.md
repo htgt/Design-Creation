@@ -1,6 +1,38 @@
 FUNCTIONALITY
 =============
 
+### IDEA: Split Oligo Target Region Code
+* One part accepts a file with oligo region coordinates and produces the fasta files
+* The other part(s) produce the oligo region coordinate file
+* I think there will be a lot of variation of commands that will produce the coordinate file
+
+### Repeat Region Masking
+* Mask oligo target region sequence
+* make aos ignore masked regions
+* add check to make sure whole region is not masked ( or too much of it )
+
+### Design Parameters
+* Store parameters for given design in a yaml file
+* use it to look up design info, like strand, chr, species, assembly, etc etc
+* store parameters here, like target region coordinates, offsets etc etc
+* for each command add values to this file as needed.
+    * oligo-target-region will add design targeting parameters
+    * find-oligos will add aos parameters
+    * filter-oligos will add any filter criteria parameters
+    * etc
+* Add attribute for this design parameters file in Action.pm
+* Also add method to add to, and read data from the file
+* Probably store data in a seperate attribute - Hash
+
+### Design Meta Information
+* Store design meta information in LIMS2
+* Storing the design parameters would be nice.
+* Store the version of the software used to create the design
+
+### Gap oligo region parameters
+* Talk to Mark, it may be worth adding the option to specify these region.
+* Not just use offset and length
+
 ### Need Config files for certain parameters:
 * Need some sort of profile for different design types
 * Oligo Target Region Definitions mainly
@@ -39,12 +71,8 @@ PROBLEMS
 
 ### Chr and Strand
 * Store the chromosome and strand in the oligo file
-    * stop having to pass it in as a command line option
-    * do not have to keep consuming TargetSequence role
-    * BUT - makes oligo file parsing a little more complicated
 * Need to do this to avoid errors when running commands by hand
-    * need to specify chr / strand in steps, eg consolidate-design-data command
-    * we could put in completely different chr / strand info here, it would be valid
+* Can use design parameters file for this
 
 ### Required Attributes Roles
 * a consuming class must provide to required attributes / methods not another role
@@ -76,6 +104,7 @@ FUTURE FUNCTIONALITY
 * We may not find a good pair of G,D or U oligos
 * Can we automatically re-run but ask AOS to increase number of oligos it outputs
 * Another option is to tweak oligo region coordiantes automatically - but this would be MUCH harder
+* Can call expand on a slice, maybe use this feature?
 
 ### Design Coordinate Pre-Check
 * Additional check on coordinates to make sure they are sane
@@ -85,7 +114,6 @@ FUTURE FUNCTIONALITY
 
 WOULD BE NICE
 =============
-
 
 ### AOS speedup
 * run aos with a smaller target file ( maybe the same one we send exonerate )
