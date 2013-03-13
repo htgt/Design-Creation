@@ -43,7 +43,7 @@ sub valid_find_oligos_cmd : Test(4) {
     chdir;
 }
 
-sub create_aos_query_file : Test(9) {
+sub create_aos_query_file : Test(13) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
@@ -67,6 +67,19 @@ sub create_aos_query_file : Test(9) {
         $o->create_aos_query_file
     } qr/Cannot find file/
         , '.. now throws error about missing file';
+
+    ok $o = $test->_get_test_object, 'can grab another test object';
+    ok my $u5_file = $o->oligo_target_regions_dir->file( 'U5.fasta' ), 'grab U5 region file';
+
+    lives_ok {
+        my @u5_data_lc = map{ lc( $_) } $u5_file->slurp;
+        $u5_file->spew( \@u5_data_lc );
+    } 'can lower-case the U5 oligo region sequence';
+
+    throws_ok{
+        $o->create_aos_query_file
+    } qr/Following oligo regions are completely repeat masked: U5/
+        , '.. throws error about completely repeat masked oligo regions';
 }
 
 sub define_target_file : Test(6) {
@@ -119,6 +132,24 @@ sub check_aos_output : Test(6) {
         $o->check_aos_output
     } qr/AOS was unable to find any of the following oligos: U5/
         , 'Throws correct error when missing oligos';
+}
+
+sub check_masked_seq : Test(6) {
+    my $test = shift;
+    ok my $o = $test->_get_test_object, 'can grab test object';
+
+    lives_ok{
+        $o->check_masked_seq( 'ATCG', 'U5' )
+    } 'can call check_aos_output';
+
+    ok !$o->has_repeat_masked_oligo_regions, 'no repeat masked oligo regions';
+
+    lives_ok{
+        $o->check_masked_seq( 'atcg', 'U5' )
+    } 'can call check_aos_output';
+
+    ok $o->has_repeat_masked_oligo_regions, 'has repeat masked oligo regions';
+    is_deeply $o->repeat_masked_oligo_regions, [ 'U5' ], 'correct repeat masked oligo region data';
 }
 
 sub _get_test_object {
