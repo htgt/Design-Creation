@@ -14,15 +14,16 @@ BEGIN {
     __PACKAGE__->mk_classdata( 'test_role' => 'DesignCreate::Role::TargetSequence' );
 }
 
-sub get_sequence : Test(3) {
+sub get_sequence : Test(4) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
-    my $seq = $o->get_sequence( 1,10 );
-    is $seq, 'NNNNNNNNNN', 'sequence is correct';
+    my $seq = $o->_get_sequence( 1,10 );
+    isa_ok $seq, 'Bio::EnsEMBL::Slice';
+    is $seq->seq, 'NNNNNNNNNN', 'sequence is correct';
 
     throws_ok{
-        $o->get_sequence( 10, 1 );
+        $o->_get_sequence( 10, 1 );
     } qr/Start must be less than end/
         , 'throws error if start after end';
 }
