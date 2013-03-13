@@ -18,6 +18,7 @@ use Bio::SeqIO;
 use Bio::Seq;
 use Fcntl; # O_ constants
 use Const::Fast;
+use Try::Tiny;
 use namespace::autoclean;
 
 with qw(
@@ -158,11 +159,20 @@ sub define_target_file {
 
 sub check_aos_output {
     my $self = shift;
+    my @missing_oligos;
 
     for my $oligo ( @{ $self->expected_oligos } ) {
-        #this will throw a error if file does not exist
-        $self->get_file( "$oligo.yaml", $self->aos_output_dir );
+        try{
+            #this will throw a error if file does not exist
+            $self->get_file( "$oligo.yaml", $self->aos_output_dir );
+        }
+        catch {
+            push @missing_oligos, $oligo;
+        };
     }
+    DesignCreate::Exception->throw(
+        "AOS was unable to find any of the following oligos: " . join( ' ', @missing_oligos )
+    ) if @missing_oligos;
 
     $self->log->info('All oligo yaml files are present');
     return;
