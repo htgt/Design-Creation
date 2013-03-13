@@ -12,10 +12,19 @@ use Perl6::Slurp;
 use Path::Class;
 use Fcntl; # O_ constants
 use Try::Tiny;
+use Getopt::Long;
 
-my $base_work_dir = 'test_test/';
+my ( $file, $persist, $base_work_dir );
+GetOptions(
+    'file'    => \$file,
+    'persist' => \$persist,
+    'dir'     => \$base_work_dir,
+);
 
-my @lines = split /\n/, slurp( $ARGV[0] );
+die( 'Specify base work dir' ) unless $base_work_dir;
+die( 'Specify file with design info' ) unless $file;
+
+my @lines = split /\n/, slurp( $file );
 
 for my $line ( @lines ) {
     my ( $params, $dir ) = get_params( $line );
@@ -24,6 +33,7 @@ for my $line ( @lines ) {
         'ins-del-design',
         '--verbose',
     );
+    push @args, '--persist' if $persist;
 
     push @args, @{ $params };
     my $output;
