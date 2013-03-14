@@ -91,7 +91,7 @@ has mask_by_lower_case => (
     is            => 'ro',
     isa           => YesNo,
     traits        => [ 'Getopt' ],
-    documentation => 'Should AOS mask lowercase sequence in its calculations ( default no )',
+    documentation => 'Should AOS mask lowercase sequence in its calculations ( default yes )',
     default       => 'yes',
     cmd_flag      => 'mask-by-lower-case',
 );
@@ -273,7 +273,7 @@ sub parse_oligo_seq {
     $oligo_data{oligo_end}    = $oligo_data{oligo_start} + ( $self->oligo_length - 1 );
     $oligo_data{oligo_length} = $self->oligo_length;
     $oligo_data{oligo_seq}    = $seq->seq;
-    $oligo_data{offset}       = $+{offset};
+    $oligo_data{offset}       = $+{offset} + 0;
     $oligo_data{oligo}        = $+{oligo};
     $oligo_data{id}           = $+{oligo} . '-' . $self->oligo_count;
 
