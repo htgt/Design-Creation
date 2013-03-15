@@ -1,0 +1,25 @@
+---
+D3:
+  chromosome: '11'
+  end: 10000700
+  start: 10000601
+D5:
+  chromosome: '11'
+  end: 10000600
+  start: 10000500
+G3:
+  chromosome: '11'
+  end: 10005700
+  start: 10004701
+G5:
+  chromosome: '11'
+  end: 9996099
+  start: 9995100
+U3:
+  chromosome: '11'
+  end: 10000300
+  start: 10000201
+U5:
+  chromosome: '11'
+  end: 10000200
+  start: 10000100
