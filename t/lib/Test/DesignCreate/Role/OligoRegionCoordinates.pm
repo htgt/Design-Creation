@@ -1,4 +1,4 @@
-package Test::DesignCreate::Role::OligoTargetRegions;
+package Test::DesignCreate::Role::OligoRegionCoordinates;
 
 use strict;
 use warnings FATAL => 'all';
@@ -9,10 +9,10 @@ use Bio::SeqIO;
 use base qw( Test::DesignCreate::Class Class::Data::Inheritable );
 
 # Testing
-# DesignCreate::Role::OligoTargetRegions
+# DesignCreate::Role::OligoRegionCoordinates
 
 BEGIN {
-    __PACKAGE__->mk_classdata( 'test_role' => 'DesignCreate::Role::OligoTargetRegions' );
+    __PACKAGE__->mk_classdata( 'test_role' => 'DesignCreate::Role::OligoRegionCoordinates' );
 }
 
 sub get_oligo_region_offset : Tests(4) {
@@ -40,36 +40,6 @@ sub get_oligo_region_length : Tests(4) {
 
 }
 
-sub write_sequence_file : Tests(6){
-    my $test = shift;
-    ok my $o = $test->_get_test_object, 'can grab test object';
-
-    lives_ok {
-        $o->write_sequence_file( 'A1', 'A1_test', 'ATCG' )
-    } 'can write_sequence_file';
-
-    ok my $seq_file = $o->oligo_target_regions_dir->file( 'A1.fasta' )
-        ,'can create Path::Class::File object from oligo target regions directory';
-    ok $o->oligo_target_regions_dir->contains( $seq_file ), 'test seq file exists';
-
-    ok my $seq_in = Bio::SeqIO->new( -file => $seq_file->stringify, -format => 'fasta' )
-        , 'can load up seq file';
-    is $seq_in->next_seq->seq, 'ATCG', 'file has correct sequence';
-}
-
-sub get_sequence : Test(3) {
-    my $test = shift;
-    ok my $o = $test->_get_test_object, 'can grab test object';
-
-    my $seq = $o->get_sequence( 1,10 );
-    is $seq, 'NNNNNNNNNN', 'sequence is correct';
-
-    throws_ok{
-        $o->get_sequence( 10, 1 );
-    } qr/Start must be less than end/
-        , 'throws error if start after end';
-}
-
 sub _get_test_object {
     my ( $test, $strand ) = @_;
     $strand //= 1;
@@ -77,8 +47,6 @@ sub _get_test_object {
     my $metaclass = $test->get_test_object_metaclass();
     return $metaclass->new_object(
         dir           => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
-        target_start  => 101176328,
-        target_end    => 101176428,
         chr_name      => 11,
         chr_strand    => $strand,
         design_method => 'deletion',
