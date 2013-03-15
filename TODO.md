@@ -6,10 +6,11 @@ FUNCTIONALITY
 * The other part(s) produce the oligo region coordinate file
 * I think there will be a lot of variation of commands that will produce the coordinate file
 
-### Repeat Region Masking
-* Mask oligo target region sequence
-* make aos ignore masked regions
-* add check to make sure whole region is not masked ( or too much of it )
+### Multiple Designs
+* If I can produce multiple variants of a design do so in a seperate folder.
+* So if I have 3 good oligos for each type and 3 good sets of pairs make:
+    * 1 main ( best ) design
+    * 2 alternate designs
 
 ### Design Parameters
 * Store parameters for given design in a yaml file
@@ -23,15 +24,15 @@ FUNCTIONALITY
 * Add attribute for this design parameters file in Action.pm
 * Also add method to add to, and read data from the file
 * Probably store data in a seperate attribute - Hash
+* IDEA: Store target region start and end info for oligos in LIMS2
+    * just adding 2 more fields
+    * will be able to deduce original critical / deleted regions
+    * BUT - can we lift over these coordinates to another assembly??
 
 ### Design Meta Information
 * Store design meta information in LIMS2
 * Storing the design parameters would be nice.
 * Store the version of the software used to create the design
-
-### Gap oligo region parameters
-* Talk to Mark, it may be worth adding the option to specify these region.
-* Not just use offset and length
 
 ### Need Config files for certain parameters:
 * Need some sort of profile for different design types
@@ -78,6 +79,10 @@ PROBLEMS
 * a consuming class must provide to required attributes / methods not another role
     * slight danger that a role is assuming the existance of a method / attribute
 
+### Dir / File Deletion
+If you run a design into the same folder twice, and the first run gets further than the second one:
+there maybe misleading data in the folder, because data from first run will not be over-written / deleted
+
 * * *
 
 TESTING
@@ -86,6 +91,9 @@ TESTING
 ### Test Action.pm
 * Consider using this as the base class instead of the cut down version
     * would need to remove certain roles, methods etc?
+
+### Role::AOS
+* Factor the tests out for this role into seperate test class
 
 * * *
 

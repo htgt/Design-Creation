@@ -147,12 +147,12 @@ sub _build_aos_output_dir {
 }
 
 has oligo_target_regions_dir => (
-    is         => 'ro',
-    isa        => 'Path::Class::Dir',
-    traits     => [ 'Getopt' ],
+    is            => 'ro',
+    isa           => 'Path::Class::Dir',
+    traits        => [ 'Getopt' ],
     documentation => 'Directory holding the oligo target region fasta files '
                      . "( default [design_dir]/$DEFAULT_OLIGO_TARGET_REGIONS_DIR_NAME )",
-    lazy_build => 1,
+    lazy_build    => 1,
     cmd_flag      => 'oligo-target-region-dir',
     coerce        => 1,
 );
