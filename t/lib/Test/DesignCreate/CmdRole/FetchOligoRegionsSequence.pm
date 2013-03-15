@@ -48,7 +48,7 @@ sub create_oligo_region_sequence_files : Test(11) {
     }
 
     lives_ok{
-        delete $o->oligo_region_coordinates->{G5}
+        delete $o->oligo_region_data->{G5}
     } 'can delete G5 oligo region data';
 
     throws_ok{

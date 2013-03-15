@@ -69,11 +69,11 @@ has D_block_end => (
 );
 
 #TODO consider method overriding / renaming here
-sub build_oligo_target_regions {
+sub get_oligo_region_coordinates {
     my $self = shift;
 
     $self->check_oligo_block_coordinates;
-    $self->_build_oligo_target_regions;
+    $self->_get_oligo_region_coordinates;
 
     return;
 }
@@ -114,7 +114,7 @@ sub check_oligo_block_coordinates {
 }
 
 # work out coordinates for block specified conditional designs
-sub get_oligo_region_coordinates {
+sub coordinates_for_oligo {
     my ( $self, $oligo ) = @_;
 
     if ( $oligo =~ /^G/ ) {

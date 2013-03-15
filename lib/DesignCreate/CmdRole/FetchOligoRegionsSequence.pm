@@ -45,7 +45,7 @@ sub _build_oligo_region_coordinate_file {
     return $self->get_file( $DEFAULT_OLIGO_COORD_FILE_NAME, $self->oligo_target_regions_dir );
 }
 
-has oligo_region_coordinates => (
+has oligo_region_data => (
     is         => 'ro',
     isa        => 'HashRef',
     traits     => [ 'NoGetopt', 'Hash' ],
@@ -56,7 +56,7 @@ has oligo_region_coordinates => (
     }
 );
 
-sub _build_oligo_region_coordinates {
+sub _build_oligo_region_data {
     my $self = shift;
 
     return LoadFile( $self->oligo_region_coordinate_file );

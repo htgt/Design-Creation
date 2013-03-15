@@ -30,7 +30,7 @@ sub execute {
     my ( $self, $opts, $args ) = @_;
 
     try{
-        $self->build_oligo_target_regions;
+        $self->get_oligo_region_coordinates;
     }
     catch{
         $self->log->error( "Failed to generate oligo target regions:\n" . $_ );

@@ -82,19 +82,19 @@ has D3_region_offset => (
     cmd_flag      => 'd3-region-offset'
 );
 
-sub build_oligo_target_regions {
+sub get_oligo_region_coordinates {
     my $self = shift;
 
     DesignCreate::Exception->throw(
         "Target start " . $self->target_start . ", greater than target end " . $self->target_end
     ) if $self->target_start > $self->target_end;
 
-    $self->_build_oligo_target_regions;
+    $self->_get_oligo_region_coordinates;
     return;
 }
 
 # work out coordinates for ins / del designs
-sub get_oligo_region_coordinates {
+sub coordinates_for_oligo {
     my ( $self, $oligo ) = @_;
     my ( $start, $end );
 

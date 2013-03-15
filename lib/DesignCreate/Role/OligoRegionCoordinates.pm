@@ -75,12 +75,12 @@ has G3_region_offset => (
     cmd_flag      => 'g3-region-offset'
 );
 
-sub _build_oligo_target_regions {
+sub _get_oligo_region_coordinates {
     my $self = shift;
 
     for my $oligo ( @{ $self->expected_oligos } ) {
         $self->log->info( "Getting target region for $oligo oligo" );
-        my ( $start, $end ) = $self->get_oligo_region_coordinates( $oligo );
+        my ( $start, $end ) = $self->coordinates_for_oligo( $oligo );
         next if !defined $start || !defined $end;
 
         my $oligo_coords = {

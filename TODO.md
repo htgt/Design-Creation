@@ -24,6 +24,8 @@ FUNCTIONALITY
 * Add attribute for this design parameters file in Action.pm
 * Also add method to add to, and read data from the file
 * Probably store data in a seperate attribute - Hash
+* Currently one role has a bunch of attributes and sequence getting code
+    * 
 * IDEA: Store target region start and end info for oligos in LIMS2
     * just adding 2 more fields
     * will be able to deduce original critical / deleted regions
@@ -40,6 +42,10 @@ FUNCTIONALITY
 * Can use MooseX::SimpleConfig but:
     * only really use it with one log file
     * seems to suppress the --help option
+
+### Split Sequence Gathering from Attributes
+* Currently one role has a bunch of attributes and sequence getting code
+* Split into multiple roles, must do after Design Parameters Work 
 
 Location Specified Designs
 --------------------------
@@ -69,6 +75,10 @@ Oligos should end up in validated oligo dir.
 
 PROBLEMS
 ========
+
+### Constants
+* Specified same constant in different places
+* Create a constants file to store all these values
 
 ### Chr and Strand
 * Store the chromosome and strand in the oligo file
