@@ -1,12 +1,12 @@
-package DesignCreate::Role::OligoTargetRegions;
+package DesignCreate::Role::OligoRegionCoordinates;
 
 =head1 NAME
 
-DesignCreate::Role::OligoTargetRegions
+DesignCreate::Role::OligoRegionCoordinates
 
 =head1 DESCRIPTION
 
-Common code for oligo target region finding commands.
+Common code for oligo target ( candidate ) region coordinate finding commands.
 
 =cut
 
