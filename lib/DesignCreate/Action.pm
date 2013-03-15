@@ -181,12 +181,12 @@ sub BUILD {
         {
             level    => $log_level,
             file     => ">>" . $self->dir . '/design-create.log',
-            layout   => '%d %c %p %m%n',
+            layout   => '%d %c %p %x %m%n',
         },
         {
             level    => $log_level,
             file     => "STDERR",
-            layout   => '%d %c %p %m%n',
+            layout   => '%d %c %p %x %m%n',
         },
     );
 
