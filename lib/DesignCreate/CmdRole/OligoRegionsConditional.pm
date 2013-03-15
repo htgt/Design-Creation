@@ -22,7 +22,7 @@ use Const::Fast;
 use namespace::autoclean;
 
 with qw(
-DesignCreate::Role::OligoTargetRegions
+DesignCreate::Role::OligoRegionCoordinates
 );
 
 const my $MIN_BLOCK_LENGTH => 102;

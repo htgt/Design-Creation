@@ -20,7 +20,7 @@ use DesignCreate::Types qw( PositiveInt NaturalNumber );
 use namespace::autoclean;
 
 with qw(
-DesignCreate::Role::OligoTargetRegions
+DesignCreate::Role::OligoRegionCoordinates
 );
 
 has target_start => (

@@ -237,7 +237,7 @@ sub get_oligo_region_u_or_d_oligo : Test(15) {
         , 'throws start greater than end error';
 }
 
-sub build_oligo_target_regions : Test(8) {
+sub build_oligo_target_regions : Test(3) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
@@ -245,10 +245,10 @@ sub build_oligo_target_regions : Test(8) {
         $o->build_oligo_target_regions
     } 'can build_oligo_target_regions';
 
-    for my $oligo ( qw( G5 U5 U3 D5 D3 G3 ) ) {
-        my $oligo_file = $o->oligo_target_regions_dir->file( $oligo . '.fasta' );
-        ok $o->oligo_target_regions_dir->contains( $oligo_file ), "$oligo oligo file exists";
-    }
+
+    my $oligo_region_file = $o->oligo_target_regions_dir->file( 'oligo_region_coords.yaml' );
+    ok $o->oligo_target_regions_dir->contains( $oligo_region_file )
+        , "$oligo_region_file oligo file exists";
 }
 
 sub get_oligo_block_left_half_coords : Test(7) {
