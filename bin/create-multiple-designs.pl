@@ -7,72 +7,69 @@
 use strict;
 use warnings FATAL => 'all';
 
-use IPC::System::Simple qw( capture );
-use Perl6::Slurp;
-use Path::Class;
-use Fcntl; # O_ constants
+use IPC::System::Simple qw( system );
+use Text::CSV;
 use Try::Tiny;
 use Getopt::Long;
+use List::MoreUtils qw( any );
+use Smart::Comments;
 
 my ( $file, $persist, $base_work_dir );
 GetOptions(
-    'file'    => \$file,
-    'persist' => \$persist,
-    'dir'     => \$base_work_dir,
+    'file=s'      => \$file,
+    'persist'     => \$persist,
+    'dir=s'       => \$base_work_dir,
+    'conditional' => \my $conditional,
+    'debug'       => \my $debug,
+    'gene=s'      => \my @genes,
+    'param=s'     => \my %extra_params,
 );
 
 die( 'Specify base work dir' ) unless $base_work_dir;
 die( 'Specify file with design info' ) unless $file;
 
-my @lines = split /\n/, slurp( $file );
+open ( my $fh, '<', $file ) or die( "Can not open $file " . $! );
+my $csv = Text::CSV->new();
+$csv->column_names( @{ $csv->getline( $fh ) } );
 
-for my $line ( @lines ) {
-    my ( $params, $dir ) = get_params( $line );
+while ( my $data = $csv->getline_hr( $fh ) ) {
+    if ( @genes ) {
+        next unless any { $data->{'target-gene'} eq $_ } @genes;
+    }
 
-    my @args = (
-        'ins-del-design',
-        '--verbose',
-    );
+    my ( $params, $dir ) = get_params( $data );
+    my @args;
+
+    push @args, $conditional ? 'conditional-design' : 'ins-del-design';
+    push @args, $debug       ? '--debug'            : '--verbose';
     push @args, '--persist' if $persist;
 
     push @args, @{ $params };
-    my $output;
+    if ( %extra_params ) {
+        while ( my( $cmd, $arg ) = each %extra_params ) {
+            push @args, '--' . $cmd,;
+            push @args, $arg;
+        }
+    }
 
     try{
-        $output = capture( 'bin/design-create', @args );
+        system( 'bin/design-create', @args );
     }
     catch{
         print $_;
     };
-
-    my $work_dir = dir( $dir )->absolute;
-    my $output_file = $work_dir->file( 'output.txt' );
-    $output_file->touch;
-    my $fh = $output_file->open( O_WRONLY|O_CREAT ) or die( "Open $output_file: $!" );
-    print $fh $output;
 }
 
 sub get_params {
-    my $line = shift;
+    my $data = shift;
 
-    $line =~ s/"//g;
+    my $dir = $base_work_dir . $data->{'target-gene'};
+    my @params;
+    while ( my( $cmd, $arg ) = each %{ $data } ) {
+        push @params, '--' . $cmd,;
+        push @params, $arg;
+    }
+    push @params, '--dir', $dir;
 
-    my ( $gene, $position ) = split /,/, $line;
-    my ( $chr, $coords ) = split /:/, $position;
-    $chr =~ s/chr//;
-    my ( $start, $end ) = split /-/, $coords;
-
-    my $dir = $base_work_dir . $gene;
-    my $params = [
-        '--target-start'  => $start,
-        '--target-end'    => $end,
-        '--chromosome'    => $chr,
-        '--target-gene'   => $gene,
-        '--dir'           => $dir,
-        '--strand'        => 1,
-        '--num-oligos'    => 3,
-        '--design-method' => 'deletion',
-    ];
-
-    return ( $params, $dir );
+    return ( \@params, $dir );
 }
