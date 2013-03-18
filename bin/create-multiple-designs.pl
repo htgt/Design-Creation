@@ -10,8 +10,6 @@ use Getopt::Long;
 use List::MoreUtils qw( any );
 use Pod::Usage;
 
-use Smart::Comments;
-
 my ( $file, $persist, $base_work_dir );
 GetOptions(
     'help'        => sub { pod2usage( -verbose => 1 ) },
@@ -33,8 +31,16 @@ my $csv = Text::CSV->new();
 $csv->column_names( @{ $csv->getline( $fh ) } );
 
 while ( my $data = $csv->getline_hr( $fh ) ) {
+    process_design( $data );
+}
+
+close $fh;
+
+sub process_design {
+    my $data = shift;
+
     if ( @genes ) {
-        next unless any { $data->{'target-gene'} eq $_ } @genes;
+        return unless any { $data->{'target-gene'} eq $_ } @genes;
     }
 
     my ( $params, $dir ) = get_params( $data );
@@ -58,6 +64,8 @@ while ( my $data = $csv->getline_hr( $fh ) ) {
     catch{
         print $_;
     };
+
+    return;
 }
 
 sub get_params {
