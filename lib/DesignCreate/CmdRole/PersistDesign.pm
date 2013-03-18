@@ -1,4 +1,10 @@
 package DesignCreate::CmdRole::PersistDesign;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::CmdRole::PersistDesign::VERSION = '0.001';
+}
+## use critic
+
 
 =head1 NAME
 
@@ -75,6 +81,8 @@ sub persist_design {
     catch {
         $self->log->error('Unable to persist design to LIMS2: ' . $_ );
     };
+
+    return;
 }
 
 1;

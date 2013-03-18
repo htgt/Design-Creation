@@ -1,4 +1,10 @@
 package DesignCreate::Action::RunAOS;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::Action::RunAOS::VERSION = '0.001';
+}
+## use critic
+
 
 =head1 NAME
 

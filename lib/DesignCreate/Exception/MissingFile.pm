@@ -1,4 +1,10 @@
 package DesignCreate::Exception::MissingFile;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::Exception::MissingFile::VERSION = '0.001';
+}
+## use critic
+
 
 use strict;
 use warnings FATAL => 'all';
@@ -23,7 +29,6 @@ has file => (
     isa      => 'Path::Class::File',
     required => 1,
 );
-
 
 override as_string => sub {
     my $self = shift;

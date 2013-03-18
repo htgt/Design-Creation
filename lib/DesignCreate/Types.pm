@@ -1,4 +1,10 @@
 package DesignCreate::Types;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::Types::VERSION = '0.001';
+}
+## use critic
+
 
 use warnings FATAL => 'all';
 use strict;

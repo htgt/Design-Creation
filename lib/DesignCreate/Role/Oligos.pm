@@ -1,4 +1,10 @@
 package DesignCreate::Role::Oligos;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::Role::Oligos::VERSION = '0.001';
+}
+## use critic
+
 
 =head1 NAME
 
@@ -11,6 +17,7 @@ Common Oligo attributes and methods
 =cut
 
 use Moose::Role;
+use DesignCreate::Exception;
 use DesignCreate::Types qw( ArrayRefOfOligos );
 use namespace::autoclean;
 
@@ -21,7 +28,6 @@ has expected_oligos => (
     lazy_build => 1,
 );
 
-#TODO account for all design type
 sub _build_expected_oligos {
     my $self = shift;
 
@@ -32,8 +38,10 @@ sub _build_expected_oligos {
         return [ qw( G5 U5 U3 D5 D3 G3 ) ];
     }
     else {
-        die( 'Unknown design method ' . $self->design_method );
+        DesignCreate::Exception->throw( 'Unknown design method ' . $self->design_method );
     }
+
+    return;
 }
 
 1;

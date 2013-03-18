@@ -1,4 +1,10 @@
 package DesignCreate::CmdRole::RunAOS;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::CmdRole::RunAOS::VERSION = '0.001';
+}
+## use critic
+
 
 =head1 NAME
 

@@ -9,18 +9,14 @@ use Path::Class qw( tempdir dir );
 use File::Copy::Recursive qw( dircopy );
 use YAML::Any qw( LoadFile );
 use FindBin;
-use base qw( Test::Class Class::Data::Inheritable );
-
-use Test::ObjectRole::DesignCreate::PickGapOligos;
-use DesignCreate::Cmd;
+use base qw( Test::DesignCreate::Class Class::Data::Inheritable );
 
 # Testing
 # DesignCreate::Action::PickGapOligos ( through command line )
 # DesignCreate::CmdRole::PickGapOligos, most of its work is done by:
 
 BEGIN {
-    __PACKAGE__->mk_classdata( 'cmd_class' => 'DesignCreate::Cmd' );
-    __PACKAGE__->mk_classdata( 'test_class' => 'Test::ObjectRole::DesignCreate::PickGapOligos' );
+    __PACKAGE__->mk_classdata( 'test_role' => 'DesignCreate::CmdRole::PickGapOligos' );
 }
 
 sub valid_pick_gap_oligos_cmd : Test(4) {
@@ -126,10 +122,12 @@ sub get_gap_oligo_pairs : Test(7) {
 
     # Need to create fresh test object here to fill in g oligo data 
     my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute;
-    ok $o = $test->test_class->new(
+    my $metaclass = $test->get_test_object_metaclass();
+    ok $o = $metaclass->new_object(
         dir            => $dir,
         g5_oligos_data => { 'G5-1' => 1 },
         g3_oligos_data => { 'G3-2' => 1, 'G3-3' => 1 },
+        design_method  => 'deletion'
     ), 'can create another test object';
 
     lives_ok{
@@ -178,7 +176,11 @@ sub _get_test_object {
 
     dircopy( $data_dir->stringify, $dir->stringify . '/validated_oligos' );
 
-    return $test->test_class->new( dir => $dir );
+    my $metaclass = $test->get_test_object_metaclass();
+    return $metaclass->new_object( 
+        dir => $dir,
+        design_method => 'deletion',
+    );
 }
 
 1;

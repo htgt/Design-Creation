@@ -1,4 +1,10 @@
 package DesignCreate::CmdRole::PickGapOligos;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::CmdRole::PickGapOligos::VERSION = '0.001';
+}
+## use critic
+
 
 =head1 NAME
 
@@ -18,7 +24,10 @@ use YAML::Any qw( LoadFile DumpFile );
 use DesignCreate::Types qw( PositiveInt );
 use List::MoreUtils qw( all );
 use Data::Dump qw( pp );
+use Const::Fast;
 use namespace::autoclean;
+
+const my $DEFAULT_GAP_OLIGO_LOG_DIR_NAME => 'gap_oligo_logs';
 
 has g5_oligos_data => (
     is         => 'ro',
@@ -58,6 +67,23 @@ sub _build_g3_oligos_data {
     my $data = LoadFile( $g3_oligos_file );
 
     return { map{ $_->{id} => $_ } @{ $data } };
+}
+
+has gap_oligo_log_dir => (
+    is         => 'ro',
+    isa        => 'Path::Class::Dir',
+    traits     => [ 'NoGetopt' ],
+    lazy_build => 1,
+);
+
+sub _build_gap_oligo_log_dir {
+    my $self = shift;
+
+    my $dir = $self->validated_oligo_dir->subdir( $DEFAULT_GAP_OLIGO_LOG_DIR_NAME )->absolute;
+    $dir->rmtree();
+    $dir->mkpath();
+
+    return $dir;
 }
 
 has tile_size => (
@@ -111,7 +137,7 @@ sub generate_tiled_oligo_seqs {
         $self->tile_oligo_seq( $oligo );
     }
     $self->log->debug('Generated tiled oligo sequence hash');
-    DumpFile( $self->validated_oligo_dir->file('tiled_oligo_seqs.yaml'), $self->tiled_oligo_seqs );
+    DumpFile( $self->gap_oligo_log_dir->file('tiled_oligo_seqs.yaml'), $self->tiled_oligo_seqs );
 
     return;
 }
@@ -154,7 +180,7 @@ sub find_oligos_with_matching_seqs {
     }
 
     $self->log->debug('Generated matching oligos hash');
-    DumpFile( $self->validated_oligo_dir->file('matching_oligos.yaml'), \%matching_oligos );
+    DumpFile( $self->gap_oligo_log_dir->file('matching_oligos.yaml'), \%matching_oligos );
 
     $self->matching_oligos( \%matching_oligos );
     return;
@@ -175,7 +201,7 @@ sub get_gap_oligo_pairs {
         }
     }
 
-    $self->log->info( 'Found oligo pairs: ' . pp($self->oligo_pairs) );
+    $self->log->info( 'Found G oligo pairs: ' . pp($self->oligo_pairs) );
     return;
 }
 

@@ -1,4 +1,10 @@
 package DesignCreate::Role::AOS;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::Role::AOS::VERSION = '0.001';
+}
+## use critic
+
 
 =head1 NAME
 
@@ -91,8 +97,8 @@ has mask_by_lower_case => (
     is            => 'ro',
     isa           => YesNo,
     traits        => [ 'Getopt' ],
-    documentation => 'Should AOS mask lowercase sequence in its calculations ( default no )',
-    default       => 'no',
+    documentation => 'Should AOS mask lowercase sequence in its calculations ( default yes )',
+    default       => 'yes',
     cmd_flag      => 'mask-by-lower-case',
 );
 
@@ -166,6 +172,8 @@ sub run_aos_scripts {
         DesignCreate::Exception->throw( "AOS oligo_fasta file has no data in it"
             . $self->aos_output_dir->stringify  );
     }
+
+    return;
 }
 
 sub run_aos_script1 {
@@ -242,33 +250,43 @@ sub parse_aos_output {
     return;
 }
 
+## no critic(RegularExpressions::ProhibitComplexRegexes)
 sub parse_oligo_seq {
     my ( $self, $seq ) = @_;
     my %oligo_data;
 
-    unless ( $seq->display_id =~ /^(U|D|G)(3|5):\d+-\d+_\d+$/ ) {
+    my $oligo_id_regex = qr/
+        ^
+        (?<oligo>(U|D|G)(3|5))
+        :
+        (?<start>\d+)
+        -
+        (?<end>\d+)
+        _
+        (?<offset>\d+)
+        $
+    /x;
+
+    unless ( $seq->display_id =~ $oligo_id_regex ) {
         $self->log->warn(
             'Oligo sequence display id is not in expected format: ' . $seq->display_id );
         return;
     }
 
-    my ( $oligo, $location )        = split( ':', $seq->display_id );
-    my ( $coordinates, $offset )    = split( '_', $location );
-    my ( $query_start, $query_end ) = split( '-', $coordinates );
+    $oligo_data{target_region_start} = $+{start} + 0;
+    $oligo_data{target_region_end}   = $+{end} + 0;
 
-    $oligo_data{target_region_start} = $query_start + 0;
-    $oligo_data{target_region_end}   = $query_end + 0;
-
-    $oligo_data{oligo_start}  = $query_start + $offset;
+    $oligo_data{oligo_start}  = $+{start} + $+{offset};
     $oligo_data{oligo_end}    = $oligo_data{oligo_start} + ( $self->oligo_length - 1 );
     $oligo_data{oligo_length} = $self->oligo_length;
     $oligo_data{oligo_seq}    = $seq->seq;
-    $oligo_data{offset}       = $offset;
-    $oligo_data{oligo}        = $oligo;
-    $oligo_data{id}           = $oligo . '-' . $self->oligo_count;
+    $oligo_data{offset}       = $+{offset} + 0;
+    $oligo_data{oligo}        = $+{oligo};
+    $oligo_data{id}           = $+{oligo} . '-' . $self->oligo_count;
 
     return \%oligo_data;
 }
+## use critic
 
 sub create_oligo_files {
     my $self = shift;

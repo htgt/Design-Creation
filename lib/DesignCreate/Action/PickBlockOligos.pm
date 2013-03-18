@@ -1,4 +1,10 @@
 package DesignCreate::Action::PickBlockOligos;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::Action::PickBlockOligos::VERSION = '0.001';
+}
+## use critic
+
 
 =head1 NAME
 
@@ -22,6 +28,11 @@ use namespace::autoclean;
 
 extends qw( DesignCreate::Action );
 with 'DesignCreate::CmdRole::PickBlockOligos';
+
+has '+design_method' => (
+    traits  => [ 'NoGetopt' ],
+    default => 'conditional',
+);
 
 sub execute {
     my ( $self, $opts, $args ) = @_;

@@ -1,4 +1,10 @@
 package DesignCreate::CmdRole::ConsolidateDesignData;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::CmdRole::ConsolidateDesignData::VERSION = '0.001';
+}
+## use critic
+
 
 =head1 NAME
 
@@ -17,10 +23,10 @@ Oligos
 =cut
 
 use Moose::Role;
+use DesignCreate::Exception;
 use DesignCreate::Exception::NonExistantAttribute;
 use YAML::Any qw( LoadFile DumpFile );
 use List::Util qw( first );
-use DesignCreate::Exception;
 use namespace::autoclean;
 
 with qw(
@@ -105,8 +111,7 @@ sub consolidate_design_data {
 sub get_design_phase {
     my $self = shift;
 
-    $self->log->info( 'Code to work out design phase not in place, setting it to -1 for now' );
-    $self->phase( -1 );
+    $self->log->info( 'Code to work out design phase not in place' );
 
     return;
 }
@@ -150,7 +155,7 @@ sub format_oligo_data {
 
     return {
         type => $oligo->{oligo},
-        seq  => $oligo->{oligo_seq},
+        seq  => uc( $oligo->{oligo_seq} ),
         loci => [
             {
                 assembly   => $self->assembly,
@@ -170,10 +175,11 @@ sub create_design_file {
         type       => $self->design_method,
         species    => $self->species,
         gene_ids   => $self->target_genes,
-        phase      => $self->phase,
         created_by => $self->created_by,
         oligos     => $self->picked_oligos,
     );
+
+    $design_data{phase} = $self->phase if $self->phase;
 
     my $design_data_file = $self->dir->file( $self->design_data_file_name );
     $self->log->info( "Creating design file: $design_data_file" );

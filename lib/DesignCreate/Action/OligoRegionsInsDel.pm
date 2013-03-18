@@ -1,4 +1,10 @@
 package DesignCreate::Action::OligoRegionsInsDel;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::Action::OligoRegionsInsDel::VERSION = '0.001';
+}
+## use critic
+
 
 =head1 NAME
 

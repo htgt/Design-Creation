@@ -9,18 +9,14 @@ use Path::Class qw( tempdir dir );
 use File::Copy::Recursive qw( dircopy );
 use YAML::Any qw( LoadFile );
 use FindBin;
-use base qw( Test::Class Class::Data::Inheritable );
-
-use Test::ObjectRole::DesignCreate::ConsolidateDesignData;
-use DesignCreate::Cmd;
+use base qw( Test::DesignCreate::Class Class::Data::Inheritable );
 
 # Testing
 # DesignCreate::Action::ConsolidateDesignData ( through command line )
 # DesignCreate::CmdRole::ConsolidateDesignData
 
 BEGIN {
-    __PACKAGE__->mk_classdata( 'cmd_class'  => 'DesignCreate::Cmd' );
-    __PACKAGE__->mk_classdata( 'test_class' => 'Test::ObjectRole::DesignCreate::ConsolidateDesignData' );
+    __PACKAGE__->mk_classdata( 'test_role' => 'DesignCreate::CmdRole::ConsolidateDesignData' );
 }
 
 sub valid_consolidate_design_data_cmd : Test(4) {
@@ -153,18 +149,20 @@ sub pick_oligo_from_pair : Test(9) {
         ,'throws error with invalid oligo type';
 }
 
-sub format_oligo_data : Test(7) {
+sub format_oligo_data : Test(10) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
     ok my $u5_file = $o->validated_oligo_dir->file( 'U5.yaml' ), 'can find U5 oligo file';
     my $oligos = LoadFile( $u5_file );
     my $test_oligo = shift @{ $oligos };
+    ok $test_oligo->{oligo_seq} = lc( $test_oligo->{oligo_seq} ), 'can lowercase oligo seq';
 
     ok my $oligo_data = $o->format_oligo_data( $test_oligo ), 'can call format_oligo_data';
 
     is $oligo_data->{type}, $test_oligo->{oligo}, 'correct oligo type';
-    is $oligo_data->{seq}, $test_oligo->{oligo_seq}, 'correct oligo seq';
+    isnt $oligo_data->{seq}, $test_oligo->{oligo_seq}, 'oligo sequences different case';
+    is $oligo_data->{seq}, uc( $test_oligo->{oligo_seq} ), 'same oligo seq once uppercase original data';
     my $loci = shift @{ $oligo_data->{loci} };
     is $loci->{chr_name}, 11, 'correct chromosome';
     is $loci->{chr_start}, $test_oligo->{oligo_start}, 'correct start coordinate';
@@ -203,7 +201,8 @@ sub _get_test_object {
 
     dircopy( $data_dir->stringify, $dir->stringify . '/validated_oligos' );
 
-    return $test->test_class->new(
+    my $metaclass = $test->get_test_object_metaclass();
+    return $metaclass->new_object(
         dir           => $dir,
         target_genes  => [ 'LBL-1' ],
         chr_name      => 11,

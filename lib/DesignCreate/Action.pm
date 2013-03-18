@@ -1,4 +1,10 @@
 package DesignCreate::Action;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::Action::VERSION = '0.001';
+}
+## use critic
+
 
 use strict;
 use warnings FATAL => 'all';
@@ -9,7 +15,6 @@ use DesignCreate::Exception;
 use DesignCreate::Exception::MissingFile;
 use DesignCreate::Types qw( DesignMethod );
 use Log::Log4perl qw( :levels );
-use Try::Tiny;
 use Const::Fast;
 use namespace::autoclean;
 
@@ -17,8 +22,6 @@ extends qw( MooseX::App::Cmd::Command );
 with qw(
 MooseX::Log::Log4perl
 );
-#TODO use SimpleConfig,
-#MooseX::SimpleConfig
 
 has trace => (
     is            => 'ro',
@@ -104,6 +107,7 @@ sub _init_output_dir {
     my ( $self, $dir ) = @_;
 
     $dir->mkpath();
+    return;
 }
 
 has validated_oligo_dir => (
@@ -149,12 +153,12 @@ sub _build_aos_output_dir {
 }
 
 has oligo_target_regions_dir => (
-    is         => 'ro',
-    isa        => 'Path::Class::Dir',
-    traits     => [ 'Getopt' ],
+    is            => 'ro',
+    isa           => 'Path::Class::Dir',
+    traits        => [ 'Getopt' ],
     documentation => 'Directory holding the oligo target region fasta files '
                      . "( default [design_dir]/$DEFAULT_OLIGO_TARGET_REGIONS_DIR_NAME )",
-    lazy_build => 1,
+    lazy_build    => 1,
     cmd_flag      => 'oligo-target-region-dir',
     coerce        => 1,
 );
@@ -183,12 +187,12 @@ sub BUILD {
         {
             level    => $log_level,
             file     => ">>" . $self->dir . '/design-create.log',
-            layout   => '%d %c %p %m%n',
+            layout   => '%d %c %p %x %m%n',
         },
         {
             level    => $log_level,
             file     => "STDERR",
-            layout   => '%d %c %p %m%n',
+            layout   => '%d %c %p %x %m%n',
         },
     );
 

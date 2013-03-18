@@ -9,18 +9,14 @@ use Path::Class qw( tempdir dir );
 use File::Copy::Recursive qw( dircopy );
 use YAML::Any qw( LoadFile );
 use FindBin;
-use base qw( Test::Class Class::Data::Inheritable );
-
-use Test::ObjectRole::DesignCreate::PickBlockOligos;
-use DesignCreate::Cmd;
+use base qw( Test::DesignCreate::Class Class::Data::Inheritable );
 
 # Testing
 # DesignCreate::Action::PickBlockOligos ( through command line )
 # DesignCreate::CmdRole::PickBlockOligos, most of its work is done by:
 
 BEGIN {
-    __PACKAGE__->mk_classdata( 'cmd_class' => 'DesignCreate::Cmd' );
-    __PACKAGE__->mk_classdata( 'test_class' => 'Test::ObjectRole::DesignCreate::PickBlockOligos' );
+    __PACKAGE__->mk_classdata( 'test_role' => 'DesignCreate::CmdRole::PickBlockOligos' );
 }
 
 sub valid_pick_gap_oligos_cmd : Test(4) {
@@ -96,12 +92,14 @@ sub _get_test_object {
 
     dircopy( $data_dir->stringify, $dir->stringify . '/validated_oligos' );
 
-    return $test->test_class->new(
+    my $metaclass = $test->get_test_object_metaclass();
+    return $metaclass->new_object(
         dir             => $dir,
         chr_strand      => $strand,
         chr_name        => 11,
         min_U_oligo_gap => $min_gap,
         min_D_oligo_gap => $min_gap,
+        design_method   => 'deletion',
     );
 }
 

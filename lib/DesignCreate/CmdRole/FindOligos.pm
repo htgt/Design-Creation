@@ -1,4 +1,10 @@
 package DesignCreate::CmdRole::FindOligos;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::CmdRole::FindOligos::VERSION = '0.001';
+}
+## use critic
+
 
 =head1 NAME
 
@@ -18,6 +24,7 @@ use Bio::SeqIO;
 use Bio::Seq;
 use Fcntl; # O_ constants
 use Const::Fast;
+use Try::Tiny;
 use namespace::autoclean;
 
 with qw(
@@ -31,6 +38,7 @@ oligo_target_regions_dir
 aos_output_dir
 );
 
+#TODO check how this works when running find-oligos as part of whole design creation
 # Don't need the following attributes when running this command on its own
 __PACKAGE__->meta->remove_attribute( 'chr_strand' );
 __PACKAGE__->meta->remove_attribute( 'species' );
@@ -52,6 +60,18 @@ sub _build_query_file {
 
     return $file;
 }
+
+has repeat_masked_oligo_regions => (
+    is      => 'ro',
+    isa     => 'ArrayRef',
+    default => sub { [] },
+    traits  => [ 'NoGetopt', 'Array' ],
+    handles => {
+        add_repeat_masked_oligo_region   => 'push',
+        has_repeat_masked_oligo_regions  => 'count',
+        list_repeat_masked_oligo_regions => 'join',
+    },
+);
 
 has target_file => (
     is            => 'rw',
@@ -99,11 +119,30 @@ sub create_aos_query_file {
         my $seq_in = Bio::SeqIO->new( -fh => $oligo_file->openr, -format => 'fasta' );
         $self->log->debug( "Adding $oligo oligo target sequence to query file" );
 
-        while ( my $seq = $seq_in->next_seq ) {
-            $seq_out->write_seq( $seq );
+        while ( my $seq_obj = $seq_in->next_seq ) {
+            $self->check_masked_seq( $seq_obj->seq, $oligo ) if $self->mask_by_lower_case eq 'yes';
+            $seq_out->write_seq( $seq_obj );
         }
     }
+
+    if ( $self->has_repeat_masked_oligo_regions ) {
+        DesignCreate::Exception->throw(
+            'Following oligo regions are completely repeat masked: '
+            . $self->list_repeat_masked_oligo_regions( ',' )
+        );
+    }
+
     $self->log->debug('AOS query file created: ' . $self->query_file->stringify );
+
+    return;
+}
+
+sub check_masked_seq {
+    my ( $self, $seq, $oligo ) = @_;
+
+    if ( $seq =~ /^[actg]+$/ ) {
+        $self->add_repeat_masked_oligo_region( $oligo );
+    }
 
     return;
 }
@@ -125,11 +164,20 @@ sub define_target_file {
 
 sub check_aos_output {
     my $self = shift;
+    my @missing_oligos;
 
     for my $oligo ( @{ $self->expected_oligos } ) {
-        #this will throw a error if file does not exist
-        $self->get_file( "$oligo.yaml", $self->aos_output_dir );
+        try{
+            #this will throw a error if file does not exist
+            $self->get_file( "$oligo.yaml", $self->aos_output_dir );
+        }
+        catch {
+            push @missing_oligos, $oligo;
+        };
     }
+    DesignCreate::Exception->throw(
+        "AOS was unable to find any of the following oligos: " . join( ' ', @missing_oligos )
+    ) if @missing_oligos;
 
     $self->log->info('All oligo yaml files are present');
     return;

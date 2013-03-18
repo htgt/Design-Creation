@@ -8,10 +8,7 @@ use App::Cmd::Tester;
 use Path::Class qw( tempdir dir );
 use FindBin;
 use Bio::Seq;
-use base qw( Test::Class Class::Data::Inheritable );
-
-use Test::ObjectRole::DesignCreate::RunAOS;
-use DesignCreate::Cmd;
+use base qw( Test::DesignCreate::Class Class::Data::Inheritable );
 
 # Testing
 # DesignCreate::Action::RunAOS ( through command line )
@@ -19,8 +16,7 @@ use DesignCreate::Cmd;
 # DesignCreate::Role::AOS
 
 BEGIN {
-    __PACKAGE__->mk_classdata( 'cmd_class' => 'DesignCreate::Cmd' );
-    __PACKAGE__->mk_classdata( 'test_class' => 'Test::ObjectRole::DesignCreate::RunAOS' );
+    __PACKAGE__->mk_classdata( 'test_role' => 'DesignCreate::CmdRole::RunAOS' );
 }
 
 sub valid_run_aos_cmd : Test(3) {
@@ -60,10 +56,12 @@ sub run_aos_scripts : Test(6) {
     }
 
     my $dir = tempdir( TMPDIR => 1, CLEANUP => 0 )->absolute;
-    $o = $test->test_class->new(
-        dir         => $dir,
-        query_file  => get_test_data_file('run_aos_broken_query_file.fasta'),
-        target_file => get_test_data_file('run_aos_target_file.fasta'),
+    my $metaclass = $test->get_test_object_metaclass();
+    $o = $metaclass->new_object(
+        dir           => $dir,
+        query_file    => get_test_data_file('run_aos_broken_query_file.fasta'),
+        target_file   => get_test_data_file('run_aos_target_file.fasta'),
+        design_method => 'deletion',
     );
 
     throws_ok{
@@ -135,10 +133,12 @@ sub _get_test_object {
 
     my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute;
 
-    return $test->test_class->new(
-        dir         => $dir,
-        query_file  => get_test_data_file('run_aos_query_file.fasta'),
-        target_file => get_test_data_file('run_aos_target_file.fasta'),
+    my $metaclass = $test->get_test_object_metaclass();
+    return $metaclass->new_object(
+        dir           => $dir,
+        query_file    => get_test_data_file('run_aos_query_file.fasta'),
+        target_file   => get_test_data_file('run_aos_target_file.fasta'),
+        design_method => 'deletion',
     );
 }
 

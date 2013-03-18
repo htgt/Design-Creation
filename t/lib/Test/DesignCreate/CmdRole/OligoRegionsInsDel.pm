@@ -7,18 +7,14 @@ use Test::Most;
 use App::Cmd::Tester;
 use Path::Class qw( tempdir dir );
 use Bio::SeqIO;
-use base qw( Test::Class Class::Data::Inheritable );
-
-use Test::ObjectRole::DesignCreate::OligoRegionsInsDel;
-use DesignCreate::Cmd;
+use base qw( Test::DesignCreate::Class Class::Data::Inheritable );
 
 # Testing
 # DesignCreate::CmdRole::OligoRegionsInsDel
 # DesignCreate::Action::OligoRegionsInsDel ( through command line )
 
 BEGIN {
-    __PACKAGE__->mk_classdata( 'cmd_class' => 'DesignCreate::Cmd' );
-    __PACKAGE__->mk_classdata( 'test_class' => 'Test::ObjectRole::DesignCreate::OligoRegionsInsDel' );
+    __PACKAGE__->mk_classdata( 'test_role' => 'DesignCreate::CmdRole::OligoRegionsInsDel' );
 }
 
 sub valid_run_cmd : Test(3) {
@@ -63,7 +59,7 @@ sub get_oligo_region_coordinates : Tests(16) {
     is $g3_end, $g3_real_end, 'correct end value';
 
     # -ve stranded design
-    ok $o = $test->_get_test_object( -1 ), 'can grab test object';
+    ok $o = $test->_get_test_object( { strand => -1 } ), 'can grab test object';
 
     ok my( $d3_start, $d3_end ) = $o->get_oligo_region_coordinates( 'D3' )
         , 'can call get_oligo_region_coordinates';
@@ -81,21 +77,20 @@ sub get_oligo_region_coordinates : Tests(16) {
     is $g5_start, $g3_real_start, 'correct start value';
     is $g5_end, $g3_real_end, 'correct end value';
 
-    ok $o = $test->test_class->new(
-        dir               => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
-        target_start      => 101176328,
-        target_end        => 101176428,
-        chr_name          => 11,
-        chr_strand        => 1,
-        U5_region_length  => 1,
-    ), 'we got a object';
+    ok $o = $test->_get_test_object(
+        {
+            target_start      => 101176328,
+            target_end        => 101176428,
+            U5_region_length  => 1,
+        }
+    ), 'we got another test object';
 
     throws_ok {
         !$o->get_oligo_region_coordinates( 'U5' )
     } qr/Start \d+, greater than or equal to end \d+/, 'throws start greater than end error';
 }
 
-sub build_oligo_target_regions : Test(6) {
+sub build_oligo_target_regions : Test(8) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
@@ -107,18 +102,37 @@ sub build_oligo_target_regions : Test(6) {
         my $oligo_file = $o->oligo_target_regions_dir->file( $oligo . '.fasta' );
         ok $o->oligo_target_regions_dir->contains( $oligo_file ), "$oligo oligo file exists";
     }
+
+    ok $o = $test->_get_test_object(
+        {
+            target_start => 101176428,
+            target_end   => 101176328,
+        }
+    ), 'can create another test object';
+
+    throws_ok {
+        $o->build_oligo_target_regions
+    } qr/Target start \d+, greater than target end \d+/
+        ,'throws error when target start greater than target end';
 }
 
 sub _get_test_object {
-    my ( $test, $strand ) = @_;
-    $strand //= 1;
+    my ( $test, $params ) = @_;
 
-    return $test->test_class->new(
-        dir          => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
-        target_start => 101176328,
-        target_end   => 101176428,
-        chr_name     => 11,
-        chr_strand   => $strand,
+    my $strand = $params->{strand} || 1;
+    my $start = $params->{target_start} || 101176328;
+    my $end = $params->{target_end} || 101176428;
+    my $u5_length = $params->{U5_region_length} || 200;
+
+    my $metaclass = $test->get_test_object_metaclass();
+    return $metaclass->new_object(
+        dir              => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
+        target_start     => $start,
+        target_end       => $end,
+        chr_name         => 11,
+        chr_strand       => $strand,
+        U5_region_length => $u5_length,
+        design_method    => 'deletion',
     );
 }
 

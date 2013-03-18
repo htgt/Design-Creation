@@ -1,4 +1,10 @@
 package DesignCreate::Action::ConsolidateDesignData;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::Action::ConsolidateDesignData::VERSION = '0.001';
+}
+## use critic
+
 
 =head1 NAME
 

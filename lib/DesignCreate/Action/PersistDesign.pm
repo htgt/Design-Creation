@@ -1,4 +1,10 @@
 package DesignCreate::Action::PersistDesign;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::Action::PersistDesign::VERSION = '0.001';
+}
+## use critic
+
 
 =head1 NAME
 
@@ -19,6 +25,11 @@ use namespace::autoclean;
 
 extends qw( DesignCreate::Action );
 with 'DesignCreate::CmdRole::PersistDesign';
+
+has '+design_method' => (
+    traits   => [ 'NoGetopt' ],
+    required => 0,
+);
 
 sub execute {
     my ( $self, $opts, $args ) = @_;
