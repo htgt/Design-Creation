@@ -66,7 +66,7 @@ has '+design_method' => (
 
 sub execute {
     my ( $self, $opts, $args ) = @_;
-    Log::Log4perl::NDC->push( shift @{ $self->target_genes } );
+    Log::Log4perl::NDC->push( @{ $self->target_genes }[0] );
 
     $self->log->info( 'Starting new design create run: ' . join(',', @{ $self->target_genes } ) );
     $self->log->debug( 'Design run args: ' . pp($opts) );
