@@ -244,6 +244,7 @@ sub parse_aos_output {
     return;
 }
 
+## no critic(RegularExpressions::ProhibitComplexRegexes)
 sub parse_oligo_seq {
     my ( $self, $seq ) = @_;
     my %oligo_data;
@@ -279,6 +280,7 @@ sub parse_oligo_seq {
 
     return \%oligo_data;
 }
+## use critic
 
 sub create_oligo_files {
     my $self = shift;
