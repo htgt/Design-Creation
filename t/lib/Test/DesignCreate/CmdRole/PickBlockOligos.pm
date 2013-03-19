@@ -29,8 +29,6 @@ sub valid_pick_gap_oligos_cmd : Test(4) {
         '--design-method'  , 'conditional',
         '--strand'         , 1,
         '--chromosome'     , 11,
-        '--min-D-oligo-gap', 10,
-        '--min-U-oligo-gap', 10,
     );
 
     ok my $result = test_app($test->cmd_class => \@argv_contents), 'can run command';
