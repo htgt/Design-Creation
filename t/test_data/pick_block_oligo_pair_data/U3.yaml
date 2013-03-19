@@ -26,3 +26,12 @@
   oligo_start: 10000112
   target_region_end: 10000199
   target_region_start: 10000100
+- id: U3-11
+  offset: 42
+  oligo: U3
+  oligo_end: 10000172
+  oligo_length: 50
+  oligo_seq: TAATATTGGCATTTATAGGTTGTACTTTGAGTGTCAAAATGTTCCAGTTA
+  oligo_start: 10000152
+  target_region_end: 10000199
+  target_region_start: 10000100
