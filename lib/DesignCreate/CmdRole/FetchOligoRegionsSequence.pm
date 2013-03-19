@@ -32,7 +32,7 @@ has oligo_region_coordinate_file => (
     is            => 'ro',
     isa           => AbsFile,
     traits        => [ 'Getopt' ],
-    documentation => 'File containing oligo region coordinates ( default ' 
+    documentation => 'File containing oligo region coordinates ( default '
                      . "[design_dir]/oligo_target_regions/$DEFAULT_OLIGO_COORD_FILE_NAME  )",
     cmd_flag      => 'oligo-region-coord-file',
     coerce        => 1,
@@ -83,6 +83,7 @@ sub create_oligo_region_sequence_files {
         $self->write_sequence_file( $oligo, $oligo_id, $oligo_seq );
     }
 
+    return;
 }
 
 sub create_oligo_id {

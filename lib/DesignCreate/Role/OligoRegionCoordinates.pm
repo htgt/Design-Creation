@@ -75,6 +75,7 @@ has G3_region_offset => (
     cmd_flag      => 'g3-region-offset'
 );
 
+## no critic(Subroutines::ProhibitUnusedPrivateSubroutine)
 sub _get_oligo_region_coordinates {
     my $self = shift;
 
@@ -95,12 +96,15 @@ sub _get_oligo_region_coordinates {
     $self->create_oligo_region_coordinate_file;
     return;
 }
+## use critic
 
 sub create_oligo_region_coordinate_file {
     my $self = shift;
 
     my $file = $self->oligo_target_regions_dir->file( $DEFAULT_OLIGO_COORD_FILE_NAME );
     DumpFile( $file, $self->oligo_region_coordinates );
+
+    return;
 }
 
 sub get_oligo_region_offset {
