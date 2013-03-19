@@ -149,7 +149,7 @@ sub pick_oligo_from_pair : Test(9) {
         ,'throws error with invalid oligo type';
 }
 
-sub format_oligo_data : Test(10) {
+sub format_oligo_data : Test(9) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 

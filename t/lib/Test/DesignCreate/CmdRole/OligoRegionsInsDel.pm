@@ -39,20 +39,20 @@ sub valid_run_cmd : Test(3) {
     ok !$result->error, 'no command errors';
 }
 
-sub get_oligo_region_coordinates : Tests(16) {
+sub coordinates_for_oligo : Tests(16) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
-    ok my( $u5_start, $u5_end ) = $o->get_oligo_region_coordinates( 'U5' )
-        , 'can call get_oligo_region_coordinates';
+    ok my( $u5_start, $u5_end ) = $o->coordinates_for_oligo( 'U5' )
+        , 'can call coordinates_for_oligo';
 
     my $u5_real_start = ( $o->target_start - ( $o->U5_region_offset + $o->U5_region_length ) );
     my $u5_real_end = ( $o->target_start - ( $o->U5_region_offset + 1 ) );
     is $u5_start, $u5_real_start, 'correct start value';
     is $u5_end, $u5_real_end, 'correct end value';
 
-    ok my( $g3_start, $g3_end ) = $o->get_oligo_region_coordinates( 'G3' )
-        , 'can call get_oligo_region_coordinates';
+    ok my( $g3_start, $g3_end ) = $o->coordinates_for_oligo( 'G3' )
+        , 'can call coordinates_for_oligo';
     my $g3_real_start = ( $o->target_end + ( $o->G3_region_offset + 1 ) );
     my $g3_real_end = ( $o->target_end + ( $o->G3_region_offset + $o->G3_region_length ) );
     is $g3_start, $g3_real_start, 'correct start value';
@@ -61,8 +61,8 @@ sub get_oligo_region_coordinates : Tests(16) {
     # -ve stranded design
     ok $o = $test->_get_test_object( { strand => -1 } ), 'can grab test object';
 
-    ok my( $d3_start, $d3_end ) = $o->get_oligo_region_coordinates( 'D3' )
-        , 'can call get_oligo_region_coordinates';
+    ok my( $d3_start, $d3_end ) = $o->coordinates_for_oligo( 'D3' )
+        , 'can call coordinates_for_oligo';
 
     #because these -ve and +ve strand deletion designs are symmetric the coordinates:
     #   U5 region on the +ve design should be the same as D3 region on the -ve design
@@ -71,8 +71,8 @@ sub get_oligo_region_coordinates : Tests(16) {
     is $d3_start, $u5_real_start, 'correct start value';
     is $d3_end, $u5_real_end, 'correct end value';
 
-    ok my( $g5_start, $g5_end ) = $o->get_oligo_region_coordinates( 'G5' )
-        , 'can call get_oligo_region_coordinates';
+    ok my( $g5_start, $g5_end ) = $o->coordinates_for_oligo( 'G5' )
+        , 'can call coordinates_for_oligo';
 
     is $g5_start, $g3_real_start, 'correct start value';
     is $g5_end, $g3_real_end, 'correct end value';
@@ -86,22 +86,21 @@ sub get_oligo_region_coordinates : Tests(16) {
     ), 'we got another test object';
 
     throws_ok {
-        !$o->get_oligo_region_coordinates( 'U5' )
+        !$o->coordinates_for_oligo( 'U5' )
     } qr/Start \d+, greater than or equal to end \d+/, 'throws start greater than end error';
 }
 
-sub build_oligo_target_regions : Test(8) {
+sub get_oligo_region_coordinates :  Test(5) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
     lives_ok {
-        $o->build_oligo_target_regions
-    } 'can build_oligo_target_regions';
+        $o->get_oligo_region_coordinates
+    } 'can get_oligo_region_coordinates';
 
-    for my $oligo ( qw( G5 U5 D3 G3 ) ) {
-        my $oligo_file = $o->oligo_target_regions_dir->file( $oligo . '.fasta' );
-        ok $o->oligo_target_regions_dir->contains( $oligo_file ), "$oligo oligo file exists";
-    }
+    my $oligo_region_file = $o->oligo_target_regions_dir->file( 'oligo_region_coords.yaml' );
+    ok $o->oligo_target_regions_dir->contains( $oligo_region_file )
+        , "$oligo_region_file oligo file exists";
 
     ok $o = $test->_get_test_object(
         {
@@ -111,7 +110,7 @@ sub build_oligo_target_regions : Test(8) {
     ), 'can create another test object';
 
     throws_ok {
-        $o->build_oligo_target_regions
+        $o->get_oligo_region_coordinates
     } qr/Target start \d+, greater than target end \d+/
         ,'throws error when target start greater than target end';
 }

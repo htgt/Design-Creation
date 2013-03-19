@@ -90,22 +90,22 @@ sub check_oligo_block_coordinates : Test(4) {
         , 'throws error when D block end is greater than U block start, -ve strand';
 }
 
-sub get_oligo_region_coordinates : Tests(14) {
+sub coordinates_for_oligo : Tests(14) {
     my $test = shift;
     #
     # -ve stranded design
     #
     ok my $o = $test->_get_test_object, 'can grab test object';
 
-    ok my( $u5_start, $u5_end ) = $o->get_oligo_region_coordinates( 'U5' )
-        , 'can call get_oligo_region_coordinates';
+    ok my( $u5_start, $u5_end ) = $o->coordinates_for_oligo( 'U5' )
+        , 'can call coordinates_for_oligo';
 
     my $u5_real_end = ( $o->U_block_start + 100 );
     is $u5_start, $o->U_block_start, 'U5 start correct value';
     is $u5_end, $u5_real_end, 'U5 end correct value';
 
-    ok my( $g5_start, $g5_end ) = $o->get_oligo_region_coordinates( 'G5' )
-        , 'can call get_oligo_region_coordinates';
+    ok my( $g5_start, $g5_end ) = $o->coordinates_for_oligo( 'G5' )
+        , 'can call coordinates_for_oligo';
     my $g5_real_start = ( $o->U_block_start - ( $o->G5_region_offset + $o->G5_region_length ) );
     my $g5_real_end = ( $o->U_block_start - ( $o->G3_region_offset + 1 ) );
     is $g5_start, $g5_real_start, 'correct start value';
@@ -116,14 +116,14 @@ sub get_oligo_region_coordinates : Tests(14) {
     #
     ok $o = $test->_get_test_object( -1 ), 'can grab test object';
 
-    ok my( $d3_start, $d3_end ) = $o->get_oligo_region_coordinates( 'D3' )
-        , 'can call get_oligo_region_coordinates';
+    ok my( $d3_start, $d3_end ) = $o->coordinates_for_oligo( 'D3' )
+        , 'can call coordinates_for_oligo';
 
     is $d3_start, $o->D_block_start, 'correct D3 start value';
     is $d3_end, $o->D_block_start + 50, 'correct D3 end value';
 
-    ok my( $g3_start, $g3_end ) = $o->get_oligo_region_coordinates( 'G3' )
-        , 'can call get_oligo_region_coordinates';
+    ok my( $g3_start, $g3_end ) = $o->coordinates_for_oligo( 'G3' )
+        , 'can call coordinates_for_oligo';
 
     is $g3_start, $o->D_block_start - ( $o->G3_region_offset + $o->G3_region_length )
         , 'correct G3 start value';
@@ -156,13 +156,13 @@ sub get_oligo_region_gap_oligo : Test(15) {
     #
     ok $o = $test->_get_test_object( -1 ), 'can grab test object';
 
-    ok my( $g5_start_minus, $g5_end_minus ) = $o->get_oligo_region_coordinates( 'G5' )
+    ok my( $g5_start_minus, $g5_end_minus ) = $o->coordinates_for_oligo( 'G5' )
         , 'can call get_oligo_region_gap_oligo for G5';
 
     is $g5_start_minus, $o->U_block_end + ( $o->G5_region_offset + 1 ), 'correct G5 start value';
     is $g5_end_minus, $o->U_block_end + ( $o->G5_region_offset + $o->G5_region_length ), 'correct G5 end value';
 
-    ok my( $g3_start_minus, $g3_end_minus ) = $o->get_oligo_region_coordinates( 'G3' )
+    ok my( $g3_start_minus, $g3_end_minus ) = $o->coordinates_for_oligo( 'G3' )
         , 'can call get_oligo_region_gap_oligo for G3';
 
     is $g3_start_minus, $o->D_block_start - ( $o->G3_region_offset + $o->G3_region_length )
@@ -191,15 +191,15 @@ sub get_oligo_region_u_or_d_oligo : Test(15) {
     #
     ok my $o = $test->_get_test_object, 'can grab test object';
 
-    ok my( $u5_start, $u5_end ) = $o->get_oligo_region_coordinates( 'U5' )
-        , 'can call get_oligo_region_coordinates';
+    ok my( $u5_start, $u5_end ) = $o->coordinates_for_oligo( 'U5' )
+        , 'can call coordinates_for_oligo';
 
     my $u5_real_end = ( $o->U_block_start + 100 );
     is $u5_start, $o->U_block_start, 'U5 start correct value';
     is $u5_end, $u5_real_end, 'U5 end correct value';
 
-    ok my( $u3_start, $u3_end ) = $o->get_oligo_region_coordinates( 'U3' )
-        , 'can call get_oligo_region_coordinates';
+    ok my( $u3_start, $u3_end ) = $o->coordinates_for_oligo( 'U3' )
+        , 'can call coordinates_for_oligo';
 
     my $u3_real_start = ( $o->U_block_start + 101 );
     is $u3_start, $u3_real_start, 'U3 start correct value';
@@ -210,14 +210,14 @@ sub get_oligo_region_u_or_d_oligo : Test(15) {
     #
     ok $o = $test->_get_test_object( -1 ), 'can grab test object';
 
-    ok my( $d3_start_minus, $d3_end_minus ) = $o->get_oligo_region_coordinates( 'D3' )
-        , 'can call get_oligo_region_coordinates';
+    ok my( $d3_start_minus, $d3_end_minus ) = $o->coordinates_for_oligo( 'D3' )
+        , 'can call coordinates_for_oligo';
 
     is $d3_start_minus, $o->D_block_start, 'correct D3 start value';
     is $d3_end_minus, $o->D_block_start + 50, 'correct D3 end value';
 
-    ok my( $d5_start_minus, $d5_end_minus ) = $o->get_oligo_region_coordinates( 'D5' )
-        , 'can call get_oligo_region_coordinates';
+    ok my( $d5_start_minus, $d5_end_minus ) = $o->coordinates_for_oligo( 'D5' )
+        , 'can call coordinates_for_oligo';
 
     is $d5_start_minus, $o->D_block_start + 51, 'correct D5 start value';
     is $d5_end_minus, $o->D_block_end, 'correct D5 end value';
@@ -237,18 +237,18 @@ sub get_oligo_region_u_or_d_oligo : Test(15) {
         , 'throws start greater than end error';
 }
 
-sub build_oligo_target_regions : Test(8) {
+sub get_oligo_region_coordinates : Test(3) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
     lives_ok {
-        $o->build_oligo_target_regions
+        $o->get_oligo_region_coordinates 
     } 'can build_oligo_target_regions';
 
-    for my $oligo ( qw( G5 U5 U3 D5 D3 G3 ) ) {
-        my $oligo_file = $o->oligo_target_regions_dir->file( $oligo . '.fasta' );
-        ok $o->oligo_target_regions_dir->contains( $oligo_file ), "$oligo oligo file exists";
-    }
+
+    my $oligo_region_file = $o->oligo_target_regions_dir->file( 'oligo_region_coords.yaml' );
+    ok $o->oligo_target_regions_dir->contains( $oligo_region_file )
+        , "$oligo_region_file oligo file exists";
 }
 
 sub get_oligo_block_left_half_coords : Test(7) {

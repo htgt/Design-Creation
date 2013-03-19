@@ -1,7 +1,7 @@
 package DesignCreate::Role::Oligos;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Role::Oligos::VERSION = '0.001';
+    $DesignCreate::Role::Oligos::VERSION = '0.002';
 }
 ## use critic
 

@@ -1,19 +1,19 @@
-package DesignCreate::Action::FindOligos;
+package DesignCreate::Action::FetchOligoRegionsSequence;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::FindOligos::VERSION = '0.002';
+    $DesignCreate::Action::FetchOligoRegionsSequence::VERSION = '0.002';
 }
 ## use critic
 
 
 =head1 NAME
 
-DesignCreate::Action::FindOligos - Get oligos for a design
+DesignCreate::Action::FetchOligoRegionsSequence - Fetch sequence for oligo target regions
 
 =head1 DESCRIPTION
 
-Finds a selection of oligos for a design given the oligos target ( candidate ) regions.
-This is a wrapper around RunAOS which does the real work.
+Given a file specifying the coordinates of oligo regions produce fasta sequence files
+for each of the oligo regions.
 
 =cut
 
@@ -21,22 +21,21 @@ use strict;
 use warnings FATAL => 'all';
 
 use Moose;
-use Const::Fast;
 use Try::Tiny;
 use Fcntl; # O_ constants
 use namespace::autoclean;
 
 extends qw( DesignCreate::Action );
-with 'DesignCreate::CmdRole::FindOligos';
+with 'DesignCreate::CmdRole::FetchOligoRegionsSequence';
 
 sub execute {
     my ( $self, $opts, $args ) = @_;
 
     try{
-        $self->find_oligos;
+        $self->create_oligo_region_sequence_files;
     }
     catch{
-        $self->log->error( "Error finding oligos:\n" . $_ );
+        $self->log->error( "Error fetching oligo region sequence files:\n" . $_ );
     };
 
     return;

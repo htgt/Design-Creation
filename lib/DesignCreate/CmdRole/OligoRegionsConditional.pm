@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::OligoRegionsConditional;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::OligoRegionsConditional::VERSION = '0.001';
+    $DesignCreate::CmdRole::OligoRegionsConditional::VERSION = '0.002';
 }
 ## use critic
 
@@ -28,7 +28,7 @@ use Const::Fast;
 use namespace::autoclean;
 
 with qw(
-DesignCreate::Role::OligoTargetRegions
+DesignCreate::Role::OligoRegionCoordinates
 );
 
 const my $MIN_BLOCK_LENGTH => 102;
@@ -75,11 +75,11 @@ has D_block_end => (
 );
 
 #TODO consider method overriding / renaming here
-sub build_oligo_target_regions {
+sub get_oligo_region_coordinates {
     my $self = shift;
 
     $self->check_oligo_block_coordinates;
-    $self->_build_oligo_target_regions;
+    $self->_get_oligo_region_coordinates;
 
     return;
 }
@@ -120,7 +120,7 @@ sub check_oligo_block_coordinates {
 }
 
 # work out coordinates for block specified conditional designs
-sub get_oligo_region_coordinates {
+sub coordinates_for_oligo {
     my ( $self, $oligo ) = @_;
 
     if ( $oligo =~ /^G/ ) {

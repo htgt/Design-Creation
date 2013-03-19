@@ -1,7 +1,7 @@
 package DesignCreate::Action::ConditionalDesign;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::ConditionalDesign::VERSION = '0.001';
+    $DesignCreate::Action::ConditionalDesign::VERSION = '0.002';
 }
 ## use critic
 
@@ -30,6 +30,7 @@ use Data::Dump qw( pp );
 extends qw( DesignCreate::Action );
 with qw(
 DesignCreate::CmdRole::OligoRegionsConditional
+DesignCreate::CmdRole::FetchOligoRegionsSequence
 DesignCreate::CmdRole::FindOligos
 DesignCreate::CmdRole::FilterOligos
 DesignCreate::CmdRole::PickBlockOligos
@@ -78,7 +79,8 @@ sub execute {
     $self->log->debug( 'Design run args: ' . pp($opts) );
 
     try {
-        $self->build_oligo_target_regions;
+        $self->get_oligo_region_coordinates;
+        $self->create_oligo_region_sequence_files;
         $self->find_oligos;
         $self->filter_oligos;
         $self->pick_gap_oligos;

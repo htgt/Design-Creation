@@ -1,7 +1,7 @@
 package DesignCreate::Action::OligoRegionsConditional;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::OligoRegionsConditional::VERSION = '0.001';
+    $DesignCreate::Action::OligoRegionsConditional::VERSION = '0.002';
 }
 ## use critic
 
@@ -36,7 +36,7 @@ sub execute {
     my ( $self, $opts, $args ) = @_;
 
     try{
-        $self->build_oligo_target_regions;
+        $self->get_oligo_region_coordinates;
     }
     catch{
         $self->log->error( "Failed to generate oligo target regions:\n" . $_ );

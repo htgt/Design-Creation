@@ -1,7 +1,7 @@
 package DesignCreate::Action;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::VERSION = '0.001';
+    $DesignCreate::Action::VERSION = '0.002';
 }
 ## use critic
 

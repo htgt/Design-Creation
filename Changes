@@ -1,2 +1,5 @@
+0.002     2013-03-19 10:48:15 Europe/London
+    Bugfix, ins-del-design command now persisting target-gene
+
 0.001     2013-03-18 14:31:14 Europe/London
     Initial release

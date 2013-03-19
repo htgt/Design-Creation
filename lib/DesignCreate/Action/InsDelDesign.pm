@@ -1,7 +1,7 @@
 package DesignCreate::Action::InsDelDesign;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::InsDelDesign::VERSION = '0.001';
+    $DesignCreate::Action::InsDelDesign::VERSION = '0.002';
 }
 ## use critic
 
@@ -30,6 +30,7 @@ use Data::Dump qw( pp );
 extends qw( DesignCreate::Action );
 with qw(
 DesignCreate::CmdRole::OligoRegionsInsDel
+DesignCreate::CmdRole::FetchOligoRegionsSequence
 DesignCreate::CmdRole::FindOligos
 DesignCreate::CmdRole::FilterOligos
 DesignCreate::CmdRole::PickGapOligos
@@ -66,13 +67,14 @@ for my $attribute ( @ATTRIBUTES_NO_CMD_OPTION ) {
 
 sub execute {
     my ( $self, $opts, $args ) = @_;
-    Log::Log4perl::NDC->push( shift @{ $self->target_genes } );
+    Log::Log4perl::NDC->push( @{ $self->target_genes }[0] );
 
     $self->log->info( 'Starting new design create run: ' . join(',', @{ $self->target_genes } ) );
     $self->log->debug( 'Design run args: ' . pp($opts) );
 
     try {
-        $self->build_oligo_target_regions;
+        $self->get_oligo_region_coordinates;
+        $self->create_oligo_region_sequence_files;
         $self->find_oligos;
         $self->filter_oligos;
         $self->pick_gap_oligos;
