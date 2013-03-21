@@ -49,6 +49,25 @@ sub _build_design_data_file {
     return $file->absolute;
 }
 
+has alternate_designs_data_file => (
+    is            => 'rw',
+    isa           => AbsFile,
+    traits        => [ 'Getopt' ],
+    predicate     => 'have_alt_designs_file',
+    coerce        => 1,
+    documentation => 'The yaml file containing alternate designs data ( default [work_dir]/alt_designs.yaml )',
+    cmd_flag      => 'alt-designs-data-file'
+);
+
+has alternate_designs => (
+    is            => 'ro',
+    isa           => 'Bool',
+    traits        => [ 'Getopt' ],
+    documentation => 'Persist alternate design to LIMS2',
+    cmd_flag      => 'alt-designs',
+    default       => 0
+);
+
 has design_data => (
     is         => 'ro',
     isa        => 'HashRef',
@@ -62,24 +81,70 @@ sub _build_design_data {
     return YAML::Any::LoadFile( $self->design_data_file );
 }
 
+has alternate_designs_data => (
+    is         => 'ro',
+    isa        => 'ArrayRef',
+    traits     => [ 'NoGetopt' ],
+    lazy_build => 1,
+);
+
+sub _build_alternate_designs_data {
+    my $self = shift;
+
+    return YAML::Any::LoadFile( $self->alternate_designs_data_file );
+}
+
 sub persist_design {
     my ( $self, $opts, $args ) = @_;
 
+    $self->log->info('Persisting design to LIMS2 for gene(s): '
+                     . join( ',', @{ $self->design_data->{gene_ids} } ) );
+
+    $self->_persist_design( $self->design_data );
+
+    return unless $self->alternate_designs;
+    $self->set_alternate_designs_data_file;
+    unless ( $self->have_alt_designs_file ) {
+        $self->log->warn( 'No alternate designs to persist' );
+        return;
+    }
+
+    $self->log->info('Persisting alternate design to LIMS2');
+    for my $alt_design_data ( @{ $self->alternate_designs_data } ) {
+        $self->_persist_design( $alt_design_data );
+    }
+    return;
+}
+
+sub _persist_design {
+    my ( $self, $design_data ) = @_;
+
     try{
-        $self->log->info('Persisting design to LIMS2 for gene(s): '
-                         . join( ',', @{ $self->design_data->{gene_ids} } ) );
-        $self->log->debug( pp( $self->design_data ) );
-        my $design = $self->lims2_api->POST( 'design', $self->design_data );
+        $self->log->debug( pp( $design_data ) );
+        my $design = $self->lims2_api->POST( 'design', $design_data );
         $self->log->info('Design persisted: ' . $design->{id} );
     }
     catch {
         $self->log->error('Unable to persist design to LIMS2: ' . $_ );
     };
+    return;
+}
 
+sub set_alternate_designs_data_file {
+    my $self = shift;
+    return if $self->have_alt_designs_file;
+
+    #default file
+    my $alt_designs_file = $self->dir->file( $self->alt_designs_data_file_name );
+    unless ( $self->dir->contains( $alt_designs_file ) ) {
+        $self->log->error( "Unable to find default alternative designs data file: $alt_designs_file" );
+        return;
+    }
+
+    $self->alternate_designs_data_file( $alt_designs_file->absolute );
     return;
 }
 
 1;
 
 __END__
-
