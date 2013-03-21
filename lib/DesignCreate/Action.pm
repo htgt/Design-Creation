@@ -88,7 +88,7 @@ has design_data_file_name => (
    traits  => [ 'NoGetopt' ],
 );
 
-has alt_design_data_file_name => (
+has alt_designs_data_file_name => (
    is      => 'ro',
    isa     => 'Str',
    default => $DEFAULT_ALT_DESIGN_DATA_FILE_NAME,

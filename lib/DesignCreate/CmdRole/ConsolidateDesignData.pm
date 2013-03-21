@@ -258,7 +258,7 @@ sub create_alt_design_file {
         push @alt_design_data, $self->build_design_data( $alt_design_oligos );
     }
 
-    my $alt_designs_file = $self->dir->file( $self->alt_design_data_file_name );
+    my $alt_designs_file = $self->dir->file( $self->alt_designs_data_file_name );
     $self->log->info( "Creating design file: $alt_designs_file" );
     DumpFile( $alt_designs_file, \@alt_design_data );
 

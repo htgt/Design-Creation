@@ -26,7 +26,8 @@ has design_data_file_name => (
    isa     => 'Str',
    default => 'design_data.yaml',
 );
-has alt_design_data_file_name => (
+
+has alt_designs_data_file_name => (
    is      => 'ro',
    isa     => 'Str',
    default => 'alt_designs.yaml',
