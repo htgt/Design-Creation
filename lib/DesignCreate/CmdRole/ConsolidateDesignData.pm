@@ -113,9 +113,15 @@ has primary_design_oligos => (
 );
 
 has alternate_designs_oligos => (
-    is     => 'rw',
-    isa    => 'ArrayRef',
-    traits => [ 'NoGetopt' ],
+    is      => 'rw',
+    isa     => 'ArrayRef',
+    traits  => [ 'NoGetopt', 'Array' ],
+    default => sub { [] },
+    handles => {
+        num_alt_designs               => 'count',
+        list_alternate_designs_oligos => 'elements',
+        add_alternate_design_oligos   => 'push',
+    }
 );
 
 sub consolidate_design_data {
@@ -127,7 +133,7 @@ sub consolidate_design_data {
     $self->build_alternate_design_oligos;
 
     $self->create_primary_design_file;
-    $self->create_alt_design_file if @{ $self->alternate_designs_oligos };
+    $self->create_alt_design_file if $self->num_alt_designs;
 
     return;
 }
@@ -151,7 +157,6 @@ sub build_primary_design_oligos {
 
 sub build_alternate_design_oligos {
     my $self = shift;
-    my @alt_designs_data;
     my $design_num = 1;
 
     $self->log->info('Picking out alternative design oligos');
@@ -159,11 +164,10 @@ sub build_alternate_design_oligos {
         my $design_oligo_data = $self->build_design_oligo_data( $design_num );
         last unless $design_oligo_data;
 
-        push @alt_designs_data, $design_oligo_data;
+        $self->add_alternate_design_oligos( $design_oligo_data );
         $design_num++;
     }
 
-    $self->alternate_designs_oligos( \@alt_designs_data );
     return;
 }
 
@@ -254,7 +258,9 @@ sub create_alt_design_file {
     my $self = shift;
     my @alt_design_data;
 
-    for my $alt_design_oligos ( @{ $self->alternate_designs_oligos } ) {
+    $self->log->info( "ALT DESIGNS: " . $self->num_alt_designs );
+
+    for my $alt_design_oligos ( $self->list_alternate_designs_oligos ) {
         push @alt_design_data, $self->build_design_data( $alt_design_oligos );
     }
 
