@@ -158,6 +158,7 @@ sub check_oligo_pair {
             {   $left_oligo->{oligo}  => $left_oligo->{id},
                 $right_oligo->{oligo} => $right_oligo->{id},
                 optimal_gap_diff      => abs( $self->optimal_gap_length - $oligo_gap ),
+                oligo_gap             => $oligo_gap,
             }
         );
     }
