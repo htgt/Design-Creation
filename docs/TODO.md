@@ -1,16 +1,9 @@
 FUNCTIONALITY
 =============
 
-### IDEA: Split Oligo Target Region Code
-* One part accepts a file with oligo region coordinates and produces the fasta files
-* The other part(s) produce the oligo region coordinate file
-* I think there will be a lot of variation of commands that will produce the coordinate file
-
-### Multiple Designs
-* If I can produce multiple variants of a design do so in a seperate folder.
-* So if I have 3 good oligos for each type and 3 good sets of pairs make:
-    * 1 main ( best ) design
-    * 2 alternate designs
+### Constants
+* Specified same constant in different places
+* Create a constants file to store all these values
 
 ### Design Parameters
 * Store parameters for given design in a yaml file
@@ -75,15 +68,6 @@ Oligos should end up in validated oligo dir.
 
 PROBLEMS
 ========
-
-### Constants
-* Specified same constant in different places
-* Create a constants file to store all these values
-
-### Chr and Strand
-* Store the chromosome and strand in the oligo file
-* Need to do this to avoid errors when running commands by hand
-* Can use design parameters file for this
 
 ### Required Attributes Roles
 * a consuming class must provide to required attributes / methods not another role
