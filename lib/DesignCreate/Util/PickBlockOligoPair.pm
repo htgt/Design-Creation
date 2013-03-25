@@ -137,7 +137,7 @@ sub get_oligo_pairs {
     return $self->oligo_pairs;
 }
 
-## no critic(ValuesAndExpressions::ProhibitCommanSeperatedStatements)
+## no critic(ValuesAndExpressions::ProhibitCommaSeparatedStatements)
 sub check_oligo_pair {
     my ( $self, $left_oligo, $right_oligo ) = @_;
 
