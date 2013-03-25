@@ -268,7 +268,7 @@ sub get_oligo_block_left_half_coords : Test(14) {
     is $start2, 101177327, 'start correct';
     is $end2, 101177427, 'end correct';
 
-    ok $o = $test->_get_test_object( { u_offset => 10, d_offset => 15 } ), 'can grab another test object';
+    ok $o = $test->_get_test_object( { u_overlap => 10, d_overlap => 15 } ), 'can grab another test object';
 
     ok my( $start3, $end3 ) = $o->get_oligo_block_left_half_coords( 'U' );
     is $start3, 101176328, 'start correct';
@@ -291,7 +291,7 @@ sub get_oligo_block_right_half_coords : Test(14) {
     is $start2, 101177428, 'start correct';
     is $end2, 101177528, 'end correct';
 
-    ok $o = $test->_get_test_object( { u_offset => 10, d_offset => 15 } ), 'can grab another test object';
+    ok $o = $test->_get_test_object( { u_overlap => 10, d_overlap => 15 } ), 'can grab another test object';
 
     ok my( $start3, $end3 ) = $o->get_oligo_block_right_half_coords( 'U' );
     is $start3, 101176419 , 'start correct';
@@ -315,8 +315,8 @@ sub get_oligo_block_attribute : Test(10) {
     ok my $u_block_length = $o->get_oligo_block_attribute( 'U', 'length' );
     is $u_block_length, 201, 'correct u block length';
 
-    #ok my $u_block_offset = $o->get_oligo_block_attribute( 'U', 'offset' );
-    #is $u_block_offset, 0, 'correct u block offset';
+    #ok my $u_block_overlap = $o->get_oligo_block_attribute( 'U', 'overlap' );
+    #is $u_block_overlap, 0, 'correct u block overlap';
 
     throws_ok{
         $o->get_oligo_block_attribute( 'G', 'end' );
@@ -342,7 +342,7 @@ sub D_block_length : Test(3) {
     is $D_block_length, 202, 'correct D_block_length value';
 }
 
-sub D_block_offset : Test(no_plan) {
+sub D_block_overlap : Test(no_plan) {
     my $test = shift;
     my $metaclass = $test->get_test_object_metaclass();
     ok my $o = $metaclass->new_object(
@@ -353,8 +353,8 @@ sub D_block_offset : Test(no_plan) {
         design_method => 'conditional',
     );
 
-    ok my $D_block_offset = $o->D_block_offset, 'can call D_block_offset';
-    is $D_block_offset, 50, 'correct D_block_offset value';
+    ok my $D_block_overlap = $o->D_block_overlap, 'can call D_block_overlap';
+    is $D_block_overlap, 50, 'correct D_block_overlap value';
 }
 
 sub U_block_length : Test(3) {
@@ -365,7 +365,7 @@ sub U_block_length : Test(3) {
     is $U_block_length, 201, 'correct U_block_length value';
 }
 
-sub U_block_offset : Test(no_plan) {
+sub U_block_overlap : Test(no_plan) {
     my $test = shift;
     my $metaclass = $test->get_test_object_metaclass();
     ok my $o = $metaclass->new_object(
@@ -376,28 +376,28 @@ sub U_block_offset : Test(no_plan) {
         design_method => 'conditional',
     );
 
-    ok my $U_block_offset = $o->U_block_offset, 'can call U_block_offset';
-    is $U_block_offset, 50, 'correct U_block_offset value';
+    ok my $U_block_overlap = $o->U_block_overlap, 'can call U_block_overlap';
+    is $U_block_overlap, 50, 'correct U_block_overlap value';
 }
 
 sub _get_test_object {
     my ( $test, $params ) = @_;
     my $strand = $params->{strand} || 1;
-    my $u_offset = $params->{u_offset} || 0;
-    my $d_offset = $params->{d_offset} || 0;
+    my $u_overlap = $params->{u_overlap} || 0;
+    my $d_overlap = $params->{d_overlap} || 0;
 
     my $metaclass = $test->get_test_object_metaclass();
     return $metaclass->new_object(
-        dir            => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
-        U_block_start  => $strand == 1 ? 101176328 : 101177328,
-        U_block_end    => $strand == 1 ? 101176528 : 101177428,
-        U_block_offset => $u_offset,
-        D_block_start  => $strand == 1 ? 101177327 : 101176328,
-        D_block_end    => $strand == 1 ? 101177528 : 101176428,
-        D_block_offset => $d_offset,
-        chr_name       => 11,
-        chr_strand     => $strand,
-        design_method  => 'conditional',
+        dir             => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
+        U_block_start   => $strand == 1 ? 101176328 : 101177328,
+        U_block_end     => $strand == 1 ? 101176528 : 101177428,
+        U_block_overlap => $u_overlap,
+        D_block_start   => $strand == 1 ? 101177327 : 101176328,
+        D_block_end     => $strand == 1 ? 101177528 : 101176428,
+        D_block_overlap => $d_overlap,
+        chr_name        => 11,
+        chr_strand      => $strand,
+        design_method   => 'conditional',
     );
 }
 

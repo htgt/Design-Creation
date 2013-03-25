@@ -62,16 +62,16 @@ sub _build_U_block_length {
     return ( $self->U_block_end - $self->U_block_start ) + 1;
 }
 
-has U_block_offset => (
+has U_block_overlap => (
     is            => 'ro',
     isa           => NaturalNumber,
     traits        => [ 'Getopt' ],
-    documentation => 'Block offset for U region',
+    documentation => 'Block overlap for U region',
     lazy_build    => 1,
-    cmd_flag      => 'u-block-offset'
+    cmd_flag      => 'u-block-overlap'
 );
 
-sub _build_U_block_offset {
+sub _build_U_block_overlap {
     my $self = shift;
 
     return sprintf( "%d", ( $self->U_block_length / 4 ) );
@@ -107,16 +107,16 @@ sub _build_D_block_length {
     return ( $self->D_block_end - $self->D_block_start ) + 1;
 }
 
-has D_block_offset => (
+has D_block_overlap => (
     is            => 'ro',
     isa           => NaturalNumber,
     traits        => [ 'Getopt' ],
-    documentation => 'Block offset for D region',
+    documentation => 'Block overlap for D region',
     lazy_build    => 1,
-    cmd_flag      => 'd-block-offset'
+    cmd_flag      => 'd-block-overlap'
 );
 
-sub _build_D_block_offset {
+sub _build_D_block_overlap {
     my $self = shift;
 
     return sprintf( "%d", ( $self->D_block_length / 4 ) );
@@ -250,7 +250,7 @@ sub get_oligo_region_u_or_d_oligo {
 sub get_oligo_block_left_half_coords {
     my ( $self, $oligo_class ) = @_;
     my $block_length = $self->get_oligo_block_attribute( $oligo_class, 'length' );
-    my $block_offset = $self->get_oligo_block_attribute( $oligo_class, 'offset' );
+    my $block_overlap = $self->get_oligo_block_attribute( $oligo_class, 'overlap' );
 
     my $start = $self->get_oligo_block_attribute( $oligo_class, 'start' );
     my $end;
@@ -260,7 +260,7 @@ sub get_oligo_block_left_half_coords {
     else {
         $end = $start + ( ( $block_length / 2 ) - 1 );
     }
-    $end += $block_offset;
+    $end += $block_overlap;
 
     return ( $start, $end );
 }
@@ -268,7 +268,7 @@ sub get_oligo_block_left_half_coords {
 sub get_oligo_block_right_half_coords {
     my ( $self, $oligo_class ) = @_;
     my $block_length = $self->get_oligo_block_attribute( $oligo_class, 'length' );
-    my $block_offset = $self->get_oligo_block_attribute( $oligo_class, 'offset' );
+    my $block_overlap = $self->get_oligo_block_attribute( $oligo_class, 'overlap' );
     my $block_start  = $self->get_oligo_block_attribute( $oligo_class, 'start' );
 
     my $end = $self->get_oligo_block_attribute( $oligo_class, 'end' );
@@ -279,7 +279,7 @@ sub get_oligo_block_right_half_coords {
     else {
         $start = $block_start + ( $block_length / 2 );
     }
-    $start -= $block_offset;
+    $start -= $block_overlap;
 
     return ( $start, $end );
 }
