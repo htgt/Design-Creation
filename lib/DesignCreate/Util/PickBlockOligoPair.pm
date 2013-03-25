@@ -93,9 +93,10 @@ has optimal_gap_length => (
 # Optimal gap length is 15% of the total oligo region length
 sub _build_optimal_gap_length {
     my $self = shift;
-    my $optimal_gap_length = $self->oligo_region_length * 0.15;
+    my $optimal_gap_length = sprintf( "%d", $self->oligo_region_length * 0.15 );
 
-    return sprintf("%d" , $optimal_gap_length );
+    $self->log->info( "Optimal gap length: " . $optimal_gap_length );
+    return $optimal_gap_length;
 }
 
 has oligo_pairs => (
@@ -140,10 +141,8 @@ sub get_oligo_pairs {
 sub check_oligo_pair {
     my ( $self, $left_oligo, $right_oligo ) = @_;
 
-    DesignCreate::Exception->throw(
-        'Invalid input ' . $left_oligo->{id} . ' and '
-        . $right_oligo->{id} . ' overlap, error with input'
-    ) if $left_oligo->{oligo_end} > $right_oligo->{oligo_start};
+    # Oligos can not overlap
+    return if $left_oligo->{oligo_end} >= $right_oligo->{oligo_start};
 
     my $oligo_gap = ( $right_oligo->{oligo_start} - $left_oligo->{oligo_end} ) - 1;
     my $log_str = $left_oligo->{id} . ' and ' . $right_oligo->{id} . " gap is $oligo_gap";

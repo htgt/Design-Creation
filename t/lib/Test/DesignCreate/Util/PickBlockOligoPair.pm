@@ -90,9 +90,8 @@ sub check_oligo_pair : Test(10) {
     my $left_oligo = shift @{ $o->left_oligos };
     my $right_oligo = shift @{ $o->right_oligos };
 
-    throws_ok{
-        $o->check_oligo_pair( $right_oligo, $left_oligo )
-    } qr/Invalid input/,  'throws error if oligos in wrong order';
+    ok !$o->check_oligo_pair( $right_oligo, $left_oligo )
+        , 'check_oligo_pair with oligos in wrong order';
     ok !$o->have_oligo_pairs, 'pairs array has no a value';
 
     $right_oligo->{oligo_start} = 10000079;
