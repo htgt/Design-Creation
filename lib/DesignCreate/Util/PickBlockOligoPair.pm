@@ -137,6 +137,7 @@ sub get_oligo_pairs {
     return $self->oligo_pairs;
 }
 
+## no critic(ValuesAndExpressions::ProhibitCommanSeperatedStatements)
 sub check_oligo_pair {
     my ( $self, $left_oligo, $right_oligo ) = @_;
 
@@ -152,10 +153,11 @@ sub check_oligo_pair {
         $log_str .= ' - REJECT, minimum gap is ' . $self->min_gap;
         $self->log->debug( $log_str );
     }
-    else {
+    else{
         $log_str .= ' - PASS';
         $self->add_oligo_pair(
-            {   $left_oligo->{oligo}  => $left_oligo->{id},
+            {
+                $left_oligo->{oligo}  => $left_oligo->{id},
                 $right_oligo->{oligo} => $right_oligo->{id},
                 optimal_gap_diff      => abs( $self->optimal_gap_length - $oligo_gap ),
                 oligo_gap             => $oligo_gap,
@@ -166,6 +168,7 @@ sub check_oligo_pair {
 
     return;
 }
+## use critic
 
 __PACKAGE__->meta->make_immutable;
 
