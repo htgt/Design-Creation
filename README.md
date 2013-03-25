@@ -20,7 +20,7 @@ INPUT DATA
 ==========
 
 Design Parameters:
---------------
+------------------
 * target coordinates
     * species
     * genome / assembly
@@ -66,9 +66,7 @@ Oligo Profile:
 |------|                                                           > G5 Region Length
        |---------|                                                 > G5 Region Offset
                       |-|                                          > U Oligo Min Gap 
-                    |-----|                                        > U Oligo Max Gap 
                                          |-|                       > D Oligo Min Gap 
-                                       |-----|                     > D Oligo Max Gap 
                                                         |------|   > G3 Region Length
                                              |-----------------|   > G3 Region Offset
 ```
