@@ -38,34 +38,110 @@ sub valid_consolidate_design_data_cmd : Test(4) {
     ok !$result->error, 'no command errors';
 }
 
-sub build_oligo_array : Test(18) {
+sub all_oligo_pairs : Test(11) {
+    my $test = shift;
+    ok my $o = $test->_get_test_object, 'can grab test object';
+
+    ok my $g_oligo_pair_file = $o->validated_oligo_dir->file( 'G_oligo_pairs.yaml' )
+        , 'can grab g oligo pairs file object';
+    ok $g_oligo_pair_file->remove, 'can remove G oligo pair file';
+    throws_ok{
+        $o->all_oligo_pairs
+    } qr/Cannot find file/ , 'throws error on missing oligo file';
+
+    ok $g_oligo_pair_file->touch, 'create empty G oligo pair file';
+    throws_ok{
+        $o->all_oligo_pairs
+    } qr/No oligo data in/ , 'throws error on empty oligo file';
+
+    ok $o = $test->_get_test_object( { design_method => 'conditional' } )
+        , 'can grab another test object';
+
+    ok my $oligo_pairs = $o->all_oligo_pairs, 'can build all_oligo_pairs';
+
+    for my $oligo_class ( qw( G U D ) ) {
+        ok exists $oligo_pairs->{$oligo_class}, "$oligo_class oligo pair data exists";
+    }
+}
+
+sub all_valid_oligos : Test(8) {
+    my $test = shift;
+    ok my $o = $test->_get_test_object, 'can grab test object';
+
+    ok my $g5_oligo_file = $o->validated_oligo_dir->file( 'G5.yaml' ), 'can grab g5 oligo file object';
+    ok $g5_oligo_file->remove, 'can remove G5 oligo file';
+    throws_ok{
+        $o->all_valid_oligos
+    } qr/Cannot find file/ , 'throws error on missing oligo file';
+
+    ok $g5_oligo_file->touch, 'create empty G5 oligo file';
+    throws_ok{
+        $o->all_valid_oligos
+    } qr/No oligo data in/ , 'throws error on empty oligo file';
+
+    ok $o = $test->_get_test_object, 'can grab another test object';
+
+    lives_ok{
+        $o->all_valid_oligos
+    } 'can build all_valid_oligos';
+}
+
+sub consolidate_design_data : Test(4) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
     lives_ok{
-        $o->build_oligo_array
-    } 'can call build_oligo_array';
+        $o->consolidate_design_data
+    } 'can call consolidate_design_data';
 
-    ok my $picked_oligos = $o->picked_oligos, 'have array of picked oligos';
+    my $design_data_file = $o->dir->file( 'design_data.yaml' );
+    ok $o->dir->contains( $design_data_file ), 'design data file created';
+
+    my $alt_design_data_file = $o->dir->file( 'alt_designs.yaml' );
+    ok $o->dir->contains( $alt_design_data_file ), 'alternative design data file created';
+}
+
+sub build_primary_design_oligos : Test(3) {
+    my $test = shift;
+    ok my $o = $test->_get_test_object, 'can grab test object';
+
+    lives_ok{
+        $o->build_primary_design_oligos
+    } 'can call build_primary_design_oligos';
+
+    ok $o->primary_design_oligos, 'have primary design oligo data';
+}
+
+sub build_alternate_design_oligos : Test(4) {
+    my $test = shift;
+    ok my $o = $test->_get_test_object( { design_method => 'conditional' } ), 'can grab test object';
+
+    lives_ok{
+        $o->build_alternate_design_oligos
+    } 'can call build_alternate_design_oligos';
+
+    ok my $num_alt_designs = @{ $o->alternate_designs_oligos }, 'can grab number of alternate designs';
+    is $num_alt_designs, 3, 'expected number of alternate designs';
+}
+
+sub build_design_oligo_data : Test(15) {
+    my $test = shift;
+    ok my $o = $test->_get_test_object, 'can grab test object';
+
+    ok my $oligo_data = $o->build_design_oligo_data( 0 ), 'can call build_design_oligo_data';
 
     for my $oligo_type ( qw( G5 U5 D3 G3 ) ) {
-        my ( $oligo ) = grep { $_->{type} eq $oligo_type } @{ $picked_oligos };
+        my ( $oligo ) = grep { $_->{type} eq $oligo_type } @{ $oligo_data };
         ok $oligo, "have $oligo_type oligo";
     }
 
-    ok $o->validated_oligo_dir->file( 'G5.yaml' )->remove, 'can remove G5 oligo file';
-    throws_ok{
-        $o->build_oligo_array
-    } qr/Cannot find file/ , 'throws error on missing oligo file';
+    ok !$o->build_design_oligo_data( 5 ), 'no data returned for non existant alternate design number';
 
     ok my $c_o = $test->_get_test_object( { design_method => 'conditional' } ), 'can grab test object';
-    lives_ok{
-        $c_o->build_oligo_array
-    } 'can call build_oligo_array';
+    ok my $cond_oligo_data = $c_o->build_design_oligo_data( 1 ), 'can call build_design_oligo_data';
 
-    ok my $cond_picked_oligos = $c_o->picked_oligos, 'have array of conditional picked oligos';
     for my $oligo_type ( qw( G5 U5 U3 D5 D3 G3 ) ) {
-        my ( $oligo ) = grep { $_->{type} eq $oligo_type } @{ $cond_picked_oligos };
+        my ( $oligo ) = grep { $_->{type} eq $oligo_type } @{ $cond_oligo_data };
         ok $oligo, "have $oligo_type oligo";
     }
 }
@@ -77,76 +153,52 @@ sub get_oligo : Test(11) {
     ok my $u5_file = $o->validated_oligo_dir->file( 'U5.yaml' ), 'can find U5 oligo file';
     my $u5_oligos = LoadFile( $u5_file );
     my @all_u5_oligos = @{ $u5_oligos };
-
-    ok my $oligo_data = $o->get_oligo( $u5_oligos, 'U5' ), 'can call get_oligo';
-
+    ok my $oligo_data = $o->get_oligo( 'U5', 0 ), 'can call get_oligo';
     is $oligo_data->{seq}, $all_u5_oligos[0]{oligo_seq}
         , 'have expected U5 oligo seq, first in list';
 
     ok my $g5_file = $o->validated_oligo_dir->file( 'G5.yaml' ), 'can find G5 oligo file';
     my $g5_oligos = LoadFile( $g5_file );
-    ok my $g5_oligo_data = $o->get_oligo( $g5_oligos, 'G5' ), 'can call get_oligo';
-    my ( $expected_g5_oligo ) = grep{ $_->{id} eq $o->G_oligo_pair->{G5} } @{ $g5_oligos };
-
+    ok my $g5_oligo_data = $o->get_oligo( 'G5', 0 ), 'can call get_oligo';
+    my ( $expected_g5_oligo ) = grep{ $_->{id} eq $o->all_oligo_pairs->{G}[0]{G5} } @{ $g5_oligos };
     is $g5_oligo_data->{seq}, $expected_g5_oligo->{oligo_seq}, 'get expected G5 oligo';
 
+    $o->all_valid_oligos->{U3} = [];
     throws_ok{
-        $o->get_oligo( [], 'U3' )
+        $o->get_oligo( 'U3', 0 )
     } qr/Can not find U3 oligo/,
         'throws errors if we can not find oligo';
 
     #conditional design, U / D oligos from best pair, not just best individual oligo
     ok my $c_o = $test->_get_test_object( { design_method => 'conditional' } ), 'can grab test object';
-    ok my $u5_oligo_data = $c_o->get_oligo( $u5_oligos, 'U5' ), 'can call get_oligo';
-    my ( $expected_u5_oligo ) = grep{ $_->{id} eq $o->U_oligo_pair->{U5} } @{ $u5_oligos };
-
+    ok my $u5_oligo_data = $c_o->get_oligo( 'U5', 0 ), 'can call get_oligo';
+    my ( $expected_u5_oligo ) = grep{ $_->{id} eq $c_o->all_oligo_pairs->{U}[0]{U5} } @{ $u5_oligos };
     is $u5_oligo_data->{seq}, $expected_u5_oligo->{oligo_seq}, 'get expected U5 oligo for condition design';
-
-}
-
-sub get_oligo_pair : Test(6) {
-    my $test = shift;
-    ok my $o = $test->_get_test_object, 'can grab test object';
-
-    ok my $oligos = $o->get_oligo_pair( 'G' ), 'can call get_oligo_pair';
-
-    my $gap_oligo_file = $o->validated_oligo_dir->file( 'G_oligo_pairs.yaml' );
-    ok $gap_oligo_file->remove, 'can remove gap oligo pair file';
-    throws_ok{
-        $o->get_oligo_pair( 'G' )
-    } qr/Cannot find file/
-        , 'throws errors if we do not have gap oligo data file';
-
-    ok $gap_oligo_file->touch, 'can create blank gap oligo file';
-    throws_ok{
-        $o->get_oligo_pair( 'G' )
-    } qr/No oligo data/
-        , 'throws errors if no data in gap oligo file';
 }
 
 sub pick_oligo_from_pair : Test(9) {
     my $test = shift;
-    ok my $o = $test->_get_test_object, 'can grab test object';
+    ok my $o = $test->_get_test_object( { design_method => 'conditional' } ), 'can grab test object';
 
-    ok my $u5_file = $o->validated_oligo_dir->file( 'U5.yaml' ), 'can find U5 oligo file';
-    my $u5_oligos = LoadFile( $u5_file );
-    ok my $oligo = $o->pick_oligo_from_pair( $u5_oligos, 'U5' );
-    is $oligo->{id}, 'U5-11', 'picked right U5 oligo';
+    ok my $u_pair_file = $o->validated_oligo_dir->file( 'U_oligo_pairs.yaml' ), 'can find U oligo pair file';
+    my $u_oligos_pairs = LoadFile( $u_pair_file );
+    ok my $u5_oligo = $o->pick_oligo_from_pair( 'U5', 0 );
+    is $u5_oligo->{id}, $u_oligos_pairs->[0]{U5}, 'picked right U5 oligo';
 
-    ok my $u3_file = $o->validated_oligo_dir->file( 'U3.yaml' ), 'can find U3 oligo file';
-    my $u3_oligos = LoadFile( $u3_file );
-    ok $oligo = $o->pick_oligo_from_pair( $u3_oligos, 'U3' );
-    is $oligo->{id}, 'U3-10', 'picked right U3 oligo';
+    ok my $u3_oligo = $o->pick_oligo_from_pair( 'U3', 0 );
+    is $u3_oligo->{id}, $u_oligos_pairs->[0]{U3}, 'picked right U3 oligo';
 
     throws_ok{
-        $o->pick_oligo_from_pair( $u3_oligos, 'U5' )
-    } qr/Unable to find U5 oligo:/
+        $o->pick_oligo_from_pair( 'X5', 0 )
+    } qr/Can not find information on X oligo pairs/
         ,'throws error when we can not find specified oligo';
 
     throws_ok{
-        $o->pick_oligo_from_pair( $u3_oligos, 'X5' )
-    } qr/Attribute X_oligo_pair does not exist/
-        ,'throws error with invalid oligo type';
+        $o->pick_oligo_from_pair( 'U5', 4 )
+    } qr/Unable to find U5 oligo: U5-99/
+        ,'throws error with non-existant oligo';
+
+    ok !$o->pick_oligo_from_pair( 'U5', 5 ), 'no fifth pair, return undef';
 }
 
 sub format_oligo_data : Test(9) {
@@ -168,28 +220,88 @@ sub format_oligo_data : Test(9) {
     is $loci->{chr_start}, $test_oligo->{oligo_start}, 'correct start coordinate';
 }
 
-sub create_design_file : Test(8) {
+sub create_primary_design_file : Test(9) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
     lives_ok{
-        $o->get_design_phase;
-        $o->build_oligo_array;
+        $o->build_primary_design_oligos;
     } 'test object setup ok';
 
     lives_ok{
-        $o->create_design_file
+        $o->create_primary_design_file
     } 'can call create_design_file';
 
     my $design_data_file = $o->dir->file( 'design_data.yaml' );
     ok $o->dir->contains( $design_data_file ), 'design data file created';
 
     my $design_data = LoadFile( $design_data_file );
+    is $design_data->{type}, 'deletion', 'correct design type';
+    is_deeply $design_data->{gene_ids}, [ 'LBL-1' ], 'correct gene ids';
+
+    ok $o = $test->_get_test_object( { design_method => 'conditional' } )
+        , 'can grab another test object, conditional design';
+
+    lives_ok{
+        $o->build_primary_design_oligos;
+        $o->create_primary_design_file
+    } 'can call create_design_file';
+
+    my $cond_design_data_file = $o->dir->file( 'design_data.yaml' );
+    ok $o->dir->contains( $cond_design_data_file ), 'design data file created';
+}
+
+sub create_alt_design_file : Test(9) {
+    my $test = shift;
+    ok my $o = $test->_get_test_object, 'can grab test object';
+
+    lives_ok{
+        $o->build_alternate_design_oligos;
+    } 'test object setup ok';
+
+    lives_ok{
+        $o->create_alt_design_file
+    } 'can call create_alt_design_file';
+
+    my $alt_design_data_file = $o->dir->file( 'alt_designs.yaml' );
+    ok $o->dir->contains( $alt_design_data_file ), 'alt design data file created';
+
+    my $alt_design_data = LoadFile( $alt_design_data_file );
+
+    my $num_alt_designs = @{ $alt_design_data };
+    is $num_alt_designs, 2, 'correct number of alternative designs, deletion';
+
+    ok $o = $test->_get_test_object( { design_method => 'conditional' } )
+        , 'can grab another test object, this time for a conditional design';
+
+    lives_ok{
+        $o->build_alternate_design_oligos;
+        $o->create_alt_design_file
+    } 'can call create_alt_design_file';
+
+    my $alt_cond_design_data_file = $o->dir->file( 'alt_designs.yaml' );
+    ok $o->dir->contains( $alt_cond_design_data_file ), 'alt design data file created';
+
+    my $alt_cond_design_data = LoadFile( $alt_cond_design_data_file );
+    my $num_cond_alt_designs = @{ $alt_cond_design_data };
+    is $num_cond_alt_designs, 3, 'correct number of alternative designs, conditional';
+}
+
+sub build_design_data : Test(8) {
+    my $test = shift;
+    ok my $o = $test->_get_test_object, 'can grab test object';
+
+    lives_ok{
+        $o->build_primary_design_oligos;
+    } 'test object setup ok';
+
+    ok my $design_data = $o->build_design_data( $o->primary_design_oligos ), 'can call build_design_data';
 
     is $design_data->{type}, 'deletion', 'correct design type';
     is $design_data->{species}, 'Mouse', 'correct species';
     is_deeply $design_data->{gene_ids}, [ 'LBL-1' ], 'correct gene ids';
     is $design_data->{created_by}, 'test', 'correct created_by';
+    ok !exists $design_data->{phase}, 'phase value not set';
 }
 
 sub _get_test_object {

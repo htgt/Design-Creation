@@ -1,0 +1,55 @@
+---
+created_by: system
+gene_ids:
+- foofoo
+oligos:
+- loci:
+  - assembly: GRCm38
+    chr_end: 23248165
+    chr_name: '1'
+    chr_start: 23248116
+    chr_strand: 1
+  seq: AGGAAGTCATAAATGGTATTCCTTAGTGATGAATCTTGAATGCCAAGATG
+  type: G5
+- loci:
+  - assembly: GRCm38
+    chr_end: 23255450
+    chr_name: '1'
+    chr_start: 23255401
+    chr_strand: 1
+  seq: TATCTTACAAATATATCCTCTGTATCTATACGCTTCTATTCAGGTATTTC
+  type: U5
+- loci:
+  - assembly: GRCm38
+    chr_end: 23255531
+    chr_name: '1'
+    chr_start: 23255482
+    chr_strand: 1
+  seq: CTTTGTTTTAGAAATAAGATTCTCAACTGGATACTGTGATGAGCTTTTGA
+  type: U3
+- loci:
+  - assembly: GRCm38
+    chr_end: 23257988
+    chr_name: '1'
+    chr_start: 23257939
+    chr_strand: 1
+  seq: GGCAATGTATAAAGAATGTATTGGCTCTGTATGTACATGTTCAAGTACCA
+  type: D5
+- loci:
+  - assembly: GRCm38
+    chr_end: 23258099
+    chr_name: '1'
+    chr_start: 23258050
+    chr_strand: 1
+  seq: CCCACCATGGAGCTTAGAAGCTTATAAACAATGCAAGTTTGTAAGTTAGA
+  type: D3
+- loci:
+  - assembly: GRCm38
+    chr_end: 23262537
+    chr_name: '1'
+    chr_start: 23262488
+    chr_strand: 1
+  seq: TTGGGAGTATTTTTGATATAGTTAGTTCAATGGACTTCTAAATTGGTGAA
+  type: G3
+species: Mouse
+type: conditional

@@ -58,6 +58,7 @@ const my $DEFAULT_VALIDATED_OLIGO_DIR_NAME      => 'validated_oligos';
 const my $DEFAULT_AOS_OUTPUT_DIR_NAME           => 'aos_output';
 const my $DEFAULT_OLIGO_TARGET_REGIONS_DIR_NAME => 'oligo_target_regions';
 const my $DEFAULT_DESIGN_DATA_FILE_NAME         => 'design_data.yaml';
+const my $DEFAULT_ALT_DESIGN_DATA_FILE_NAME     => 'alt_designs.yaml';
 
 has validated_oligo_dir_name => (
     is      => 'ro',
@@ -84,6 +85,13 @@ has design_data_file_name => (
    is      => 'ro',
    isa     => 'Str',
    default => $DEFAULT_DESIGN_DATA_FILE_NAME,
+   traits  => [ 'NoGetopt' ],
+);
+
+has alt_designs_data_file_name => (
+   is      => 'ro',
+   isa     => 'Str',
+   default => $DEFAULT_ALT_DESIGN_DATA_FILE_NAME,
    traits  => [ 'NoGetopt' ],
 );
 

@@ -17,17 +17,16 @@ sub valid_conditional_design_aos_cmd : Test(4) {
     my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute;
 
     my @argv_contents = (
-        'conditional-design' ,
-        '--dir'              , $dir->stringify,
-        '--chromosome'       , 11,
-        '--strand'           , 1,
-        '--u-block-start'    , 10000100,
-        '--u-block-end'      , 10000300,
-        '--d-block-start'    , 10000500,
-        '--d-block-end'      , 10000700,
-        '--min-u-oligo-gap'  , 10,
-        '--min-d-oligo-gap'  , 5,
-        '--target-gene'      , 'CONDITIONAL-TEST',
+        'conditional-design'  ,
+        '--dir'               , $dir->stringify,
+        '--chromosome'        , 11,
+        '--strand'            , 1,
+        '--u-block-start'     , 10000100,
+        '--u-block-end'       , 10000300,
+        '--d-block-start'     , 10000500,
+        '--d-block-end'       , 10000700,
+        '--target-gene'       , 'CONDITIONAL-TEST',
+        '--mask-by-lower-case', 'no',
     );
 
     note('############################################');

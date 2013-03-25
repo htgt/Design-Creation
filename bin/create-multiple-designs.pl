@@ -10,12 +10,13 @@ use Getopt::Long;
 use List::MoreUtils qw( any );
 use Pod::Usage;
 
-my ( $file, $persist, $base_work_dir );
+my ( $file, $persist, $base_work_dir, $alt_designs );
 GetOptions(
     'help'        => sub { pod2usage( -verbose => 1 ) },
     'man'         => sub { pod2usage( -verbose => 2 ) },
     'file=s'      => \$file,
     'persist'     => \$persist,
+    'alt-designs' => \$alt_designs,
     'dir=s'       => \$base_work_dir,
     'conditional' => \my $conditional,
     'debug'       => \my $debug,
@@ -48,6 +49,7 @@ sub process_design {
 
     push @args, $conditional ? 'conditional-design' : 'ins-del-design';
     push @args, $debug       ? '--debug'            : '--verbose';
+    push @args, '--alt-designs' if $alt_designs;
     push @args, '--persist' if $persist;
 
     push @args, @{ $params };
@@ -74,6 +76,7 @@ sub get_params {
     my $dir = $base_work_dir . $data->{'target-gene'};
     my @params;
     while ( my( $cmd, $arg ) = each %{ $data } ) {
+        next unless $arg;
         push @params, '--' . $cmd,;
         push @params, $arg;
     }
