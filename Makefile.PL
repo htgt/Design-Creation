@@ -32,8 +32,8 @@ my %WriteMakefileArgs = (
   },
   "DISTNAME" => "Design-Creation",
   "EXE_FILES" => [
-    "bin/design-create",
-    "bin/create-multiple-designs.pl"
+    "bin/create-multiple-designs.pl",
+    "bin/design-create"
   ],
   "LICENSE" => "perl",
   "NAME" => "Design::Creation",
