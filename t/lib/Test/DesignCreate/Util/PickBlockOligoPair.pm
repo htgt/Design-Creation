@@ -28,105 +28,97 @@ sub constructor : Test( startup => 2) {
     isa_ok $o, $test->class;
 }
 
-sub right_oligo_data : Test(9) {
+sub right_oligos : Test(6) {
     my $test = shift;
     ok my $o = $test->get_test_object, 'can get test object';
 
-    ok my @right_oligos = $o->right_oligos, 'can get right oligos';
-    is $right_oligos[0]->{oligo}, 'U3', 'correct oligo type for +ve stranded design';
-
-    ok my @sorted_oligos = sort( { $a->{offset} <=> $b->{offset} } @right_oligos ), 'sort oligo data';
-    lives_ok {
-        $o->get_oligo_pairs
-    } 'can call get_oligo_pairs';
-
-    is_deeply $o->right_oligo_data, \@sorted_oligos, 'right oligos sorted correctly';
+    ok my $right_oligos = $o->right_oligos, 'can get right oligos';
+    is $right_oligos->[0]{oligo}, 'U3', 'correct oligo type for +ve stranded design';
 
     ok $o = $test->get_test_object( { strand => -1 } ), 'can get another test object';
-    ok @right_oligos = $o->right_oligos, 'can get right oligos again';
-    is $right_oligos[0]->{oligo}, 'U5', 'correct oligo type for -ve stranded design';
+    ok $right_oligos = $o->right_oligos, 'can get right oligos again';
+    is $right_oligos->[0]->{oligo}, 'U5', 'correct oligo type for -ve stranded design';
 }
 
-sub left_oligo_data : Test(9) {
+sub left_oligos : Test(6) {
     my $test = shift;
     ok my $o = $test->get_test_object, 'can get test object';
 
-    ok my @left_oligos = $o->left_oligos, 'can get left oligos';
-    is $left_oligos[0]->{oligo}, 'U5', 'correct oligo type for +ve stranded design';
-
-    ok my @sorted_oligos = sort( { $b->{offset} <=> $a->{offset} } @left_oligos ), 'sort oligo data';
-    lives_ok {
-        $o->get_oligo_pairs
-    } 'can call get_oligo_pairs';
-
-    is_deeply $o->left_oligo_data, \@sorted_oligos, 'left oligos sorted correctly';
+    ok my $left_oligos = $o->left_oligos, 'can get left oligos';
+    is $left_oligos->[0]->{oligo}, 'U5', 'correct oligo type for +ve stranded design';
 
     ok $o = $test->get_test_object( { strand => -1 } ), 'can get another test object';
-    ok @left_oligos = $o->left_oligos, 'can get left oligos again';
-    is $left_oligos[0]->{oligo}, 'U3', 'correct oligo type for -ve stranded design';
+    ok $left_oligos = $o->left_oligos, 'can get left oligos again';
+    is $left_oligos->[0]->{oligo}, 'U3', 'correct oligo type for -ve stranded design';
 }
 
-sub get_oligo_pairs : Test(11) {
+sub get_oligo_pairs : Test(13) {
     my $test = shift;
     ok my $o = $test->get_test_object, 'can get test object';
 
-    #default min_gap 15 makes the U3-10, U5-13 pair invalid, their gap is 14
+    # optimal gap is 30, best pair has gap of 32
     ok my $oligo_pairs = $o->get_oligo_pairs,  'can call get_oligo_pairs';
 
     my $best_pair = shift @{ $oligo_pairs };
-    is_deeply $best_pair, { U5 => 'U5-13', U3 => 'U3-9' }, 'have correct best pair';
+    is $best_pair->{U5}, 'U5-14', 'have correct U5 oligo for best pair';
+    is $best_pair->{U3}, 'U3-11', 'have correct U3 oligo for best pair';
 
-    #min_gap 10 makes the U3-10, U5-13 pair valid, their gap is 14
-    ok $o = $test->get_test_object( { min_gap => 10 } ), 'can get another test object';
+    #min_gap 40 makes the previous best pair invalid, their gap is 32
+    ok $o = $test->get_test_object( { min_gap => 40 } ), 'can get another test object';
     ok $oligo_pairs = $o->get_oligo_pairs,  'can call get_oligo_pairs';
 
     $best_pair = shift @{ $oligo_pairs };
-    is_deeply $best_pair, { U5 => 'U5-13', U3 => 'U3-10' }, 'have correct best pair';
+    is $best_pair->{U5}, 'U5-11', 'have correct U5 oligo for best pair';
+    is $best_pair->{U3}, 'U3-9', 'have correct U3 oligo for best pair';
 
-    ok my $d_o = $test->get_test_object( { five_file => 'D5.yaml', three_file => 'D3.yaml' } ),
+    # return pair for -ve stranded design
+    ok my $d_o = $test->get_test_object( { five_file => 'D5.yaml', three_file => 'D3.yaml', strand => -1 } ),
         'can get test object for D oligos';
 
     ok my $d_oligo_pairs = $d_o->get_oligo_pairs,  'can call get_oligo_pairs';
-    is_deeply $d_oligo_pairs, [], 'no valid pairs';
+    ok $d_o->have_oligo_pairs, 'have valid D pairs';
+    $best_pair = shift @{ $d_oligo_pairs };
+    is $best_pair->{D5}, 'D5-1', 'have correct D5 oligo for best pair';
+    is $best_pair->{D3}, 'D3-4', 'have correct D3 oligo for best pair';
 
-    ok my $f_o = $test->get_test_object( { strand => -1 } )
-        , 'can get test object with wrong strand';
-    throws_ok{
-        $f_o->get_oligo_pairs
-    } qr/Invalid input/, 'throws error when 5 and 3 oligos wrong way around for given strand';
 }
 
-sub check_oligo_pair : Test(7) {
+sub check_oligo_pair : Test(10) {
     my $test = shift;
     ok my $o = $test->get_test_object, 'can get test object';
 
-    my $left_oligo = shift @{ $o->left_oligo_data };
-    my $right_oligo = shift @{ $o->right_oligo_data };
-    my @pairs;
+    my $left_oligo = shift @{ $o->left_oligos };
+    my $right_oligo = shift @{ $o->right_oligos };
+
+    throws_ok{
+        $o->check_oligo_pair( $right_oligo, $left_oligo )
+    } qr/Invalid input/,  'throws error if oligos in wrong order';
+    ok !$o->have_oligo_pairs, 'pairs array has no a value';
 
     $right_oligo->{oligo_start} = 10000079;
     lives_ok{
-        $o->check_oligo_pair( $left_oligo, $right_oligo, \@pairs )
+        $o->check_oligo_pair( $left_oligo, $right_oligo )
     } 'can call check_oligo_pair';
-    ok !scalar(@pairs), 'pairs array has no a value';
+    ok !$o->have_oligo_pairs, 'pairs array has no a value, when min_gap value specified';
 
     $right_oligo->{oligo_start} = 10000132;
     lives_ok{
-        $o->check_oligo_pair( $left_oligo, $right_oligo, \@pairs )
+        $o->check_oligo_pair( $left_oligo, $right_oligo )
     } 'can call check_oligo_pair';
-    ok scalar(@pairs), 'pairs array has a value';
+    ok $o->have_oligo_pairs, 'pairs array has a value, min_gap specified and gap is larger than this';
 
-    @pairs = ();
-    throws_ok{
-        $o->check_oligo_pair( $right_oligo, $left_oligo, \@pairs )
-    } qr/Invalid input/,  'throws error if oligos in wrong order';
-    ok !scalar(@pairs), 'pairs array has no a value';
+    ok $o = $test->get_test_object( { min_gap => undef } ), 'can get test object';
+    $right_oligo->{oligo_start} = 10000079;
+    lives_ok{
+        $o->check_oligo_pair( $left_oligo, $right_oligo )
+    } 'can call check_oligo_pair';
+    ok $o->have_oligo_pairs, 'pairs array has a value when no min_gap value specified';
 }
 
 sub get_test_object {
     my ( $test, $params ) = @_;
     my $strand     = $params->{strand} || 1;
-    my $min_gap    = $params->{min_gap} || 15;
+    my $min_gap    = exists $params->{min_gap} ? $params->{min_gap} : 15;
     my $five_file  = $params->{five_file} || 'U5.yaml';
     my $three_file = $params->{three_file} ||'U3.yaml';
 

@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::ConsolidateDesignData;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::ConsolidateDesignData::VERSION = '0.002';
+    $DesignCreate::CmdRole::ConsolidateDesignData::VERSION = '0.003';
 }
 ## use critic
 
@@ -52,37 +52,58 @@ has created_by => (
     cmd_flag      => 'created-by',
 );
 
-has U_oligo_pair => (
+has all_oligo_pairs => (
     is         => 'ro',
     isa        => 'HashRef',
-    traits     => [ 'NoGetopt' ],
+    traits     => [ 'NoGetopt', 'Hash' ],
     lazy_build => 1,
+    handles    => {
+        have_oligo_pairs => 'exists',
+        get_oligo_class_pairs => 'get',
+    }
 );
 
-sub _build_U_oligo_pair {
-    return shift->get_oligo_pair( 'U' );
+sub _build_all_oligo_pairs {
+    my $self = shift;
+    my %oligo_pairs;
+    my @oligo_class = $self->design_method eq 'conditional' ? qw( G U D ) : qw( G );
+
+    for my $class ( @oligo_class ) {
+        my $oligo_pair_file = $self->get_file( $class . '_oligo_pairs.yaml', $self->validated_oligo_dir );
+        my $oligos = LoadFile( $oligo_pair_file );
+        if ( !$oligos || !@{ $oligos } ) {
+            DesignCreate::Exception->throw( "No oligo data in $oligo_pair_file" );
+        }
+        $oligo_pairs{$class} = $oligos;
+    }
+
+    return \%oligo_pairs;
 }
 
-has D_oligo_pair => (
+has all_valid_oligos => (
     is         => 'ro',
     isa        => 'HashRef',
-    traits     => [ 'NoGetopt' ],
+    traits     => [ 'NoGetopt', 'Hash' ],
     lazy_build => 1,
+    handles    => {
+        get_oligos_of_type => 'get',
+    }
 );
 
-sub _build_D_oligo_pair {
-    return shift->get_oligo_pair( 'D' );
-}
+sub _build_all_valid_oligos {
+    my $self = shift;
+    my %oligos;
 
-has G_oligo_pair => (
-    is         => 'ro',
-    isa        => 'HashRef',
-    traits     => [ 'NoGetopt' ],
-    lazy_build => 1,
-);
+    for my $oligo_type ( @{ $self->expected_oligos } ) {
+        my $oligo_file = $self->get_file( "$oligo_type.yaml", $self->validated_oligo_dir );
+        my $oligos = LoadFile( $oligo_file );
+        if ( !$oligos || !@{ $oligos } ) {
+            DesignCreate::Exception->throw( "No oligo data in $oligo_file" );
+        }
+        $oligos{$oligo_type} = $oligos;
+    }
 
-sub _build_G_oligo_pair {
-    return shift->get_oligo_pair( 'G' );
+    return \%oligos;
 }
 
 has phase => (
@@ -91,18 +112,34 @@ has phase => (
     traits => [ 'NoGetopt' ],
 );
 
-has picked_oligos => (
+has primary_design_oligos => (
     is     => 'rw',
     isa    => 'ArrayRef',
     traits => [ 'NoGetopt' ],
+);
+
+has alternate_designs_oligos => (
+    is      => 'rw',
+    isa     => 'ArrayRef',
+    traits  => [ 'NoGetopt', 'Array' ],
+    default => sub { [] },
+    handles => {
+        num_alt_designs               => 'count',
+        list_alternate_designs_oligos => 'elements',
+        add_alternate_design_oligos   => 'push',
+    }
 );
 
 sub consolidate_design_data {
     my ( $self, $opts, $args ) = @_;
 
     $self->get_design_phase;
-    $self->build_oligo_array;
-    $self->create_design_file;
+
+    $self->build_primary_design_oligos;
+    $self->build_alternate_design_oligos;
+
+    $self->create_primary_design_file;
+    $self->create_alt_design_file if $self->num_alt_designs;
 
     return;
 }
@@ -116,38 +153,82 @@ sub get_design_phase {
     return;
 }
 
-sub build_oligo_array {
+sub build_primary_design_oligos {
     my $self = shift;
-    my @oligos;
 
-    $self->log->info('Picking out design oligos');
-    for my $oligo_type ( @{ $self->expected_oligos } ) {
-        my $oligo_file = $self->get_file( "$oligo_type.yaml", $self->validated_oligo_dir );
-        my $oligos = LoadFile( $oligo_file );
+    $self->log->info('Picking out primary design oligos');
+    $self->primary_design_oligos( $self->build_design_oligo_data( 0 ) );
+    return;
+}
 
-        push @oligos, $self->get_oligo( $oligos, $oligo_type );
+sub build_alternate_design_oligos {
+    my $self = shift;
+    my $design_num = 1;
+
+    $self->log->info('Picking out alternative design oligos');
+    while ( 1 ) {
+        my $design_oligo_data = $self->build_design_oligo_data( $design_num );
+        last unless $design_oligo_data;
+
+        $self->add_alternate_design_oligos( $design_oligo_data );
+        $design_num++;
     }
-
-    $self->picked_oligos( \@oligos );
 
     return;
 }
 
+sub build_design_oligo_data {
+    my ( $self, $design_num ) = @_;
+    my @design_oligo_data;
+
+    for my $oligo_type ( @{ $self->expected_oligos } ) {
+         my $design_oligo_data = $self->get_oligo( $oligo_type, $design_num );
+         return unless $design_oligo_data;
+
+         push @design_oligo_data, $design_oligo_data;
+    }
+
+    return \@design_oligo_data;
+}
+
 sub get_oligo {
-    my ( $self, $oligos, $oligo_type ) = @_;
+    my ( $self, $oligo_type, $design_num ) = @_;
     my $oligo;
 
     if ( $oligo_type =~ /^G/ || $self->design_method eq 'conditional' ) {
-        $oligo = $self->pick_oligo_from_pair( $oligos, $oligo_type );
+        $oligo = $self->pick_oligo_from_pair( $oligo_type, $design_num );
     }
     else {
-        $oligo = shift @{ $oligos };
+        my $oligos = $self->get_oligos_of_type( $oligo_type );
+        $oligo = $oligos->[$design_num];
     }
 
+    #throw error if this is the oligo for the primary design
     DesignCreate::Exception->throw("Can not find $oligo_type oligo")
-        unless $oligo;
+        if !$oligo && $design_num == 0;
+    return unless $oligo;
 
     return $self->format_oligo_data( $oligo );
+}
+
+sub pick_oligo_from_pair {
+    my ( $self, $oligo_type, $design_num ) = @_;
+
+    my $oligo_class = substr( $oligo_type, 0,1 );
+    DesignCreate::Exception->throw( "Can not find information on $oligo_class oligo pairs")
+        unless $self->have_oligo_pairs( $oligo_class );
+
+    my $oligo_pairs = $self->get_oligo_class_pairs($oligo_class);
+    my $oligo_id = $oligo_pairs->[$design_num]{$oligo_type};
+    return unless $oligo_id;
+
+    my $oligos = $self->get_oligos_of_type( $oligo_type );
+    my $oligo = first{ $_->{id} eq $oligo_id } @{ $oligos };
+
+    DesignCreate::Exception->throw( "Unable to find $oligo_type oligo: " . $oligo_id )
+        unless $oligo;
+
+    return $oligo;
 }
 
 sub format_oligo_data {
@@ -168,56 +249,48 @@ sub format_oligo_data {
     };
 }
 
-sub create_design_file {
+sub create_primary_design_file {
     my $self = shift;
-
-    my %design_data = (
-        type       => $self->design_method,
-        species    => $self->species,
-        gene_ids   => $self->target_genes,
-        created_by => $self->created_by,
-        oligos     => $self->picked_oligos,
-    );
-
-    $design_data{phase} = $self->phase if $self->phase;
+    my $design_data = $self->build_design_data( $self->primary_design_oligos );
 
     my $design_data_file = $self->dir->file( $self->design_data_file_name );
     $self->log->info( "Creating design file: $design_data_file" );
-    DumpFile( $design_data_file, \%design_data );
+    DumpFile( $design_data_file, $design_data );
 
     return;
 }
 
-sub get_oligo_pair {
-    my ( $self, $type ) = @_;
+sub create_alt_design_file {
+    my $self = shift;
+    my @alt_design_data;
 
-    my $oligo_pair_file = $self->get_file( $type . '_oligo_pairs.yaml', $self->validated_oligo_dir );
+    $self->log->info( "ALT DESIGNS: " . $self->num_alt_designs );
 
-    my $oligos = LoadFile( $oligo_pair_file );
-    if ( !$oligos || !@{ $oligos } ) {
-        DesignCreate::Exception->throw( "No oligo data in $oligo_pair_file" );
+    for my $alt_design_oligos ( $self->list_alternate_designs_oligos ) {
+        push @alt_design_data, $self->build_design_data( $alt_design_oligos );
     }
 
-    return shift @{ $oligos };
+    my $alt_designs_file = $self->dir->file( $self->alt_designs_data_file_name );
+    $self->log->info( "Creating design file: $alt_designs_file" );
+    DumpFile( $alt_designs_file, \@alt_design_data );
+
+    return;
 }
 
-sub pick_oligo_from_pair {
-    my ( $self, $oligos, $oligo_type ) = @_;
+sub build_design_data {
+    my ( $self, $oligos ) = @_;
 
-    my $oligo_region = substr( $oligo_type, 0,1 );
-    my $pair_attribute = $oligo_region . '_oligo_pair';
-    DesignCreate::Exception::NonExistantAttribute->throw(
-        attribute_name => $pair_attribute,
-        class          => $self->meta->name
-    ) unless $self->meta->has_attribute($pair_attribute);
+    my %design_data = (
+        type       => $self->design_method,
+        species    => $self->species,
+        gene_ids   => [ @{ $self->target_genes } ],
+        created_by => $self->created_by,
+        oligos     => $oligos,
+    );
 
-    my $oligo_id = $self->$pair_attribute->{$oligo_type};
-    my $oligo = first{ $_->{id} eq $oligo_id } @{ $oligos };
+    $design_data{phase} = $self->phase if $self->phase;
 
-    DesignCreate::Exception->throw( "Unable to find $oligo_type oligo: " . $oligo_id )
-        unless $oligo;
-
-    return $oligo;
+    return \%design_data;
 }
 
 1;

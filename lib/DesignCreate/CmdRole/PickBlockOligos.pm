@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::PickBlockOligos;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::PickBlockOligos::VERSION = '0.002';
+    $DesignCreate::CmdRole::PickBlockOligos::VERSION = '0.003';
 }
 ## use critic
 
@@ -42,8 +42,7 @@ has min_U_oligo_gap => (
     is            => 'ro',
     isa           => PositiveInt,
     traits        => [ 'Getopt' ],
-    documentation => 'Minimum gap between U oligos',
-    required      => 1,
+    documentation => 'Minimum gap between U oligos, optional',
     cmd_flag      => 'min-U-oligo-gap',
 );
 
@@ -51,8 +50,7 @@ has min_D_oligo_gap => (
     is            => 'ro',
     isa           => PositiveInt,
     traits        => [ 'Getopt' ],
-    documentation => 'Minimum gap between D oligos',
-    required      => 1,
+    documentation => 'Minimum gap between D oligos, optional',
     cmd_flag      => 'min-D-oligo-gap',
 );
 

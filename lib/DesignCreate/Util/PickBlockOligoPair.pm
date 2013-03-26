@@ -1,7 +1,7 @@
 package DesignCreate::Util::PickBlockOligoPair;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Util::PickBlockOligoPair::VERSION = '0.002';
+    $DesignCreate::Util::PickBlockOligoPair::VERSION = '0.003';
 }
 ## use critic
 
@@ -39,9 +39,8 @@ has three_prime_oligo_file => (
 );
 
 has min_gap => (
-    is       => 'ro',
-    isa      => PositiveInt,
-    required => 1,
+    is  => 'ro',
+    isa => 'Maybe[Int]',
 );
 
 has strand => (
@@ -50,41 +49,72 @@ has strand => (
     required => 1,
 );
 
-has left_oligo_data => (
+has left_oligos => (
     is         => 'ro',
     isa        => 'ArrayRef',
     lazy_build => 1,
-    traits     => [ 'Array' ],
-    handles    => {
-        sort_left_oligos => 'sort_in_place',
-        left_oligos      => 'elements',
-    },
 );
 
-sub _build_left_oligo_data {
+sub _build_left_oligos {
     my $self = shift;
 
     my $oligo_file = $self->strand == 1 ? $self->five_prime_oligo_file : $self->three_prime_oligo_file;
     return LoadFile( $oligo_file );
 }
 
-has right_oligo_data => (
+has right_oligos => (
     is         => 'ro',
     isa        => 'ArrayRef',
     lazy_build => 1,
-    traits     => [ 'Array' ],
-    handles    => {
-        sort_right_oligos => 'sort_in_place',
-        right_oligos      => 'elements',
-    },
 );
 
-sub _build_right_oligo_data {
+sub _build_right_oligos {
     my $self = shift;
 
     my $oligo_file = $self->strand == 1 ? $self->three_prime_oligo_file : $self->five_prime_oligo_file;
     return LoadFile( $oligo_file );
 }
+
+has oligo_region_length => (
+    is         => 'ro',
+    isa        => 'Int',
+    lazy_build => 1,
+);
+
+sub _build_oligo_region_length {
+    my $self = shift;
+
+    my $start = $self->left_oligos->[0]{target_region_start};
+    my $end   = $self->right_oligos->[0]{target_region_end};
+
+    return ( $end - $start ) + 1;
+}
+
+has optimal_gap_length => (
+    is         => 'ro',
+    isa        => 'Int',
+    lazy_build => 1,
+);
+
+# Optimal gap length is 15% of the total oligo region length
+sub _build_optimal_gap_length {
+    my $self = shift;
+    my $optimal_gap_length = $self->oligo_region_length * 0.15;
+
+    return sprintf("%d" , $optimal_gap_length );
+}
+
+has oligo_pairs => (
+    is      => 'ro',
+    isa     => 'ArrayRef',
+    traits  => [ 'Array' ],
+    default => sub{ [] },
+    handles => {
+        add_oligo_pair   => 'push',
+        sort_oligo_pairs => 'sort_in_place',
+        have_oligo_pairs => 'count',
+    },
+);
 
 has pick_log => (
     is      => 'rw',
@@ -97,29 +127,25 @@ has pick_log => (
     },
 );
 
-# left oligos ranked from closest to 3' end to furthest
-# right oligos ranked from cloesest to 5' end to furthest
-# subroutine will list pairs from closest together to furthest apart
 sub get_oligo_pairs {
     my $self = shift;
-    my @oligo_pairs;
 
-    # rank right oligos from closest to 5' to furthest
-    $self->sort_right_oligos( sub{ $_[0]->{offset} <=> $_[1]->{offset} } );
-    # rank left oligos from closest to 3' to furthest
-    $self->sort_left_oligos( sub{ $_[1]->{offset} <=> $_[0]->{offset} } );
-
-    for my $left_oligo ( $self->left_oligos ) {
-        for my $right_oligo ( $self->right_oligos ) {
-            $self->check_oligo_pair( $left_oligo, $right_oligo, \@oligo_pairs );
+    for my $left_oligo ( @{ $self->left_oligos } ) {
+        for my $right_oligo ( @{ $self->right_oligos } ) {
+            $self->check_oligo_pair( $left_oligo, $right_oligo );
         }
     }
 
-    return \@oligo_pairs;
+    # Order from closest to ideal gap to furthest away
+    # If minimum gap specified this will still do the right thing
+    $self->sort_oligo_pairs( sub{ $_[0]->{optimal_gap_diff} <=> $_[1]->{optimal_gap_diff} } );
+
+    return $self->oligo_pairs;
 }
 
+## no critic(ValuesAndExpressions::ProhibitCommaSeparatedStatements)
 sub check_oligo_pair {
-    my ( $self, $left_oligo, $right_oligo, $oligo_pairs ) = @_;
+    my ( $self, $left_oligo, $right_oligo ) = @_;
 
     DesignCreate::Exception->throw(
         'Invalid input ' . $left_oligo->{id} . ' and '
@@ -129,21 +155,26 @@ sub check_oligo_pair {
     my $oligo_gap = ( $right_oligo->{oligo_start} - $left_oligo->{oligo_end} ) - 1;
     my $log_str = $left_oligo->{id} . ' and ' . $right_oligo->{id} . " gap is $oligo_gap";
 
-    if ( $oligo_gap < $self->min_gap ) {
+    if ( $self->min_gap && $oligo_gap < $self->min_gap ) {
         $log_str .= ' - REJECT, minimum gap is ' . $self->min_gap;
         $self->log->debug( $log_str );
     }
-    else {
+    else{
         $log_str .= ' - PASS';
-        push @{ $oligo_pairs }, {
-            $left_oligo->{oligo}  => $left_oligo->{id},
-            $right_oligo->{oligo} => $right_oligo->{id}
-        };
+        $self->add_oligo_pair(
+            {
+                $left_oligo->{oligo}  => $left_oligo->{id},
+                $right_oligo->{oligo} => $right_oligo->{id},
+                optimal_gap_diff      => abs( $self->optimal_gap_length - $oligo_gap ),
+                oligo_gap             => $oligo_gap,
+            }
+        );
     }
     $self->add_log( $log_str );
 
     return;
 }
+## use critic
 
 __PACKAGE__->meta->make_immutable;
 

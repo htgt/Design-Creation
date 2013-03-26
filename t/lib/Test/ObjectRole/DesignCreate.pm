@@ -27,6 +27,12 @@ has design_data_file_name => (
    default => 'design_data.yaml',
 );
 
+has alt_designs_data_file_name => (
+   is      => 'ro',
+   isa     => 'Str',
+   default => 'alt_designs.yaml',
+);
+
 has validated_oligo_dir => (
     is         => 'ro',
     isa        => 'Path::Class::Dir',

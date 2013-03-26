@@ -22,6 +22,7 @@ my %WriteMakefileArgs = (
     "MooseX::Getopt" => 0,
     "Path::Class" => 0,
     "Test::Class" => 0,
+    "Test::MockObject" => 0,
     "Test::More" => "0.88",
     "Test::Most" => 0,
     "base" => 0
@@ -31,8 +32,8 @@ my %WriteMakefileArgs = (
   },
   "DISTNAME" => "Design-Creation",
   "EXE_FILES" => [
-    "bin/create-multiple-designs.pl",
-    "bin/design-create"
+    "bin/design-create",
+    "bin/create-multiple-designs.pl"
   ],
   "LICENSE" => "perl",
   "NAME" => "Design::Creation",
@@ -68,7 +69,7 @@ my %WriteMakefileArgs = (
     "strict" => 0,
     "warnings" => 0
   },
-  "VERSION" => "0.002",
+  "VERSION" => "0.003",
   "test" => {
     "TESTS" => "t/*.t"
   }

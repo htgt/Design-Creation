@@ -1,7 +1,7 @@
 package DesignCreate::Action::FilterOligos;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::FilterOligos::VERSION = '0.002';
+    $DesignCreate::Action::FilterOligos::VERSION = '0.003';
 }
 ## use critic
 

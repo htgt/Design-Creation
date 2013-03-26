@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::OligoRegionsConditional;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::OligoRegionsConditional::VERSION = '0.002';
+    $DesignCreate::CmdRole::OligoRegionsConditional::VERSION = '0.003';
 }
 ## use critic
 
