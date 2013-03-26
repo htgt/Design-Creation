@@ -141,12 +141,16 @@ sub get_oligo_pairs {
 ## no critic(ValuesAndExpressions::ProhibitCommaSeparatedStatements)
 sub check_oligo_pair {
     my ( $self, $left_oligo, $right_oligo ) = @_;
+    my $log_str = $left_oligo->{id} . ' and ' . $right_oligo->{id};
 
     # Oligos can not overlap
-    return if $left_oligo->{oligo_end} >= $right_oligo->{oligo_start};
+     if ( $left_oligo->{oligo_end} >= $right_oligo->{oligo_start} ) {
+         $self->log->debug( $log_str . ' overlap' );
+         return;
+     }
 
     my $oligo_gap = ( $right_oligo->{oligo_start} - $left_oligo->{oligo_end} ) - 1;
-    my $log_str = $left_oligo->{id} . ' and ' . $right_oligo->{id} . " gap is $oligo_gap";
+    $log_str .= " gap is $oligo_gap";
 
     if ( $self->min_gap && $oligo_gap < $self->min_gap ) {
         $log_str .= ' - REJECT, minimum gap is ' . $self->min_gap;

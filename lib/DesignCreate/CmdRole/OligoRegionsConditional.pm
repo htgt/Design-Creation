@@ -67,15 +67,9 @@ has U_block_overlap => (
     isa           => NaturalNumber,
     traits        => [ 'Getopt' ],
     documentation => 'Block overlap for U region',
-    lazy_build    => 1,
+    default       => 0,
     cmd_flag      => 'u-block-overlap'
 );
-
-sub _build_U_block_overlap {
-    my $self = shift;
-
-    return sprintf( "%d", ( $self->U_block_length / 4 ) );
-}
 
 has D_block_start => (
     is            => 'ro',
@@ -112,15 +106,9 @@ has D_block_overlap => (
     isa           => NaturalNumber,
     traits        => [ 'Getopt' ],
     documentation => 'Block overlap for D region',
-    lazy_build    => 1,
+    default       => 0,
     cmd_flag      => 'd-block-overlap'
 );
-
-sub _build_D_block_overlap {
-    my $self = shift;
-
-    return sprintf( "%d", ( $self->D_block_length / 4 ) );
-}
 
 #TODO consider method overriding / renaming here
 sub get_oligo_region_coordinates {

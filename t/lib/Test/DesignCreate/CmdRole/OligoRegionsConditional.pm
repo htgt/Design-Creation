@@ -342,42 +342,12 @@ sub D_block_length : Test(3) {
     is $D_block_length, 202, 'correct D_block_length value';
 }
 
-sub D_block_overlap : Test(no_plan) {
-    my $test = shift;
-    my $metaclass = $test->get_test_object_metaclass();
-    ok my $o = $metaclass->new_object(
-        dir => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
-        U_block_start => 101176328, U_block_end => 101176528,
-        D_block_start => 101177327, D_block_end => 101177528,
-        chr_name      => 11       , chr_strand  => 1,
-        design_method => 'conditional',
-    );
-
-    ok my $D_block_overlap = $o->D_block_overlap, 'can call D_block_overlap';
-    is $D_block_overlap, 50, 'correct D_block_overlap value';
-}
-
 sub U_block_length : Test(3) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
     ok my $U_block_length = $o->U_block_length, 'can call U_block_length';
     is $U_block_length, 201, 'correct U_block_length value';
-}
-
-sub U_block_overlap : Test(no_plan) {
-    my $test = shift;
-    my $metaclass = $test->get_test_object_metaclass();
-    ok my $o = $metaclass->new_object(
-        dir => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
-        U_block_start => 101176328, U_block_end => 101176528,
-        D_block_start => 101177327, D_block_end => 101177528,
-        chr_name      => 11       , chr_strand  => 1,
-        design_method => 'conditional',
-    );
-
-    ok my $U_block_overlap = $o->U_block_overlap, 'can call U_block_overlap';
-    is $U_block_overlap, 50, 'correct U_block_overlap value';
 }
 
 sub _get_test_object {
