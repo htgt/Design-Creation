@@ -1,4 +1,14 @@
 {{$NEXT}}
 
+0.003     2013-03-26 07:24:13 Europe/London
+
+    Make min U / D oligo gap parameter option, work out optimal gap value, currently 15%
+    Sort block oligo pairs on how close they are to optimal gap value
+    Create alternate designs as well as primary design
+    Add option to persist these alternate designs to LIMS2
+
+0.002     2013-03-19 10:48:15 Europe/London
+    Bugfix, ins-del-design command now persisting target-gene
+
 0.001     2013-03-18 14:31:14 Europe/London
     Initial release
