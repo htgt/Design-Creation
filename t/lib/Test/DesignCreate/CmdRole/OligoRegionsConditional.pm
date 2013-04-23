@@ -114,7 +114,7 @@ sub coordinates_for_oligo : Tests(14) {
     #
     # -ve stranded design
     #
-    ok $o = $test->_get_test_object( -1 ), 'can grab test object';
+    ok $o = $test->_get_test_object( { strand => -1 } ), 'can grab test object';
 
     ok my( $d3_start, $d3_end ) = $o->coordinates_for_oligo( 'D3' )
         , 'can call coordinates_for_oligo';
@@ -154,7 +154,7 @@ sub get_oligo_region_gap_oligo : Test(15) {
     #
     # -ve stranded design
     #
-    ok $o = $test->_get_test_object( -1 ), 'can grab test object';
+    ok $o = $test->_get_test_object( { strand => -1 } ), 'can grab test object';
 
     ok my( $g5_start_minus, $g5_end_minus ) = $o->coordinates_for_oligo( 'G5' )
         , 'can call get_oligo_region_gap_oligo for G5';
@@ -184,7 +184,7 @@ sub get_oligo_region_gap_oligo : Test(15) {
         , 'throws start greater than end error';
 }
 
-sub get_oligo_region_u_or_d_oligo : Test(15) {
+sub get_oligo_region_u_or_d_oligo : Test(16) {
     my $test = shift;
     #
     # +ve stranded design
@@ -208,7 +208,7 @@ sub get_oligo_region_u_or_d_oligo : Test(15) {
     #
     # -ve stranded design
     #
-    ok $o = $test->_get_test_object( -1 ), 'can grab test object';
+    ok $o = $test->_get_test_object( { strand => -1 } ), 'can grab test object';
 
     ok my( $d3_start_minus, $d3_end_minus ) = $o->coordinates_for_oligo( 'D3' )
         , 'can call coordinates_for_oligo';
@@ -235,6 +235,11 @@ sub get_oligo_region_u_or_d_oligo : Test(15) {
         $o->get_oligo_region_u_or_d_oligo( 'U5' )
     } qr/Start \d+, greater than or equal to end \d+/
         , 'throws start greater than end error';
+
+    throws_ok {
+        $o->get_oligo_region_u_or_d_oligo( 'X5' )
+    } qr/Block oligo type must be U or D, not X5/
+        , 'throws error when unknown oligo type';
 }
 
 sub get_oligo_region_coordinates : Test(3) {
@@ -242,7 +247,7 @@ sub get_oligo_region_coordinates : Test(3) {
     ok my $o = $test->_get_test_object, 'can grab test object';
 
     lives_ok {
-        $o->get_oligo_region_coordinates 
+        $o->get_oligo_region_coordinates
     } 'can build_oligo_target_regions';
 
 
@@ -251,72 +256,118 @@ sub get_oligo_region_coordinates : Test(3) {
         , "$oligo_region_file oligo file exists";
 }
 
-sub get_oligo_block_left_half_coords : Test(7) {
+sub get_oligo_block_left_half_coords : Test(14) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
-    ok my( $start1, $end1 ) = $o->get_oligo_block_left_half_coords( 1, 10 );
-    is $start1, 1, 'start correct';
-    is $end1, 5, 'end correct';
+    ok my( $start1, $end1 ) = $o->get_oligo_block_left_half_coords( 'U' );
+    is $start1, 101176328, 'start correct';
+    is $end1, 101176428, 'end correct';
 
-    ok my( $start2, $end2 ) = $o->get_oligo_block_left_half_coords( 1, 11 );
-    is $start2, 1, 'start correct';
-    is $end2, 6, 'end correct';
+    ok my( $start2, $end2 ) = $o->get_oligo_block_left_half_coords( 'D' );
+    is $start2, 101177327, 'start correct';
+    is $end2, 101177427, 'end correct';
+
+    ok $o = $test->_get_test_object( { u_overlap => 10, d_overlap => 15 } ), 'can grab another test object';
+
+    ok my( $start3, $end3 ) = $o->get_oligo_block_left_half_coords( 'U' );
+    is $start3, 101176328, 'start correct';
+    is $end3, 101176438, 'end correct';
+
+    ok my( $start4, $end4 ) = $o->get_oligo_block_left_half_coords( 'D' );
+    is $start4, 101177327, 'start correct';
+    is $end4, 101177442, 'end correct';
 }
 
-sub get_oligo_block_right_half_coords : Test(7) {
+sub get_oligo_block_right_half_coords : Test(14) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
-    ok my( $start1, $end1 ) = $o->get_oligo_block_right_half_coords( 1, 10 );
-    is $start1, 6, 'start correct';
-    is $end1, 10, 'end correct';
+    ok my( $start1, $end1 ) = $o->get_oligo_block_right_half_coords( 'U' );
+    is $start1, 101176429 , 'start correct';
+    is $end1, 101176528 , 'end correct';
 
-    ok my( $start2, $end2 ) = $o->get_oligo_block_right_half_coords( 1, 11 );
-    is $start2, 7, 'start correct';
-    is $end2, 11, 'end correct';
+    ok my( $start2, $end2 ) = $o->get_oligo_block_right_half_coords( 'D' );
+    is $start2, 101177428, 'start correct';
+    is $end2, 101177528, 'end correct';
+
+    ok $o = $test->_get_test_object( { u_overlap => 10, d_overlap => 15 } ), 'can grab another test object';
+
+    ok my( $start3, $end3 ) = $o->get_oligo_block_right_half_coords( 'U' );
+    is $start3, 101176419 , 'start correct';
+    is $end3, 101176528 , 'end correct';
+
+    ok my( $start4, $end4 ) = $o->get_oligo_block_right_half_coords( 'D' );
+    is $start4, 101177413, 'start correct';
+    is $end4, 101177528, 'end correct';
 }
 
-sub get_oligo_block_coordinate : Test(8) {
+sub get_oligo_block_attribute : Test(10) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
-    ok my $u_block_start = $o->get_oligo_block_coordinate( 'U5', 'start' );
+    ok my $u_block_start = $o->get_oligo_block_attribute( 'U', 'start' );
     is $u_block_start, 101176328, 'correct u block start';
 
-    ok my $u_block_end = $o->get_oligo_block_coordinate( 'U5', 'end' );
+    ok my $u_block_end = $o->get_oligo_block_attribute( 'U', 'end' );
     is $u_block_end, 101176528, 'correct u block end';
 
+    ok my $u_block_length = $o->get_oligo_block_attribute( 'U', 'length' );
+    is $u_block_length, 201, 'correct u block length';
+
+    #ok my $u_block_overlap = $o->get_oligo_block_attribute( 'U', 'overlap' );
+    #is $u_block_overlap, 0, 'correct u block overlap';
+
     throws_ok{
-        $o->get_oligo_block_coordinate( 'G5', 'end' );
-    } qr/Block oligo type must be U or D, not G5/
+        $o->get_oligo_block_attribute( 'G', 'end' );
+    } 'DesignCreate::Exception::NonExistantAttribute'
         , 'throws error if calling with non U or D oligo type';
 
     throws_ok{
-        $o->get_oligo_block_coordinate( 'U5' );
-    } qr/Must specify start or end block coordinate/
+        $o->get_oligo_block_attribute( 'U' );
+    } 'DesignCreate::Exception::NonExistantAttribute'
         , 'throws error if calling without start or end value';
 
     throws_ok{
-        $o->get_oligo_block_coordinate( 'U5', 'blah' );
-    } qr/Must specify start or end block coordinate/
+        $o->get_oligo_block_attribute( 'U', 'blah' );
+    } 'DesignCreate::Exception::NonExistantAttribute'
         , 'throws error if calling without start or end value';
 }
 
+sub D_block_length : Test(3) {
+    my $test = shift;
+    ok my $o = $test->_get_test_object, 'can grab test object';
+
+    ok my $D_block_length = $o->D_block_length, 'can call D_block_length';
+    is $D_block_length, 202, 'correct D_block_length value';
+}
+
+sub U_block_length : Test(3) {
+    my $test = shift;
+    ok my $o = $test->_get_test_object, 'can grab test object';
+
+    ok my $U_block_length = $o->U_block_length, 'can call U_block_length';
+    is $U_block_length, 201, 'correct U_block_length value';
+}
+
 sub _get_test_object {
-    my ( $test, $strand ) = @_;
-    $strand //= 1;
+    my ( $test, $params ) = @_;
+    my $strand = $params->{strand} || 1;
+    my $u_overlap = $params->{u_overlap} || 0;
+    my $d_overlap = $params->{d_overlap} || 0;
 
     my $metaclass = $test->get_test_object_metaclass();
     return $metaclass->new_object(
-        dir           => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
-        U_block_start => $strand == 1 ? 101176328 : 101177328,
-        U_block_end   => $strand == 1 ? 101176528 : 101177428,
-        D_block_start => $strand == 1 ? 101177328 : 101176328,
-        D_block_end   => $strand == 1 ? 101177528 : 101176428,
-        chr_name      => 11,
-        chr_strand    => $strand,
-        design_method => 'conditional',
+        dir             => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
+        U_block_start   => $strand == 1 ? 101176328 : 101177328,
+        U_block_end     => $strand == 1 ? 101176528 : 101177428,
+        U_block_overlap => $u_overlap,
+        D_block_start   => $strand == 1 ? 101177327 : 101176328,
+        D_block_end     => $strand == 1 ? 101177528 : 101176428,
+        D_block_overlap => $d_overlap,
+        chr_name        => 11,
+        chr_strand      => $strand,
+        design_method   => 'conditional',
     );
 }
 

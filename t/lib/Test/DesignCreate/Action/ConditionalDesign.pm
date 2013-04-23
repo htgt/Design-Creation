@@ -23,8 +23,10 @@ sub valid_conditional_design_aos_cmd : Test(4) {
         '--strand'            , 1,
         '--u-block-start'     , 10000100,
         '--u-block-end'       , 10000300,
+        '--u-block-overlap'   , 10,
         '--d-block-start'     , 10000500,
         '--d-block-end'       , 10000700,
+        '--d-block-overlap'   , 10,
         '--target-gene'       , 'CONDITIONAL-TEST',
         '--mask-by-lower-case', 'no',
     );

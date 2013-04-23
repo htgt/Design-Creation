@@ -1,7 +1,7 @@
 package DesignCreate::Role::TargetSequence;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Role::TargetSequence::VERSION = '0.003';
+    $DesignCreate::Role::TargetSequence::VERSION = '0.004';
 }
 ## use critic
 

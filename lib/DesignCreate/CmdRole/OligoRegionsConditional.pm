@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::OligoRegionsConditional;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::OligoRegionsConditional::VERSION = '0.003';
+    $DesignCreate::CmdRole::OligoRegionsConditional::VERSION = '0.004';
 }
 ## use critic
 
@@ -56,6 +56,27 @@ has U_block_end => (
     cmd_flag      => 'u-block-end'
 );
 
+has U_block_length => (
+    is         => 'ro',
+    isa        => PositiveInt,
+    traits     => [ 'NoGetopt' ],
+    lazy_build => 1,
+);
+
+sub _build_U_block_length {
+    my $self = shift;
+    return ( $self->U_block_end - $self->U_block_start ) + 1;
+}
+
+has U_block_overlap => (
+    is            => 'ro',
+    isa           => NaturalNumber,
+    traits        => [ 'Getopt' ],
+    documentation => 'Block overlap for U region',
+    default       => 0,
+    cmd_flag      => 'u-block-overlap'
+);
+
 has D_block_start => (
     is            => 'ro',
     isa           => PositiveInt,
@@ -74,11 +95,33 @@ has D_block_end => (
     cmd_flag      => 'd-block-end'
 );
 
+has D_block_length => (
+    is         => 'ro',
+    isa        => PositiveInt,
+    traits     => [ 'NoGetopt' ],
+    lazy_build => 1,
+);
+
+sub _build_D_block_length {
+    my $self = shift;
+    return ( $self->D_block_end - $self->D_block_start ) + 1;
+}
+
+has D_block_overlap => (
+    is            => 'ro',
+    isa           => NaturalNumber,
+    traits        => [ 'Getopt' ],
+    documentation => 'Block overlap for D region',
+    default       => 0,
+    cmd_flag      => 'd-block-overlap'
+);
+
 #TODO consider method overriding / renaming here
 sub get_oligo_region_coordinates {
     my $self = shift;
 
     $self->check_oligo_block_coordinates;
+    # See DesignCreate::Role::OligoRegionCoordinates
     $self->_get_oligo_region_coordinates;
 
     return;
@@ -171,24 +214,24 @@ sub get_oligo_region_gap_oligo {
 sub get_oligo_region_u_or_d_oligo {
     my ( $self, $oligo ) = @_;
     my ( $start, $end );
-
-    my $block_start = $self->get_oligo_block_coordinate( $oligo, 'start' );
-    my $block_end = $self->get_oligo_block_coordinate( $oligo, 'end' );
+    my $oligo_class = substr( $oligo, 0,1 );
+    DesignCreate::Exception->throw( "Block oligo type must be U or D, not $oligo" )
+        unless  $oligo_class =~ /^U|D$/;
 
     if ( $self->chr_strand == 1 ) {
         if ( $oligo =~ /5$/ ) {
-            ( $start, $end ) = $self->get_oligo_block_left_half_coords( $block_start, $block_end );
+            ( $start, $end ) = $self->get_oligo_block_left_half_coords( $oligo_class );
         }
         elsif ( $oligo =~ /3$/ ) {
-            ( $start, $end ) = $self->get_oligo_block_right_half_coords( $block_start, $block_end );
+            ( $start, $end ) = $self->get_oligo_block_right_half_coords( $oligo_class );
         }
     }
     else {
         if ( $oligo =~ /5$/ ) {
-            ( $start, $end ) = $self->get_oligo_block_right_half_coords( $block_start, $block_end );
+            ( $start, $end ) = $self->get_oligo_block_right_half_coords( $oligo_class );
         }
         elsif ( $oligo =~ /3$/ ) {
-            ( $start, $end ) = $self->get_oligo_block_left_half_coords( $block_start, $block_end );
+            ( $start, $end ) = $self->get_oligo_block_left_half_coords( $oligo_class );
         }
     }
 
@@ -199,48 +242,45 @@ sub get_oligo_region_u_or_d_oligo {
 }
 
 sub get_oligo_block_left_half_coords {
-    my ( $self, $block_start, $block_end ) = @_;
-    my $block_length = ( $block_end - $block_start ) + 1;
-    my $start = $block_start;
-    my $end;
+    my ( $self, $oligo_class ) = @_;
+    my $block_length = $self->get_oligo_block_attribute( $oligo_class, 'length' );
+    my $block_overlap = $self->get_oligo_block_attribute( $oligo_class, 'overlap' );
 
+    my $start = $self->get_oligo_block_attribute( $oligo_class, 'start' );
+    my $end;
     if ( $block_length % 2 ) { # not divisible by 2
         $end = $start + ( ( $block_length - 1 ) / 2 );
     }
     else {
         $end = $start + ( ( $block_length / 2 ) - 1 );
     }
+    $end += $block_overlap;
 
     return ( $start, $end );
 }
 
 sub get_oligo_block_right_half_coords {
-    my ( $self, $block_start, $block_end ) = @_;
-    my $block_length = ( $block_end - $block_start ) + 1;
-    my $end = $block_end;
-    my $start;
+    my ( $self, $oligo_class ) = @_;
+    my $block_length = $self->get_oligo_block_attribute( $oligo_class, 'length' );
+    my $block_overlap = $self->get_oligo_block_attribute( $oligo_class, 'overlap' );
+    my $block_start  = $self->get_oligo_block_attribute( $oligo_class, 'start' );
 
+    my $end = $self->get_oligo_block_attribute( $oligo_class, 'end' );
+    my $start;
     if ( $block_length % 2 ) { # not divisible by 2
         $start = $block_start + ( ( $block_length + 1 ) / 2 );
     }
     else {
         $start = $block_start + ( $block_length / 2 );
     }
+    $start -= $block_overlap;
 
     return ( $start, $end );
 }
 
-sub get_oligo_block_coordinate {
-    my ( $self, $oligo, $start_or_end ) = @_;
-    DesignCreate::Exception->throw( "Must specify start or end block coordinate" )
-        if !$start_or_end || $start_or_end !~ /start|end/;
-
-    my $block_type = $oligo =~ /^U/ ? 'U' :
-                     $oligo =~ /^D/ ? 'D' : undef;
-    DesignCreate::Exception->throw( "Block oligo type must be U or D, not $oligo" )
-        unless  $block_type;
-
-    my $attribute_name = $block_type . '_block_' . $start_or_end;
+sub get_oligo_block_attribute {
+    my ( $self, $oligo_class, $attribute_type ) = @_;
+    my $attribute_name = $oligo_class . '_block_' . $attribute_type;
 
     DesignCreate::Exception::NonExistantAttribute->throw(
         attribute_name => $attribute_name,

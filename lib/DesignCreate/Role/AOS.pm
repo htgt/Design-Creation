@@ -1,7 +1,7 @@
 package DesignCreate::Role::AOS;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Role::AOS::VERSION = '0.003';
+    $DesignCreate::Role::AOS::VERSION = '0.004';
 }
 ## use critic
 
