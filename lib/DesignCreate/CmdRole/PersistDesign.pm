@@ -136,10 +136,7 @@ sub set_alternate_designs_data_file {
 
     #default file
     my $alt_designs_file = $self->dir->file( $self->alt_designs_data_file_name );
-    unless ( $self->dir->contains( $alt_designs_file ) ) {
-        $self->log->error( "Unable to find default alternative designs data file: $alt_designs_file" );
-        return;
-    }
+    return unless $self->dir->contains( $alt_designs_file );
 
     $self->alternate_designs_data_file( $alt_designs_file->absolute );
     return;
