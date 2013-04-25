@@ -26,6 +26,23 @@ DesignCreate::Role::OligoRegionCoordinates
 );
 
 const my $MIN_BLOCK_LENGTH => 102;
+const my @DESIGN_PARAMETERS => qw(
+U_block_start
+U_block_end
+D_block_start
+D_block_end
+U_block_overlap
+D_block_overlap
+chr_name
+chr_strand
+species
+assembly
+G5_region_length
+G5_region_offset
+G3_region_length
+G3_region_offset
+design_method
+);
 
 #
 # Oligo Region Parameters
@@ -114,6 +131,7 @@ has D_block_overlap => (
 sub get_oligo_region_coordinates {
     my $self = shift;
 
+    $self->add_design_parameters( \@DESIGN_PARAMETERS );
     $self->check_oligo_block_coordinates;
     # See DesignCreate::Role::OligoRegionCoordinates
     $self->_get_oligo_region_coordinates;

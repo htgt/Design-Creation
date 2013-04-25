@@ -19,6 +19,7 @@ use Bio::Seq;
 use Fcntl; # O_ constants
 use Const::Fast;
 use Try::Tiny;
+use Const::Fast;
 use namespace::autoclean;
 
 with qw(
@@ -32,13 +33,20 @@ oligo_target_regions_dir
 aos_output_dir
 );
 
-#TODO check how this works when running find-oligos as part of whole design creation
 # Don't need the following attributes when running this command on its own
 __PACKAGE__->meta->remove_attribute( 'chr_strand' );
 __PACKAGE__->meta->remove_attribute( 'species' );
 
 const my $DEFAULT_CHROMOSOME_DIR => $ENV{AOS_CHROMOSOME_DIR}
     || '/lustre/scratch110/blastdb/Users/vvi/KO_MOUSE/GRCm38';
+
+const my @DESIGN_PARAMETERS => qw(
+oligo_length
+num_oligos
+minimum_gc_content
+mask_by_lower_case
+genomic_search_method
+);
 
 has query_file => (
     is         => 'ro',
@@ -90,6 +98,7 @@ has base_chromosome_dir => (
 sub find_oligos {
     my ( $self, $opts, $args ) = @_;
 
+    $self->add_design_parameters( \@DESIGN_PARAMETERS );
     $self->create_aos_query_file;
     $self->define_target_file;
     $self->run_aos;
@@ -131,6 +140,7 @@ sub create_aos_query_file {
     return;
 }
 
+#check if entire region is repeat masked
 sub check_masked_seq {
     my ( $self, $seq, $oligo ) = @_;
 

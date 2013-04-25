@@ -32,6 +32,11 @@ __PACKAGE__->meta->remove_attribute( 'species' );
 
 const my $DEFAULT_BLOCK_OLIGO_LOG_DIR_NAME => 'block_oligo_logs';
 
+const my @DESIGN_PARAMETERS => qw(
+min_U_oligo_gap
+min_D_oligo_gap
+);
+
 has min_U_oligo_gap => (
     is            => 'ro',
     isa           => PositiveInt,
@@ -68,6 +73,7 @@ sub _build_block_oligo_log_dir {
 sub pick_block_oligos {
     my ( $self, $opts, $args ) = @_;
 
+    $self->add_design_parameters( \@DESIGN_PARAMETERS );
     $self->pick_block_oligo_pair( $_ ) for qw( U D );
 
     return;

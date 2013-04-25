@@ -17,10 +17,29 @@ design types is found in DesignCreate::Role::OligoTargetRegions.
 use Moose::Role;
 use DesignCreate::Exception;
 use DesignCreate::Types qw( PositiveInt NaturalNumber );
+use Const::Fast;
 use namespace::autoclean;
 
 with qw(
 DesignCreate::Role::OligoRegionCoordinates
+);
+
+const my @DESIGN_PARAMETERS => qw(
+target_start
+target_end
+U5_region_length
+U5_region_offset
+D3_region_length
+D3_region_offset
+chr_name
+chr_strand
+species
+assembly
+G5_region_length
+G5_region_offset
+G3_region_length
+G3_region_offset
+design_method
 );
 
 has target_start => (
@@ -85,6 +104,7 @@ has D3_region_offset => (
 sub get_oligo_region_coordinates {
     my $self = shift;
 
+    $self->add_design_parameters( \@DESIGN_PARAMETERS );
     DesignCreate::Exception->throw(
         "Target start " . $self->target_start . ", greater than target end " . $self->target_end
     ) if $self->target_start > $self->target_end;

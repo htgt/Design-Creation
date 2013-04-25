@@ -21,11 +21,17 @@ use DesignCreate::Exception;
 use DesignCreate::Exception::NonExistantAttribute;
 use YAML::Any qw( LoadFile DumpFile );
 use List::Util qw( first );
+use Const::Fast;
 use namespace::autoclean;
 
 with qw(
 DesignCreate::Role::TargetSequence
 DesignCreate::Role::Oligos
+);
+
+const my @DESIGN_PARAMETERS => qw(
+target_genes
+created_by
 );
 
 has target_genes => (
@@ -126,6 +132,7 @@ has alternate_designs_oligos => (
 
 sub consolidate_design_data {
     my ( $self, $opts, $args ) = @_;
+    $self->add_design_parameters( \@DESIGN_PARAMETERS );
 
     $self->get_design_phase;
 

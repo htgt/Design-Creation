@@ -4,10 +4,11 @@ use strict;
 use warnings FATAL => 'all';
 
 use Moose;
-use MooseX::Types::Path::Class::MoreCoercions qw/AbsDir/;
+use MooseX::Types::Path::Class::MoreCoercions qw/AbsDir AbsFile/;
 use DesignCreate::Exception;
 use DesignCreate::Exception::MissingFile;
 use DesignCreate::Types qw( DesignMethod );
+use YAML::Any qw( LoadFile DumpFile );
 use Log::Log4perl qw( :levels );
 use Const::Fast;
 use namespace::autoclean;
@@ -49,6 +50,42 @@ has design_method => (
     documentation => 'Design type, deletion, insertion or conditional ( default deletion )',
     cmd_flag      => 'design-method',
 );
+
+has design_parameters => (
+    is         => 'ro',
+    isa        => 'HashRef',
+    traits     => [ 'NoGetopt', 'Hash' ],
+    lazy_build => 1,
+    handles    => {
+        get_param    => 'get',
+        set_param    => 'set',
+        param_exists => 'exists',
+    }
+);
+
+sub _build_design_parameters {
+    my $self = shift;
+
+    my $params = LoadFile( $self->design_parameters_file );
+    return $params ? $params : {};
+}
+
+has design_parameters_file => (
+    is         => 'ro',
+    isa        => AbsFile,
+    traits     => [ 'NoGetopt' ],
+    lazy_build => 1,
+);
+
+sub _build_design_parameters_file {
+    my $self = shift;
+
+    my $file = $self->dir->file( 'design_parameters.yaml' );
+    #create file if it does not exist
+    $file->touch unless $self->dir->contains( $file );
+
+    return $file->absolute;
+}
 
 #
 # Directories common to multiple commands
@@ -209,6 +246,19 @@ sub get_file {
         unless $dir->contains( $file );
 
     return $file;
+}
+
+# add values to the design parameters hash and dump into the design_parameters.yaml file
+sub add_design_parameters {
+    my( $self, $attributes ) = @_;
+
+    for my $attribute ( @{ $attributes } ) {
+        my $val = $self->$attribute;
+        $self->set_param( $attribute, $self->$attribute );
+    }
+
+    DumpFile( $self->design_parameters_file, $self->design_parameters );
+    return;
 }
 
 override command_names => sub {

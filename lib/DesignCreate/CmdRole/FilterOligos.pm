@@ -30,6 +30,10 @@ DesignCreate::Role::Oligos
 
 const my $DEFAULT_EXONERATE_OLIGO_DIR_NAME => 'exonerate_oligos';
 
+const my @DESIGN_PARAMETERS => qw(
+flank_length
+);
+
 has exonerate_query_file => (
     is     => 'rw',
     isa    => AbsFile,
@@ -97,6 +101,7 @@ has validated_oligos => (
 sub filter_oligos {
     my ( $self, $opts, $args ) = @_;
 
+    $self->add_design_parameters( \@DESIGN_PARAMETERS );
     $self->validate_oligos;
     $self->run_exonerate;
     $self->filter_out_non_specific_oligos;

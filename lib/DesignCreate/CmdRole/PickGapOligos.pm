@@ -23,6 +23,10 @@ use namespace::autoclean;
 
 const my $DEFAULT_GAP_OLIGO_LOG_DIR_NAME => 'gap_oligo_logs';
 
+const my @DESIGN_PARAMETERS => qw(
+flank_length
+);
+
 has g5_oligos_data => (
     is         => 'ro',
     isa        => 'HashRef',
@@ -116,6 +120,7 @@ has oligo_pairs => (
 sub pick_gap_oligos {
     my ( $self, $opts, $args ) = @_;
 
+    $self->add_design_parameters( \@DESIGN_PARAMETERS );
     $self->generate_tiled_oligo_seqs;
     $self->find_oligos_with_matching_seqs;
     $self->get_gap_oligo_pairs;
