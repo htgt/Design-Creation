@@ -91,8 +91,7 @@ sub _get_test_object {
 
     my $metaclass = $test->get_test_object_metaclass();
     return $metaclass->new_object(
-        dir           => $dir,
-        design_method => 'deletion',
+        dir => $dir,
     );
 }
 
