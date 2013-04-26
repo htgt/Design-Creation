@@ -7,7 +7,7 @@ use Moose;
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsDir AbsFile/;
 use DesignCreate::Exception;
 use DesignCreate::Exception::MissingFile;
-use DesignCreate::Types qw( DesignMethod );
+use DesignCreate::Types qw( DesignMethod ArrayRefOfOligos );
 use YAML::Any qw( LoadFile DumpFile );
 use Log::Log4perl qw( :levels );
 use Const::Fast;
@@ -47,7 +47,7 @@ has design_method => (
     isa           => DesignMethod,
     traits        => [ 'Getopt' ],
     required      => 1,
-    documentation => 'Design type, deletion, insertion or conditional ( default deletion )',
+    documentation => 'Design type, deletion, insertion or conditional',
     cmd_flag      => 'design-method',
 );
 
@@ -85,6 +85,32 @@ sub _build_design_parameters_file {
     $file->touch unless $self->dir->contains( $file );
 
     return $file->absolute;
+}
+
+has oligos => (
+    is         => 'ro',
+    isa        => 'ArrayRef',
+    traits     => [ 'NoGetopt', 'Array' ],
+    lazy_build => 1,
+    handles     => {
+        expected_oligos => 'elements'
+    }
+);
+
+sub _build_oligos {
+    my $self = shift;
+
+    if ( $self->design_method eq 'deletion' || $self->design_method eq 'insertion' ) {
+        return [ qw( G5 U5 D3 G3 ) ];
+    }
+    elsif ( $self->design_method eq 'conditional' ) {
+        return [ qw( G5 U5 U3 D5 D3 G3 ) ];
+    }
+    else {
+        DesignCreate::Exception->throw( 'Unknown design method ' . $self->design_method );
+    }
+
+    return;
 }
 
 #
