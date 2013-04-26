@@ -3,3 +3,4 @@ chr_name: '11'
 chr_strand: 1
 species: Mouse
 assembly: GRCm38
+design_method: 'deletion'

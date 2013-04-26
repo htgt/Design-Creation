@@ -38,7 +38,7 @@ sub valid_consolidate_design_data_cmd : Test(4) {
     ok !$result->error, 'no command errors';
 }
 
-sub all_oligo_pairs : Test(11) {
+sub all_oligo_pairs : Test(12) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
@@ -54,10 +54,10 @@ sub all_oligo_pairs : Test(11) {
         $o->all_oligo_pairs
     } qr/No oligo data in/ , 'throws error on empty oligo file';
 
-    ok $o = $test->_get_test_object( { design_method => 'conditional' } )
-        , 'can grab another test object';
+    ok my $c_o = $test->_get_test_object, 'can grab test object';
+    ok $c_o->set_param( 'design_method', 'conditional' ), 'can set design method to conditional';
 
-    ok my $oligo_pairs = $o->all_oligo_pairs, 'can build all_oligo_pairs';
+    ok my $oligo_pairs = $c_o->all_oligo_pairs, 'can build all_oligo_pairs';
 
     for my $oligo_class ( qw( G U D ) ) {
         ok exists $oligo_pairs->{$oligo_class}, "$oligo_class oligo pair data exists";
@@ -112,9 +112,10 @@ sub build_primary_design_oligos : Test(3) {
     ok $o->primary_design_oligos, 'have primary design oligo data';
 }
 
-sub build_alternate_design_oligos : Test(4) {
+sub build_alternate_design_oligos : Test(5) {
     my $test = shift;
-    ok my $o = $test->_get_test_object( { design_method => 'conditional' } ), 'can grab test object';
+    ok my $o = $test->_get_test_object, 'can grab test object';
+    ok $o->set_param( 'design_method', 'conditional' ), 'can set design method to conditional';
 
     lives_ok{
         $o->build_alternate_design_oligos
@@ -124,7 +125,7 @@ sub build_alternate_design_oligos : Test(4) {
     is $num_alt_designs, 3, 'expected number of alternate designs';
 }
 
-sub build_design_oligo_data : Test(15) {
+sub build_design_oligo_data : Test(16) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
@@ -137,7 +138,8 @@ sub build_design_oligo_data : Test(15) {
 
     ok !$o->build_design_oligo_data( 5 ), 'no data returned for non existant alternate design number';
 
-    ok my $c_o = $test->_get_test_object( { design_method => 'conditional' } ), 'can grab test object';
+    ok my $c_o = $test->_get_test_object, 'can grab test object';
+    ok $c_o->set_param( 'design_method', 'conditional' ), 'can set design method to conditional';
     ok my $cond_oligo_data = $c_o->build_design_oligo_data( 1 ), 'can call build_design_oligo_data';
 
     for my $oligo_type ( qw( G5 U5 U3 D5 D3 G3 ) ) {
@@ -146,7 +148,7 @@ sub build_design_oligo_data : Test(15) {
     }
 }
 
-sub get_oligo : Test(11) {
+sub get_oligo : Test(12) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
@@ -170,15 +172,17 @@ sub get_oligo : Test(11) {
         'throws errors if we can not find oligo';
 
     #conditional design, U / D oligos from best pair, not just best individual oligo
-    ok my $c_o = $test->_get_test_object( { design_method => 'conditional' } ), 'can grab test object';
+    ok my $c_o = $test->_get_test_object, 'can grab test object';
+    ok $c_o->set_param( 'design_method', 'conditional' ), 'can set design method to conditional';
     ok my $u5_oligo_data = $c_o->get_oligo( 'U5', 0 ), 'can call get_oligo';
     my ( $expected_u5_oligo ) = grep{ $_->{id} eq $c_o->all_oligo_pairs->{U}[0]{U5} } @{ $u5_oligos };
     is $u5_oligo_data->{seq}, $expected_u5_oligo->{oligo_seq}, 'get expected U5 oligo for condition design';
 }
 
-sub pick_oligo_from_pair : Test(9) {
+sub pick_oligo_from_pair : Test(10) {
     my $test = shift;
-    ok my $o = $test->_get_test_object( { design_method => 'conditional' } ), 'can grab test object';
+    ok my $o = $test->_get_test_object, 'can grab test object';
+    ok $o->set_param( 'design_method', 'conditional' ), 'can set design method to conditional';
 
     ok my $u_pair_file = $o->validated_oligo_dir->file( 'U_oligo_pairs.yaml' ), 'can find U oligo pair file';
     my $u_oligos_pairs = LoadFile( $u_pair_file );
@@ -220,7 +224,7 @@ sub format_oligo_data : Test(9) {
     is $loci->{chr_start}, $test_oligo->{oligo_start}, 'correct start coordinate';
 }
 
-sub create_primary_design_file : Test(9) {
+sub create_primary_design_file : Test(10) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
@@ -239,19 +243,19 @@ sub create_primary_design_file : Test(9) {
     is $design_data->{type}, 'deletion', 'correct design type';
     is_deeply $design_data->{gene_ids}, [ 'LBL-1' ], 'correct gene ids';
 
-    ok $o = $test->_get_test_object( { design_method => 'conditional' } )
-        , 'can grab another test object, conditional design';
+    ok my $c_o = $test->_get_test_object, 'can grab test object';
+    ok $c_o->set_param( 'design_method', 'conditional' ), 'can set design method to conditional';
 
     lives_ok{
-        $o->build_primary_design_oligos;
-        $o->create_primary_design_file
+        $c_o->build_primary_design_oligos;
+        $c_o->create_primary_design_file
     } 'can call create_design_file';
 
-    my $cond_design_data_file = $o->dir->file( 'design_data.yaml' );
-    ok $o->dir->contains( $cond_design_data_file ), 'design data file created';
+    my $cond_design_data_file = $c_o->dir->file( 'design_data.yaml' );
+    ok $c_o->dir->contains( $cond_design_data_file ), 'design data file created';
 }
 
-sub create_alt_design_file : Test(9) {
+sub create_alt_design_file : Test(10) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
@@ -271,16 +275,16 @@ sub create_alt_design_file : Test(9) {
     my $num_alt_designs = @{ $alt_design_data };
     is $num_alt_designs, 2, 'correct number of alternative designs, deletion';
 
-    ok $o = $test->_get_test_object( { design_method => 'conditional' } )
-        , 'can grab another test object, this time for a conditional design';
+    ok my $c_o = $test->_get_test_object, 'can grab test object';
+    ok $c_o->set_param( 'design_method', 'conditional' ), 'can set design method to conditional';
 
     lives_ok{
-        $o->build_alternate_design_oligos;
-        $o->create_alt_design_file
+        $c_o->build_alternate_design_oligos;
+        $c_o->create_alt_design_file
     } 'can call create_alt_design_file';
 
-    my $alt_cond_design_data_file = $o->dir->file( 'alt_designs.yaml' );
-    ok $o->dir->contains( $alt_cond_design_data_file ), 'alt design data file created';
+    my $alt_cond_design_data_file = $c_o->dir->file( 'alt_designs.yaml' );
+    ok $c_o->dir->contains( $alt_cond_design_data_file ), 'alt design data file created';
 
     my $alt_cond_design_data = LoadFile( $alt_cond_design_data_file );
     my $num_cond_alt_designs = @{ $alt_cond_design_data };
@@ -306,7 +310,6 @@ sub build_design_data : Test(8) {
 
 sub _get_test_object {
     my ( $test, $params ) = @_;
-    my $design_method = $params->{design_method} || 'deletion';
 
     my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute;
     my $data_dir = dir($FindBin::Bin)->absolute->subdir('test_data/consolidate_design_data');
@@ -318,7 +321,6 @@ sub _get_test_object {
         dir           => $dir,
         target_genes  => [ 'LBL-1' ],
         created_by    => 'test',
-        design_method => $design_method,
     );
 }
 
