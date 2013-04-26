@@ -311,14 +311,12 @@ sub _get_test_object {
     my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute;
     my $data_dir = dir($FindBin::Bin)->absolute->subdir('test_data/consolidate_design_data');
 
-    dircopy( $data_dir->stringify, $dir->stringify . '/validated_oligos' );
+    dircopy( $data_dir->stringify, $dir->stringify );
 
     my $metaclass = $test->get_test_object_metaclass();
     return $metaclass->new_object(
         dir           => $dir,
         target_genes  => [ 'LBL-1' ],
-        chr_name      => 11,
-        chr_strand    => 1,
         created_by    => 'test',
         design_method => $design_method,
     );
