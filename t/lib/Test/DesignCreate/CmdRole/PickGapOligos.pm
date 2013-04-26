@@ -26,7 +26,6 @@ sub valid_pick_gap_oligos_cmd : Test(4) {
     my @argv_contents = (
         'pick-gap-oligos',
         '--dir', $o->dir->stringify,
-        '--design-method', 'deletion',
     );
 
     ok my $result = test_app($test->cmd_class => \@argv_contents), 'can run command';
@@ -174,13 +173,10 @@ sub _get_test_object {
     my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute;
     my $data_dir = dir($FindBin::Bin)->absolute->subdir('test_data/pick_gap_oligos');
 
-    dircopy( $data_dir->stringify, $dir->stringify . '/validated_oligos' );
+    dircopy( $data_dir->stringify, $dir->stringify );
 
     my $metaclass = $test->get_test_object_metaclass();
-    return $metaclass->new_object( 
-        dir => $dir,
-        design_method => 'deletion',
-    );
+    return $metaclass->new_object( dir => $dir );
 }
 
 1;

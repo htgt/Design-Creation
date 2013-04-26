@@ -24,7 +24,7 @@ use namespace::autoclean;
 const my $DEFAULT_GAP_OLIGO_LOG_DIR_NAME => 'gap_oligo_logs';
 
 const my @DESIGN_PARAMETERS => qw(
-flank_length
+tile_size
 );
 
 has g5_oligos_data => (
