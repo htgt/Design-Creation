@@ -83,21 +83,17 @@ sub pick_block_oligo_pair : Test(8) {
 sub _get_test_object {
     my ( $test, $params ) = @_;
     my $min_gap = $params->{min_gap} || 10;
-    my $strand = $params->{strand} || 1;
 
     my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute;
     my $data_dir = dir($FindBin::Bin)->absolute->subdir('test_data/pick_block_oligos_data');
 
-    dircopy( $data_dir->stringify, $dir->stringify . '/validated_oligos' );
+    dircopy( $data_dir->stringify, $dir->stringify );
 
     my $metaclass = $test->get_test_object_metaclass();
     return $metaclass->new_object(
         dir             => $dir,
-        chr_strand      => $strand,
-        chr_name        => 11,
         min_U_oligo_gap => $min_gap,
         min_D_oligo_gap => $min_gap,
-        design_method   => 'deletion',
     );
 }
 
