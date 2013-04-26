@@ -16,6 +16,7 @@ is not possible to instantiate the Design Create Command modules outside of the 
 use Moose::Role;
 use DesignCreate::Exception;
 use DesignCreate::Exception::MissingFile;
+use DesignCreate::Exception::NonExistantAttribute;
 use DesignCreate::Types qw( DesignMethod ArrayRefOfOligos );
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsDir AbsFile/;
 use YAML::Any qw( LoadFile DumpFile );
@@ -225,7 +226,11 @@ sub add_design_parameters {
     my( $self, $attributes ) = @_;
 
     for my $attribute ( @{ $attributes } ) {
-        my $val = $self->$attribute;
+        DesignCreate::Exception::NonExistantAttribute->throw(
+            attribute_name => $attribute,
+            class          => $self->meta->name
+        ) unless $self->meta->has_attribute($attribute);
+
         $self->set_param( $attribute, $self->$attribute );
     }
 
