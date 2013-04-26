@@ -23,7 +23,6 @@ use namespace::autoclean;
 
 with qw(
 DesignCreate::Role::EnsEMBL
-DesignCreate::Role::Oligos
 );
 
 const my $DEFAULT_OLIGO_COORD_FILE_NAME => 'oligo_region_coords.yaml';
@@ -45,7 +44,6 @@ sub _build_oligo_region_coordinate_file {
     return $self->get_file( $DEFAULT_OLIGO_COORD_FILE_NAME, $self->oligo_target_regions_dir );
 }
 
-#TODO chromosome stored here, lets not
 has oligo_region_data => (
     is         => 'ro',
     isa        => 'HashRef',
@@ -66,7 +64,7 @@ sub _build_oligo_region_data {
 sub create_oligo_region_sequence_files {
     my $self = shift;
 
-    for my $oligo ( @{ $self->expected_oligos } ) {
+    for my $oligo ( $self->expected_oligos ) {
         $self->log->info( "Getting sequence for $oligo oligo region" );
 
         DesignCreate::Exception->throw(
