@@ -45,6 +45,7 @@ sub _build_oligo_region_coordinate_file {
     return $self->get_file( $DEFAULT_OLIGO_COORD_FILE_NAME, $self->oligo_target_regions_dir );
 }
 
+#TODO chromosome stored here, lets not
 has oligo_region_data => (
     is         => 'ro',
     isa        => 'HashRef',
@@ -75,8 +76,7 @@ sub create_oligo_region_sequence_files {
         my $coords   = $self->get_oligo_region_coords( $oligo );
         my $start    = $coords->{start};
         my $end      = $coords->{end};
-        #TODO grab chromosome for params file
-        my $chr_name = $coords->{chromosome};
+        my $chr_name = $self->get_design_param( 'chr_name' );
 
         my $oligo_seq = $self->get_repeat_masked_sequence( $start, $end, $chr_name );
         my $oligo_id  = $self->create_oligo_id( $oligo, $start, $end );

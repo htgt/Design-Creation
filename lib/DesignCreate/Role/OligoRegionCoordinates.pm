@@ -86,9 +86,8 @@ sub _get_oligo_region_coordinates {
         next if !defined $start || !defined $end;
 
         my $oligo_coords = {
-            start      => $start,
-            end        => $end,
-            chromosome => $self->chr_name,
+            start => $start,
+            end   => $end,
         };
 
         $self->oligo_region_coordinates->{$oligo} = $oligo_coords;

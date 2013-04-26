@@ -261,6 +261,16 @@ sub add_design_parameters {
     return;
 }
 
+# get design parameter stored in design_parameters.yaml file
+sub get_design_param {
+    my ( $self, $param_name ) = @_;
+
+    DesignCreate::Exception->throw("$param_name not stored in design parameters hash")
+        unless $self->param_exists( $param_name );
+
+    return $self->get_param( $param_name );
+}
+
 override command_names => sub {
     # from App::Cmd::Command
     my ( $name ) = (ref( $_[0] ) || $_[0]) =~ /([^:]+)$/;
