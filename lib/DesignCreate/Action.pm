@@ -42,15 +42,6 @@ has verbose => (
     default       => 0
 );
 
-has design_method => (
-    is            => 'ro',
-    isa           => DesignMethod,
-    traits        => [ 'Getopt' ],
-    required      => 1,
-    documentation => 'Design type, deletion, insertion or conditional',
-    cmd_flag      => 'design-method',
-);
-
 has design_parameters => (
     is         => 'ro',
     isa        => 'HashRef',
@@ -100,14 +91,15 @@ has oligos => (
 sub _build_oligos {
     my $self = shift;
 
-    if ( $self->design_method eq 'deletion' || $self->design_method eq 'insertion' ) {
+    my $design_method = $self->design_param( 'design_method' );
+    if ( $design_method eq 'deletion' || $design_method eq 'insertion' ) {
         return [ qw( G5 U5 D3 G3 ) ];
     }
-    elsif ( $self->design_method eq 'conditional' ) {
+    elsif ( $design_method eq 'conditional' ) {
         return [ qw( G5 U5 U3 D5 D3 G3 ) ];
     }
     else {
-        DesignCreate::Exception->throw( 'Unknown design method ' . $self->design_method );
+        DesignCreate::Exception->throw( 'Unknown design method ' . $design_method );
     }
 
     return;

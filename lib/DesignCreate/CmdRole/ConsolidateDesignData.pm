@@ -61,7 +61,7 @@ has all_oligo_pairs => (
 sub _build_all_oligo_pairs {
     my $self = shift;
     my %oligo_pairs;
-    my @oligo_class = $self->design_method eq 'conditional' ? qw( G U D ) : qw( G );
+    my @oligo_class = $self->design_param( 'design_method' ) eq 'conditional' ? qw( G U D ) : qw( G );
 
     for my $class ( @oligo_class ) {
         my $oligo_pair_file = $self->get_file( $class . '_oligo_pairs.yaml', $self->validated_oligo_dir );
@@ -191,7 +191,7 @@ sub get_oligo {
     my ( $self, $oligo_type, $design_num ) = @_;
     my $oligo;
 
-    if ( $oligo_type =~ /^G/ || $self->design_method eq 'conditional' ) {
+    if ( $oligo_type =~ /^G/ || $self->design_param( 'design_method' ) eq 'conditional' ) {
         $oligo = $self->pick_oligo_from_pair( $oligo_type, $design_num );
     }
     else {
@@ -277,7 +277,7 @@ sub build_design_data {
     my ( $self, $oligos ) = @_;
 
     my %design_data = (
-        type       => $self->design_method,
+        type       => $self->design_param( 'design_method' ),
         species    => $self->design_param( 'species' ),
         gene_ids   => [ @{ $self->target_genes } ],
         created_by => $self->created_by,

@@ -17,7 +17,7 @@ design types is found in DesignCreate::Role::OligoTargetRegions.
 use Moose::Role;
 use DesignCreate::Exception;
 use DesignCreate::Exception::NonExistantAttribute;
-use DesignCreate::Types qw( PositiveInt NaturalNumber );
+use DesignCreate::Types qw( DesignMethod PositiveInt NaturalNumber );
 use Const::Fast;
 use namespace::autoclean;
 
@@ -42,6 +42,13 @@ G5_region_offset
 G3_region_length
 G3_region_offset
 design_method
+);
+
+has design_method => (
+    is      => 'ro',
+    isa     => DesignMethod,
+    traits  => [ 'NoGetopt' ],
+    default => 'conditional'
 );
 
 #

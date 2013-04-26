@@ -60,11 +60,6 @@ for my $attribute ( @ATTRIBUTES_NO_CMD_OPTION ) {
     has '+' . $attribute => ( traits => [ 'NoGetopt' ] );
 }
 
-has '+design_method' => (
-    traits  => [ 'NoGetopt' ],
-    default => 'conditional',
-);
-
 sub execute {
     my ( $self, $opts, $args ) = @_;
     Log::Log4perl::NDC->push( @{ $self->target_genes }[0] );

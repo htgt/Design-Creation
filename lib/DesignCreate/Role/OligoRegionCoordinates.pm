@@ -114,12 +114,7 @@ sub _get_oligo_region_coordinates {
         my ( $start, $end ) = $self->coordinates_for_oligo( $oligo );
         next if !defined $start || !defined $end;
 
-        my $oligo_coords = {
-            start => $start,
-            end   => $end,
-        };
-
-        $self->oligo_region_coordinates->{$oligo} = $oligo_coords;
+        $self->oligo_region_coordinates->{$oligo} = { start => $start, end => $end };
     }
 
     $self->create_oligo_region_coordinate_file;
