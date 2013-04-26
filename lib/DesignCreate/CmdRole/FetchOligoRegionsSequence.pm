@@ -74,7 +74,7 @@ sub create_oligo_region_sequence_files {
         my $coords   = $self->get_oligo_region_coords( $oligo );
         my $start    = $coords->{start};
         my $end      = $coords->{end};
-        my $chr_name = $self->get_design_param( 'chr_name' );
+        my $chr_name = $self->design_param( 'chr_name' );
 
         my $oligo_seq = $self->get_repeat_masked_sequence( $start, $end, $chr_name );
         my $oligo_id  = $self->create_oligo_id( $oligo, $start, $end );

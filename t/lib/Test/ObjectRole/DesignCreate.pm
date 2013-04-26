@@ -35,7 +35,7 @@ has design_parameters => (
     traits     => [ 'NoGetopt', 'Hash' ],
     lazy_build => 1,
     handles    => {
-        get_param    => 'get',
+        get_design_param    => 'get',
         set_param    => 'set',
         param_exists => 'exists',
     }
@@ -165,13 +165,13 @@ sub add_design_parameters {
 }
 
 # get design parameter stored in design_parameters.yaml file
-sub get_design_param {
+sub design_param {
     my ( $self, $param_name ) = @_;
 
     DesignCreate::Exception->throw("$param_name not stored in design parameters hash")
         unless $self->param_exists( $param_name );
 
-    return $self->get_param( $param_name );
+    return $self->get_design_param( $param_name );
 }
 
 with qw(

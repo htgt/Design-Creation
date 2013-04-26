@@ -24,11 +24,6 @@ use List::Util qw( first );
 use Const::Fast;
 use namespace::autoclean;
 
-with qw(
-DesignCreate::Role::TargetSequence
-DesignCreate::Role::Oligos
-);
-
 const my @DESIGN_PARAMETERS => qw(
 target_genes
 created_by
@@ -94,7 +89,7 @@ sub _build_all_valid_oligos {
     my $self = shift;
     my %oligos;
 
-    for my $oligo_type ( @{ $self->expected_oligos } ) {
+    for my $oligo_type ( $self->expected_oligos ) {
         my $oligo_file = $self->get_file( "$oligo_type.yaml", $self->validated_oligo_dir );
         my $oligos = LoadFile( $oligo_file );
         if ( !$oligos || !@{ $oligos } ) {
@@ -132,10 +127,10 @@ has alternate_designs_oligos => (
 
 sub consolidate_design_data {
     my ( $self, $opts, $args ) = @_;
+
     $self->add_design_parameters( \@DESIGN_PARAMETERS );
 
     $self->get_design_phase;
-
     $self->build_primary_design_oligos;
     $self->build_alternate_design_oligos;
 
@@ -182,7 +177,7 @@ sub build_design_oligo_data {
     my ( $self, $design_num ) = @_;
     my @design_oligo_data;
 
-    for my $oligo_type ( @{ $self->expected_oligos } ) {
+    for my $oligo_type ( $self->expected_oligos ) {
          my $design_oligo_data = $self->get_oligo( $oligo_type, $design_num );
          return unless $design_oligo_data;
 
@@ -240,11 +235,11 @@ sub format_oligo_data {
         seq  => uc( $oligo->{oligo_seq} ),
         loci => [
             {
-                assembly   => $self->assembly,
+                assembly   => $self->design_param( 'assembly' ),
                 chr_start  => $oligo->{oligo_start},
                 chr_end    => $oligo->{oligo_end},
-                chr_name   => $self->chr_name,
-                chr_strand => $self->chr_strand,
+                chr_name   => $self->design_param( 'chr_name' ),
+                chr_strand => $self->design_param( 'chr_strand' ),
             }
         ]
     };
@@ -283,7 +278,7 @@ sub build_design_data {
 
     my %design_data = (
         type       => $self->design_method,
-        species    => $self->species,
+        species    => $self->design_param( 'species' ),
         gene_ids   => [ @{ $self->target_genes } ],
         created_by => $self->created_by,
         oligos     => $oligos,

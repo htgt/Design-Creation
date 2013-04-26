@@ -22,14 +22,6 @@ use Const::Fast;
 use Fcntl; # O_ constants
 use namespace::autoclean;
 
-with qw(
-DesignCreate::Role::TargetSequence
-);
-
-# Don't need the following attributes when running this command on its own
-__PACKAGE__->meta->remove_attribute( 'chr_name' );
-__PACKAGE__->meta->remove_attribute( 'species' );
-
 const my $DEFAULT_BLOCK_OLIGO_LOG_DIR_NAME => 'block_oligo_logs';
 
 const my @DESIGN_PARAMETERS => qw(
@@ -96,7 +88,7 @@ sub pick_block_oligo_pair {
     my $oligo_picker = DesignCreate::Util::PickBlockOligoPair->new(
         five_prime_oligo_file  => $five_prime_oligo_file,
         three_prime_oligo_file => $three_prime_oligo_file,
-        strand                 => $self->chr_strand,
+        strand                 => $self->design_param( 'chr_strand' ),
         min_gap                => $self->$min_gap_attribute,
     );
 

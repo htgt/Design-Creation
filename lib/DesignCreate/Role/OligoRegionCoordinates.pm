@@ -13,24 +13,53 @@ Common code for oligo target ( candidate ) region coordinate finding commands.
 use Moose::Role;
 use DesignCreate::Exception;
 use DesignCreate::Exception::NonExistantAttribute;
-use DesignCreate::Types qw( PositiveInt NaturalNumber );
+use DesignCreate::Types qw( PositiveInt NaturalNumber Chromosome Strand Species );
 use Fcntl; # O_ constants
 use Const::Fast;
 use YAML::Any qw( DumpFile );
 use namespace::autoclean;
 
-with qw(
-DesignCreate::Role::TargetSequence
-DesignCreate::Role::Oligos
-);
-
 const my $DEFAULT_OLIGO_COORD_FILE_NAME => 'oligo_region_coords.yaml';
+const my $CURRENT_ASSEMBLY => 'GRCm38';
 
 has oligo_region_coordinates => (
     is      => 'rw',
     isa     => 'HashRef',
     traits  => [ 'NoGetopt' ],
     default => sub { {} },
+);
+
+has chr_name => (
+    is            => 'ro',
+    isa           => Chromosome,
+    traits        => [ 'Getopt' ],
+    documentation => 'Name of chromosome the design target lies within',
+    required      => 1,
+    cmd_flag      => 'chromosome'
+);
+
+has chr_strand => (
+    is            => 'ro',
+    isa           => Strand,
+    traits        => [ 'Getopt' ],
+    documentation => 'The strand the design target lies on',
+    required      => 1,
+    cmd_flag      => 'strand'
+);
+
+has species => (
+    is            => 'ro',
+    isa           => Species,
+    traits        => [ 'NoGetopt' ],
+    documentation => 'The species of the design target ( default Mouse )',
+    default       => 'Mouse',
+);
+
+has assembly => (
+    is      => 'ro',
+    isa     => 'Str',
+    traits  => [ 'NoGetopt' ],
+    default => sub { $CURRENT_ASSEMBLY },
 );
 
 #
@@ -79,7 +108,7 @@ has G3_region_offset => (
 sub _get_oligo_region_coordinates {
     my $self = shift;
 
-    for my $oligo ( @{ $self->expected_oligos } ) {
+    for my $oligo ( $self->expected_oligos ) {
         $self->log->info( "Getting target region for $oligo oligo" );
         # coordinates_for_oligo sub will be defined within consuming role;
         my ( $start, $end ) = $self->coordinates_for_oligo( $oligo );
