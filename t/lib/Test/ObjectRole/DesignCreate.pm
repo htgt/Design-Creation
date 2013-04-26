@@ -29,9 +29,9 @@ has design_parameters => (
     traits     => [ 'NoGetopt', 'Hash' ],
     lazy_build => 1,
     handles    => {
-        get_design_param    => 'get',
-        set_param    => 'set',
-        param_exists => 'exists',
+        get_design_param => 'get',
+        set_param        => 'set',
+        param_exists     => 'exists',
     }
 );
 
