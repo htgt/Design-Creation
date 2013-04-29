@@ -26,18 +26,8 @@ use Const::Fast;
 use namespace::autoclean;
 
 const my @DESIGN_PARAMETERS => qw(
-target_genes
 created_by
 software_version
-);
-
-has target_genes => (
-    is            => 'ro',
-    isa           => 'ArrayRef',
-    traits        => [ 'Getopt' ],
-    documentation => 'Name of target gene(s) of design',
-    required      => 1,
-    cmd_flag      => 'target-gene',
 );
 
 has created_by => (
@@ -295,7 +285,7 @@ sub build_design_data {
     my %design_data = (
         type       => $self->design_param( 'design_method' ),
         species    => $self->design_param( 'species' ),
-        gene_ids   => [ @{ $self->target_genes } ],
+        gene_ids   => [ @{ $self->design_param( 'target_genes' ) } ],
         created_by => $self->created_by,
         oligos     => $oligos,
     );

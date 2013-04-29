@@ -31,6 +31,7 @@ sub valid_run_cmd : Test(3) {
         '--chromosome', 11,
         '--strand', 1,
         '--design-method', 'deletion',
+        '--target-gene'  ,'test_gene',
     );
 
     ok my $result = test_app($test->cmd_class => \@argv_contents), 'can run command';
@@ -132,6 +133,7 @@ sub _get_test_object {
         chr_strand       => $strand,
         U5_region_length => $u5_length,
         design_method    => 'deletion',
+        target_genes     => [ 'test_gene' ],
     );
 }
 

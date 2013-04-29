@@ -22,6 +22,15 @@ use namespace::autoclean;
 const my $DEFAULT_OLIGO_COORD_FILE_NAME => 'oligo_region_coords.yaml';
 const my $CURRENT_ASSEMBLY => 'GRCm38';
 
+has target_genes => (
+    is            => 'ro',
+    isa           => 'ArrayRef',
+    traits        => [ 'Getopt' ],
+    documentation => 'Name of target gene(s) of design',
+    required      => 1,
+    cmd_flag      => 'target-gene',
+);
+
 has oligo_region_coordinates => (
     is      => 'rw',
     isa     => 'HashRef',

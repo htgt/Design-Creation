@@ -40,6 +40,7 @@ G5_region_offset
 G3_region_length
 G3_region_offset
 design_method
+target_genes
 );
 
 has design_method => (
