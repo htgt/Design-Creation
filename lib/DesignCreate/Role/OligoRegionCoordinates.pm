@@ -20,7 +20,10 @@ use YAML::Any qw( DumpFile );
 use namespace::autoclean;
 
 const my $DEFAULT_OLIGO_COORD_FILE_NAME => 'oligo_region_coords.yaml';
-const my $CURRENT_ASSEMBLY => 'GRCm38';
+const my %CURRENT_ASSEMBLY => (
+    Mouse => 'GRCm38',
+    Human => 'GRCh37',
+ );
 
 has target_genes => (
     is            => 'ro',
@@ -59,17 +62,23 @@ has chr_strand => (
 has species => (
     is            => 'ro',
     isa           => Species,
-    traits        => [ 'NoGetopt' ],
+    traits        => [ 'Getopt' ],
     documentation => 'The species of the design target ( default Mouse )',
     default       => 'Mouse',
 );
 
 has assembly => (
-    is      => 'ro',
-    isa     => 'Str',
-    traits  => [ 'NoGetopt' ],
-    default => sub { $CURRENT_ASSEMBLY },
+    is         => 'ro',
+    isa        => 'Str',
+    traits     => [ 'NoGetopt' ],
+    lazy_build => 1,
 );
+
+sub _build_assembly {
+    my $self = shift;
+
+    return $CURRENT_ASSEMBLY{ $self->species };
+}
 
 #
 # Gap oligo region parameters, common to all design types
