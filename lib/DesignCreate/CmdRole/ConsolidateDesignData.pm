@@ -21,12 +21,14 @@ use DesignCreate::Exception;
 use DesignCreate::Exception::NonExistantAttribute;
 use YAML::Any qw( LoadFile DumpFile );
 use List::Util qw( first );
+use DateTime;
 use Const::Fast;
 use namespace::autoclean;
 
 const my @DESIGN_PARAMETERS => qw(
 target_genes
 created_by
+software_version
 );
 
 has target_genes => (
@@ -46,6 +48,20 @@ has created_by => (
     default       => 'system',
     cmd_flag      => 'created-by',
 );
+
+has software_version => (
+    is         => 'ro',
+    isa        => 'Str',
+    traits     => [ 'NoGetopt' ],
+    lazy_build => 1,
+);
+
+sub _build_software_version {
+    my $self = shift;
+
+    my $t = DateTime->today();
+    return $DesignCreate::Role::Action::VERSION || 'dev_' . $t->dmy;
+}
 
 has all_oligo_pairs => (
     is         => 'ro',
