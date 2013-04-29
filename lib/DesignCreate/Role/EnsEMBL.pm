@@ -27,8 +27,8 @@ sub _build_ensembl_util {
     my $self = shift;
     require LIMS2::Util::EnsEMBL;
 
-    #TODO grab species from design params file
-    return LIMS2::Util::EnsEMBL->new( species => 'Mouse' );
+    my $species = $self->design_param( 'species' );
+    return LIMS2::Util::EnsEMBL->new( species => $species );
 }
 
 sub get_sequence {
