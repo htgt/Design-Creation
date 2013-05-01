@@ -28,7 +28,7 @@ sub get_sequence : Test(4) {
         , 'throws error if start after end';
 }
 
-sub ensembl_util : Test(5) {
+sub ensembl_util : Test(7) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
@@ -37,16 +37,22 @@ sub ensembl_util : Test(5) {
 
     ok my $slice_adaptor = $o->ensembl_util->slice_adaptor, 'can grab slice adaptor';
     isa_ok $slice_adaptor, 'Bio::EnsEMBL::DBSQL::SliceAdaptor';
+
+    ok my $exon_adaptor = $o->ensembl_util->exon_adaptor, 'can grab exon adaptor';
+    isa_ok $exon_adaptor, 'Bio::EnsEMBL::DBSQL::ExonAdaptor';
 }
 
 sub _get_test_object {
     my ( $test ) = @_;
 
     my $metaclass = $test->get_test_object_metaclass();
-    return $metaclass->new_object(
+    my $o = $metaclass->new_object(
         dir           => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
         design_method => 'deletion',
     );
+    $o->set_param( 'species', 'Mouse' );
+
+    return $o;
 }
 
 1;

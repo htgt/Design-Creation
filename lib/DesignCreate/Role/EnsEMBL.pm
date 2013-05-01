@@ -20,7 +20,7 @@ has ensembl_util => (
     isa        => 'LIMS2::Util::EnsEMBL',
     traits     => [ 'NoGetopt' ],
     lazy_build => 1,
-    handles    => [ qw( slice_adaptor ) ],
+    handles    => [ qw( slice_adaptor exon_adaptor ) ],
 );
 
 sub _build_ensembl_util {
