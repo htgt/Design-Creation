@@ -31,8 +31,14 @@ oligo_target_regions_dir
 aos_output_dir
 );
 
-const my $DEFAULT_CHROMOSOME_DIR => $ENV{AOS_CHROMOSOME_DIR}
-    || '/lustre/scratch110/blastdb/Users/vvi/KO_MOUSE/GRCm38';
+const my %DEFAULT_CHROMOSOME_DIR => (
+    Mouse => {
+        GRCm38 => '/lustre/scratch110/blastdb/Users/team87/Mouse/GRCm38',
+    },
+    Human =>{
+        GRCh37 => '/lustre/scratch110/blastdb/Users/team87/Human/GRCh37',
+    },
+);
 
 const my @DESIGN_PARAMETERS => qw(
 oligo_length
@@ -84,10 +90,20 @@ has base_chromosome_dir => (
     isa           => 'Path::Class::Dir',
     traits        => [ 'Getopt' ],
     coerce        => 1,
-    default       => sub{ Path::Class::Dir->new( $DEFAULT_CHROMOSOME_DIR )->absolute },
-    documentation => "Location of chromosome files ( default $DEFAULT_CHROMOSOME_DIR )",
+    lazy_build    => 1,
+    documentation => "Location of chromosome files",
     cmd_flag      => 'base-chromosome-dir'
 );
+
+sub _build_base_chromosome_dir {
+    my $self = shift;
+
+    my $species = $self->design_param( 'species' );
+    my $assembly = $self->design_param( 'assembly' );
+    my $dir = Path::Class::Dir->new( $DEFAULT_CHROMOSOME_DIR{ $species }{ $assembly } );
+
+    return $dir->absolute;
+}
 
 sub find_oligos {
     my ( $self, $opts, $args ) = @_;
