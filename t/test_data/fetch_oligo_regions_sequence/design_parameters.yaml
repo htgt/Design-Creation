@@ -1,3 +1,5 @@
 ---
 chr_name: '11'
 design_method: deletion
+species: Mouse
+assembly: GRCm38
