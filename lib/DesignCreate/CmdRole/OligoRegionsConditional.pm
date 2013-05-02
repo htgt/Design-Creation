@@ -17,7 +17,7 @@ design types is found in DesignCreate::Role::OligoTargetRegions.
 use Moose::Role;
 use DesignCreate::Exception;
 use DesignCreate::Exception::NonExistantAttribute;
-use DesignCreate::Types qw( DesignMethod PositiveInt NaturalNumber );
+use DesignCreate::Types qw( DesignMethod PositiveInt NaturalNumber Chromosome Strand );
 use Const::Fast;
 use namespace::autoclean;
 
@@ -50,6 +50,24 @@ has design_method => (
     isa     => DesignMethod,
     traits  => [ 'NoGetopt' ],
     default => 'conditional'
+);
+
+has chr_name => (
+    is            => 'ro',
+    isa           => Chromosome,
+    traits        => [ 'Getopt' ],
+    documentation => 'Name of chromosome the design target lies within',
+    required      => 1,
+    cmd_flag      => 'chromosome'
+);
+
+has chr_strand => (
+    is            => 'ro',
+    isa           => Strand,
+    traits        => [ 'Getopt' ],
+    documentation => 'The strand the design target lies on',
+    required      => 1,
+    cmd_flag      => 'strand'
 );
 
 #

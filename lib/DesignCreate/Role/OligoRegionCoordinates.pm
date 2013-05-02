@@ -13,7 +13,7 @@ Common code for oligo target ( candidate ) region coordinate finding commands.
 use Moose::Role;
 use DesignCreate::Exception;
 use DesignCreate::Exception::NonExistantAttribute;
-use DesignCreate::Types qw( PositiveInt NaturalNumber Chromosome Strand Species );
+use DesignCreate::Types qw( PositiveInt NaturalNumber Species );
 use Fcntl; # O_ constants
 use Const::Fast;
 use YAML::Any qw( DumpFile );
@@ -23,7 +23,7 @@ const my $DEFAULT_OLIGO_COORD_FILE_NAME => 'oligo_region_coords.yaml';
 const my %CURRENT_ASSEMBLY => (
     Mouse => 'GRCm38',
     Human => 'GRCh37',
- );
+);
 
 has target_genes => (
     is            => 'ro',
@@ -39,24 +39,6 @@ has oligo_region_coordinates => (
     isa     => 'HashRef',
     traits  => [ 'NoGetopt' ],
     default => sub { {} },
-);
-
-has chr_name => (
-    is            => 'ro',
-    isa           => Chromosome,
-    traits        => [ 'Getopt' ],
-    documentation => 'Name of chromosome the design target lies within',
-    required      => 1,
-    cmd_flag      => 'chromosome'
-);
-
-has chr_strand => (
-    is            => 'ro',
-    isa           => Strand,
-    traits        => [ 'Getopt' ],
-    documentation => 'The strand the design target lies on',
-    required      => 1,
-    cmd_flag      => 'strand'
 );
 
 has species => (
