@@ -72,7 +72,7 @@ sub design_param : Test(3) {
 
     throws_ok{
         $o->design_param( 'blah' )
-    } qr/blah not stored in design parameters hash/
+    } qr/blah not stored in design parameters hash or attribute value/
         ,'throws error when trying to find non existant design parameter value';
 
 }

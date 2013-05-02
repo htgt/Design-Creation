@@ -239,11 +239,18 @@ sub add_design_parameters {
 }
 
 # get design parameter stored in design_parameters.yaml file
+# if it can't find it look for a attribute with the same name
 sub design_param {
     my ( $self, $param_name ) = @_;
 
-    DesignCreate::Exception->throw("$param_name not stored in design parameters hash")
-        unless $self->param_exists( $param_name );
+    unless ( $self->param_exists( $param_name ) ) {
+        if ( $self->meta->has_attribute( $param_name ) ) {
+            return $self->$param_name
+        }
+        else {
+            DesignCreate::Exception->throw("$param_name not stored in design parameters hash or attribute value")
+        }
+    }
 
     return $self->get_design_param( $param_name );
 }
