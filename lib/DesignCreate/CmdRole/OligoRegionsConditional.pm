@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::OligoRegionsConditional;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::OligoRegionsConditional::VERSION = '0.004';
+    $DesignCreate::CmdRole::OligoRegionsConditional::VERSION = '0.005';
 }
 ## use critic
 
@@ -23,7 +23,7 @@ design types is found in DesignCreate::Role::OligoTargetRegions.
 use Moose::Role;
 use DesignCreate::Exception;
 use DesignCreate::Exception::NonExistantAttribute;
-use DesignCreate::Types qw( PositiveInt NaturalNumber );
+use DesignCreate::Types qw( DesignMethod PositiveInt NaturalNumber Chromosome Strand );
 use Const::Fast;
 use namespace::autoclean;
 
@@ -32,6 +32,49 @@ DesignCreate::Role::OligoRegionCoordinates
 );
 
 const my $MIN_BLOCK_LENGTH => 102;
+const my @DESIGN_PARAMETERS => qw(
+U_block_start
+U_block_end
+D_block_start
+D_block_end
+U_block_overlap
+D_block_overlap
+chr_name
+chr_strand
+species
+assembly
+G5_region_length
+G5_region_offset
+G3_region_length
+G3_region_offset
+design_method
+target_genes
+);
+
+has design_method => (
+    is      => 'ro',
+    isa     => DesignMethod,
+    traits  => [ 'NoGetopt' ],
+    default => 'conditional'
+);
+
+has chr_name => (
+    is            => 'ro',
+    isa           => Chromosome,
+    traits        => [ 'Getopt' ],
+    documentation => 'Name of chromosome the design target lies within',
+    required      => 1,
+    cmd_flag      => 'chromosome'
+);
+
+has chr_strand => (
+    is            => 'ro',
+    isa           => Strand,
+    traits        => [ 'Getopt' ],
+    documentation => 'The strand the design target lies on',
+    required      => 1,
+    cmd_flag      => 'strand'
+);
 
 #
 # Oligo Region Parameters
@@ -120,6 +163,7 @@ has D_block_overlap => (
 sub get_oligo_region_coordinates {
     my $self = shift;
 
+    $self->add_design_parameters( \@DESIGN_PARAMETERS );
     $self->check_oligo_block_coordinates;
     # See DesignCreate::Role::OligoRegionCoordinates
     $self->_get_oligo_region_coordinates;

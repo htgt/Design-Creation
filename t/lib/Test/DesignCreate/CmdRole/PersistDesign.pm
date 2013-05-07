@@ -39,7 +39,6 @@ sub persist_design : Test(10) {
     is scalar( @{ $alt_design_data } ), 2, 'have 2 alternate designs';
 }
 
-
 sub _persist_design : Test(5) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';

@@ -1,7 +1,7 @@
 package DesignCreate::Types;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Types::VERSION = '0.004';
+    $DesignCreate::Types::VERSION = '0.005';
 }
 ## use critic
 
@@ -30,7 +30,7 @@ use MooseX::Types -declare => [
 use MooseX::Types::Moose qw/Int Str ArrayRef/;
 
 const my %CHROMOSOMES => (
-    map{ $_ => 1  } (1..19),
+    map{ $_ => 1  } (1..22),
     X => 1,
     Y => 1,
     x => 1,
@@ -43,6 +43,7 @@ const my %OLIGOS => (
 
 const my %SPECIES => (
     Mouse => 1,
+    Human => 1,
 );
 
 const my %DESIGN_METHODS => (

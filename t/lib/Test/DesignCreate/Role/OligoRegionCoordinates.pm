@@ -50,6 +50,7 @@ sub _get_test_object {
         chr_name      => 11,
         chr_strand    => $strand,
         design_method => 'deletion',
+        target_genes  => [ 'test_gene' ],
     );
 }
 

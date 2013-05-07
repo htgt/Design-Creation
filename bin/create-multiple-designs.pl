@@ -7,25 +7,32 @@ use IPC::System::Simple qw( system );
 use Text::CSV;
 use Try::Tiny;
 use Getopt::Long;
+use Path::Class;
 use List::MoreUtils qw( any );
 use Pod::Usage;
 
-my ( $file, $persist, $base_work_dir, $alt_designs );
+my ( $file, $persist, $base_dir_name, $alt_designs );
 GetOptions(
     'help'        => sub { pod2usage( -verbose => 1 ) },
     'man'         => sub { pod2usage( -verbose => 2 ) },
     'file=s'      => \$file,
     'persist'     => \$persist,
     'alt-designs' => \$alt_designs,
-    'dir=s'       => \$base_work_dir,
+    'dir=s'       => \$base_dir_name,
     'conditional' => \my $conditional,
+    'del-exon'    => \my $del_exon,
     'debug'       => \my $debug,
     'gene=s'      => \my @genes,
     'param=s'     => \my %extra_params,
 ) or pod2usage(2);
 
-die( 'Specify base work dir' ) unless $base_work_dir;
+die( 'Specify base work dir' ) unless $base_dir_name;
 die( 'Specify file with design info' ) unless $file;
+die( 'Can not be both conditional and del-exon' ) if $conditional && $del_exon;
+
+my %targeted_genes;
+my $base_dir = dir( $base_dir_name );
+$base_dir = $base_dir->absolute;
 
 open ( my $fh, '<', $file ) or die( "Can not open $file " . $! );
 my $csv = Text::CSV->new();
@@ -47,8 +54,17 @@ sub process_design {
     my ( $params, $dir ) = get_params( $data );
     my @args;
 
-    push @args, $conditional ? 'conditional-design' : 'ins-del-design';
-    push @args, $debug       ? '--debug'            : '--verbose';
+    if ( $conditional ) {
+        push @args, 'conditional-design';
+    }
+    elsif ( $del_exon ) {
+        push @args, 'del-exon-design';
+    }
+    else {
+        push @args, 'ins-del-design';
+    }
+
+    push @args, $debug ? '--debug' : '--verbose';
     push @args, '--alt-designs' if $alt_designs;
     push @args, '--persist' if $persist;
 
@@ -71,18 +87,38 @@ sub process_design {
 }
 
 sub get_params {
-    my $data = shift;
+    my ( $data ) = @_;
 
-    my $dir = $base_work_dir . $data->{'target-gene'};
     my @params;
     while ( my( $cmd, $arg ) = each %{ $data } ) {
         next unless $arg;
-        push @params, '--' . $cmd,;
-        push @params, $arg;
+        push @params, '--' . _trim($cmd);
+        push @params, _trim($arg);
     }
-    push @params, '--dir', $dir;
 
+    my $target_gene = _trim( $data->{'target-gene'} );
+
+    my $dir_name;
+    # deal with same gene being targeted in multiple designs
+    # cant name the work folder the same in these cases
+    if ( exists $targeted_genes{$target_gene} ) {
+        $dir_name = $target_gene . '-' . $targeted_genes{$target_gene}
+    }
+    else {
+        $dir_name = $target_gene;
+    }
+    $targeted_genes{$target_gene}++;
+
+    my $dir = $base_dir->subdir($dir_name);
+    push @params, '--dir', $dir->stringify;
     return ( \@params, $dir );
+}
+
+sub _trim{
+    my $v = shift;
+    $v =~ s/^\s+|\s+$//g;
+
+    return $v;
 }
 
 __END__
@@ -102,6 +138,7 @@ create-multiple-designs.pl - Create multiple designs
       --persist         Persist newly created designs to LIMS2
       --dir             Directory where design-create output goes
       --conditional     Specify conditional design, default deletion
+      --del-exon        Specify deletion designs where we target a given exon
       --gene            Only create this gene(s), picked from input file
       --param           Specify additional param(s) not in file
 

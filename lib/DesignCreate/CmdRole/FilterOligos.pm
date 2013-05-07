@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::FilterOligos;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::FilterOligos::VERSION = '0.004';
+    $DesignCreate::CmdRole::FilterOligos::VERSION = '0.005';
 }
 ## use critic
 
@@ -30,11 +30,14 @@ use Bio::SeqIO;
 use namespace::autoclean;
 
 with qw(
-DesignCreate::Role::TargetSequence
-DesignCreate::Role::Oligos
+DesignCreate::Role::EnsEMBL
 );
 
 const my $DEFAULT_EXONERATE_OLIGO_DIR_NAME => 'exonerate_oligos';
+
+const my @DESIGN_PARAMETERS => qw(
+flank_length
+);
 
 has exonerate_query_file => (
     is     => 'rw',
@@ -103,6 +106,7 @@ has validated_oligos => (
 sub filter_oligos {
     my ( $self, $opts, $args ) = @_;
 
+    $self->add_design_parameters( \@DESIGN_PARAMETERS );
     $self->validate_oligos;
     $self->run_exonerate;
     $self->filter_out_non_specific_oligos;
@@ -116,7 +120,7 @@ sub filter_oligos {
 sub validate_oligos {
     my $self = shift;
 
-    for my $oligo_type ( @{ $self->expected_oligos } ) {
+    for my $oligo_type ( $self->expected_oligos ) {
         my $oligo_file = $self->get_file( "$oligo_type.yaml", $self->aos_output_dir );
 
         DesignCreate::Exception->throw("No valid $oligo_type oligos")
@@ -188,7 +192,11 @@ sub check_oligo_coordinates {
 sub check_oligo_sequence {
     my ( $self, $oligo_data ) = @_;
 
-    my $ensembl_seq = $self->get_sequence( $oligo_data->{oligo_start}, $oligo_data->{oligo_end} );
+    my $ensembl_seq = $self->get_sequence(
+        $oligo_data->{oligo_start},
+        $oligo_data->{oligo_end},
+        $self->design_param( 'chr_name' ),
+    );
 
     if ( $ensembl_seq ne uc( $oligo_data->{oligo_seq} ) ) {
         $self->log->error( 'Oligo seq does not match coordinate sequence: ' . $oligo_data->{id} );
@@ -284,7 +292,8 @@ sub target_flanking_region_coordinates {
     my $self = shift;
     my ( $start, $end );
 
-    if ( $self->chr_strand == 1 ) {
+    my $strand = $self->design_param( 'chr_strand' );
+    if ( $strand == 1 ) {
         $start = $self->all_oligos->{'G5'}[0]{target_region_start};
         $end   = $self->all_oligos->{'G3'}[0]{target_region_end};
     }
@@ -296,13 +305,13 @@ sub target_flanking_region_coordinates {
     my $flanking_region_start = $start - $self->flank_length;
     my $flanking_region_end = $end + $self->flank_length;
 
-    return( $flanking_region_start, $flanking_region_end );
+    return( $flanking_region_start, $flanking_region_end, $self->design_param( 'chr_name' ) );
 }
 
 sub filter_out_non_specific_oligos {
     my ( $self ) = @_;
 
-    for my $oligo_type ( @{ $self->expected_oligos } ) {
+    for my $oligo_type ( $self->expected_oligos ) {
         for my $oligo ( @{ $self->all_oligos->{$oligo_type} } ) {
             next unless my $match_info = $self->exonerate_matches->{ $oligo->{id} };
             next unless $self->check_oligo_specificity( $oligo->{id}, $match_info );
@@ -341,7 +350,7 @@ sub check_oligo_specificity {
 sub have_required_validated_oligos {
     my $self = shift;
 
-    for my $oligo_type ( @{ $self->expected_oligos } ) {
+    for my $oligo_type ( $self->expected_oligos ) {
         DesignCreate::Exception->throw( "No valid $oligo_type oligos, halting filter process" )
             unless exists $self->validated_oligos->{$oligo_type};
     }

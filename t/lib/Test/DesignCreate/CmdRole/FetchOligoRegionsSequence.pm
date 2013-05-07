@@ -87,12 +87,11 @@ sub _get_test_object {
     my ( $test, $strand ) = @_;
     my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute;
     my $data_dir = dir($FindBin::Bin)->absolute->subdir('test_data/fetch_oligo_regions_sequence');
-    dircopy( $data_dir->stringify, $dir->stringify . '/oligo_target_regions' );
+    dircopy( $data_dir->stringify, $dir->stringify );
 
     my $metaclass = $test->get_test_object_metaclass();
     return $metaclass->new_object(
-        dir           => $dir,
-        design_method => 'deletion',
+        dir => $dir,
     );
 }
 

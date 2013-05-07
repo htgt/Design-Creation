@@ -97,13 +97,10 @@ sub define_target_file : Test(6) {
     } 'can call define_target_file again';
     is $o->target_file->basename, '11.fasta', '.. target file should stay the same';
 
-    my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute;
     my $metaclass = $test->get_test_object_metaclass();
     $o = $metaclass->new_object(
-        dir                 => $dir,
-        chr_name            => 11,
+        dir                 => $o->dir,
         base_chromosome_dir => tempdir( TMPDIR => 1, CLEANUP => 1 ),
-        design_method       => 'deletion',
     );
 
     throws_ok{
@@ -159,14 +156,10 @@ sub _get_test_object {
     my $data_dir = dir($FindBin::Bin)->absolute->subdir('test_data/find_oligos_data');
 
     # need 4 oligo target region files to test against, in oligo_target_regions dir
-    dircopy( $data_dir->stringify, $dir->stringify . '/oligo_target_regions' );
+    dircopy( $data_dir->stringify, $dir->stringify );
 
     my $metaclass = $test->get_test_object_metaclass();
-    return $metaclass->new_object(
-        dir           => $dir,
-        chr_name      => 11,
-        design_method => 'deletion',
-    );
+    return $metaclass->new_object( dir => $dir );
 }
 
 1;

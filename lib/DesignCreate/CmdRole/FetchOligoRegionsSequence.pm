@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::FetchOligoRegionsSequence;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::FetchOligoRegionsSequence::VERSION = '0.004';
+    $DesignCreate::CmdRole::FetchOligoRegionsSequence::VERSION = '0.005';
 }
 ## use critic
 
@@ -29,7 +29,6 @@ use namespace::autoclean;
 
 with qw(
 DesignCreate::Role::EnsEMBL
-DesignCreate::Role::Oligos
 );
 
 const my $DEFAULT_OLIGO_COORD_FILE_NAME => 'oligo_region_coords.yaml';
@@ -71,7 +70,7 @@ sub _build_oligo_region_data {
 sub create_oligo_region_sequence_files {
     my $self = shift;
 
-    for my $oligo ( @{ $self->expected_oligos } ) {
+    for my $oligo ( $self->expected_oligos ) {
         $self->log->info( "Getting sequence for $oligo oligo region" );
 
         DesignCreate::Exception->throw(
@@ -81,8 +80,7 @@ sub create_oligo_region_sequence_files {
         my $coords   = $self->get_oligo_region_coords( $oligo );
         my $start    = $coords->{start};
         my $end      = $coords->{end};
-        #TODO grab chromosome for params file
-        my $chr_name = $coords->{chromosome};
+        my $chr_name = $self->design_param( 'chr_name' );
 
         my $oligo_seq = $self->get_repeat_masked_sequence( $start, $end, $chr_name );
         my $oligo_id  = $self->create_oligo_id( $oligo, $start, $end );

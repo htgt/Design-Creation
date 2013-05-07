@@ -1,7 +1,7 @@
 package DesignCreate::Action::PickGapOligos;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::PickGapOligos::VERSION = '0.004';
+    $DesignCreate::Action::PickGapOligos::VERSION = '0.005';
 }
 ## use critic
 
@@ -28,11 +28,6 @@ use namespace::autoclean;
 
 extends qw( DesignCreate::Action );
 with 'DesignCreate::CmdRole::PickGapOligos';
-
-has '+design_method' => (
-    traits  => [ 'NoGetopt' ],
-    required => 0,
-);
 
 sub execute {
     my ( $self, $opts, $args ) = @_;

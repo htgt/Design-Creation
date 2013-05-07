@@ -1,7 +1,7 @@
 package DesignCreate::Role::EnsEMBL;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Role::EnsEMBL::VERSION = '0.004';
+    $DesignCreate::Role::EnsEMBL::VERSION = '0.005';
 }
 ## use critic
 
@@ -26,15 +26,15 @@ has ensembl_util => (
     isa        => 'LIMS2::Util::EnsEMBL',
     traits     => [ 'NoGetopt' ],
     lazy_build => 1,
-    handles    => [ qw( slice_adaptor ) ],
+    handles    => [ qw( slice_adaptor exon_adaptor ) ],
 );
 
 sub _build_ensembl_util {
     my $self = shift;
     require LIMS2::Util::EnsEMBL;
 
-    #TODO grab species from design params file
-    return LIMS2::Util::EnsEMBL->new( species => 'Mouse' );
+    my $species = $self->design_param( 'species' );
+    return LIMS2::Util::EnsEMBL->new( species => $species );
 }
 
 sub get_sequence {

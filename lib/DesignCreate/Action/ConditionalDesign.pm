@@ -1,7 +1,7 @@
 package DesignCreate::Action::ConditionalDesign;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::ConditionalDesign::VERSION = '0.004';
+    $DesignCreate::Action::ConditionalDesign::VERSION = '0.005';
 }
 ## use critic
 
@@ -65,11 +65,6 @@ genomic_search_method
 for my $attribute ( @ATTRIBUTES_NO_CMD_OPTION ) {
     has '+' . $attribute => ( traits => [ 'NoGetopt' ] );
 }
-
-has '+design_method' => (
-    traits  => [ 'NoGetopt' ],
-    default => 'conditional',
-);
 
 sub execute {
     my ( $self, $opts, $args ) = @_;

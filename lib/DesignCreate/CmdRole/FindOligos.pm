@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::FindOligos;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::FindOligos::VERSION = '0.004';
+    $DesignCreate::CmdRole::FindOligos::VERSION = '0.005';
 }
 ## use critic
 
@@ -25,12 +25,11 @@ use Bio::Seq;
 use Fcntl; # O_ constants
 use Const::Fast;
 use Try::Tiny;
+use Const::Fast;
 use namespace::autoclean;
 
 with qw(
 DesignCreate::Role::AOS
-DesignCreate::Role::TargetSequence
-DesignCreate::Role::Oligos
 );
 
 requires qw(
@@ -38,13 +37,22 @@ oligo_target_regions_dir
 aos_output_dir
 );
 
-#TODO check how this works when running find-oligos as part of whole design creation
-# Don't need the following attributes when running this command on its own
-__PACKAGE__->meta->remove_attribute( 'chr_strand' );
-__PACKAGE__->meta->remove_attribute( 'species' );
+const my %DEFAULT_CHROMOSOME_DIR => (
+    Mouse => {
+        GRCm38 => '/lustre/scratch110/blastdb/Users/team87/Mouse/GRCm38',
+    },
+    Human =>{
+        GRCh37 => '/lustre/scratch110/blastdb/Users/team87/Human/GRCh37',
+    },
+);
 
-const my $DEFAULT_CHROMOSOME_DIR => $ENV{AOS_CHROMOSOME_DIR}
-    || '/lustre/scratch110/blastdb/Users/vvi/KO_MOUSE/GRCm38';
+const my @DESIGN_PARAMETERS => qw(
+oligo_length
+num_oligos
+minimum_gc_content
+mask_by_lower_case
+genomic_search_method
+);
 
 has query_file => (
     is         => 'ro',
@@ -88,14 +96,25 @@ has base_chromosome_dir => (
     isa           => 'Path::Class::Dir',
     traits        => [ 'Getopt' ],
     coerce        => 1,
-    default       => sub{ Path::Class::Dir->new( $DEFAULT_CHROMOSOME_DIR )->absolute },
-    documentation => "Location of chromosome files ( default $DEFAULT_CHROMOSOME_DIR )",
+    lazy_build    => 1,
+    documentation => "Location of chromosome files",
     cmd_flag      => 'base-chromosome-dir'
 );
+
+sub _build_base_chromosome_dir {
+    my $self = shift;
+
+    my $species = $self->design_param( 'species' );
+    my $assembly = $self->design_param( 'assembly' );
+    my $dir = Path::Class::Dir->new( $DEFAULT_CHROMOSOME_DIR{ $species }{ $assembly } );
+
+    return $dir->absolute;
+}
 
 sub find_oligos {
     my ( $self, $opts, $args ) = @_;
 
+    $self->add_design_parameters( \@DESIGN_PARAMETERS );
     $self->create_aos_query_file;
     $self->define_target_file;
     $self->run_aos;
@@ -113,7 +132,7 @@ sub create_aos_query_file {
 
     my $seq_out = Bio::SeqIO->new( -fh => $fh, -format => 'fasta' );
 
-    for my $oligo ( @{ $self->expected_oligos } ) {
+    for my $oligo ( $self->expected_oligos ) {
         my $oligo_file = $self->get_file( "$oligo.fasta", $self->oligo_target_regions_dir );
 
         my $seq_in = Bio::SeqIO->new( -fh => $oligo_file->openr, -format => 'fasta' );
@@ -137,6 +156,7 @@ sub create_aos_query_file {
     return;
 }
 
+#check if entire region is repeat masked
 sub check_masked_seq {
     my ( $self, $seq, $oligo ) = @_;
 
@@ -155,7 +175,7 @@ sub define_target_file {
         return;
     }
 
-    my $chr_file = $self->get_file( $self->chr_name . ".fasta", $self->base_chromosome_dir );
+    my $chr_file = $self->get_file( $self->design_param( 'chr_name' ) . ".fasta", $self->base_chromosome_dir );
     $self->log->debug( "Target file found: $chr_file" );
     $self->target_file( $chr_file );
 
@@ -166,7 +186,7 @@ sub check_aos_output {
     my $self = shift;
     my @missing_oligos;
 
-    for my $oligo ( @{ $self->expected_oligos } ) {
+    for my $oligo ( $self->expected_oligos ) {
         try{
             #this will throw a error if file does not exist
             $self->get_file( "$oligo.yaml", $self->aos_output_dir );

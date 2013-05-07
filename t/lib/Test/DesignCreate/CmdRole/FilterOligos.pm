@@ -133,7 +133,7 @@ sub validate_oligos : Test(5) {
 
 }
 
-sub target_flanking_region_coordinates : Test(11){
+sub target_flanking_region_coordinates : Test(10){
     my $test = shift;
 
     ok my $o = $test->_get_test_object, 'can grab test object';
@@ -152,7 +152,6 @@ sub target_flanking_region_coordinates : Test(11){
     is $plus_end, $end , 'end is correct';
 
     ok $o = $test->_get_test_object( -1 ), 'can grab another test object';
-    is $o->chr_strand, -1, 'strand is correct';
 
     lives_ok{
         $o->validate_oligos;
@@ -307,15 +306,10 @@ sub _get_test_object {
     }
 
     # need 4 aos oligo files to test against, in aos_output dir
-    dircopy( $data_dir->stringify, $dir->stringify . '/aos_output' );
+    dircopy( $data_dir->stringify, $dir->stringify );
 
     my $metaclass = $test->get_test_object_metaclass();
-    return $metaclass->new_object(
-        dir        => $dir,
-        chr_name   => 11,
-        chr_strand => $strand,
-        design_method => 'deletion',
-    );
+    return $metaclass->new_object( dir => $dir);
 }
 
 1;

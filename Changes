@@ -1,3 +1,8 @@
+0.005     2013-05-07 12:31:37 Europe/London
+
+    Add species option, can now design on Mouse and Human targets.
+    Add del-exon-design command, creates design based on target exon.
+
 0.004     2013-04-23 07:50:16 Europe/London
 
     For conditional designs add optional block oligo region overlap value.

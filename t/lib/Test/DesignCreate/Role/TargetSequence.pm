@@ -64,8 +64,8 @@ sub species : Test(2) {
     my $test = shift;
 
     throws_ok{
-        $test->_get_test_object( { chr_strand => 1, chr_name => '3', species => 'Human' } )
-    } qr/Invalid species Human/, 'throws error with invalid chromosome name';
+        $test->_get_test_object( { chr_strand => 1, chr_name => '3', species => 'Unicorn' } )
+    } qr/Invalid species Unicorn/, 'throws error with invalid chromosome name';
 
     lives_ok{
         $test->_get_test_object( { chr_strand => -1, chr_name => 'X', species => 'Mouse' } )

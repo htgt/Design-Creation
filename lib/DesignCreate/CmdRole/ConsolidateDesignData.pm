@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::ConsolidateDesignData;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::ConsolidateDesignData::VERSION = '0.004';
+    $DesignCreate::CmdRole::ConsolidateDesignData::VERSION = '0.005';
 }
 ## use critic
 
@@ -27,20 +27,13 @@ use DesignCreate::Exception;
 use DesignCreate::Exception::NonExistantAttribute;
 use YAML::Any qw( LoadFile DumpFile );
 use List::Util qw( first );
+use DateTime;
+use Const::Fast;
 use namespace::autoclean;
 
-with qw(
-DesignCreate::Role::TargetSequence
-DesignCreate::Role::Oligos
-);
-
-has target_genes => (
-    is            => 'ro',
-    isa           => 'ArrayRef',
-    traits        => [ 'Getopt' ],
-    documentation => 'Name of target gene(s) of design',
-    required      => 1,
-    cmd_flag      => 'target-gene',
+const my @DESIGN_PARAMETERS => qw(
+created_by
+software_version
 );
 
 has created_by => (
@@ -51,6 +44,20 @@ has created_by => (
     default       => 'system',
     cmd_flag      => 'created-by',
 );
+
+has software_version => (
+    is         => 'ro',
+    isa        => 'Str',
+    traits     => [ 'NoGetopt' ],
+    lazy_build => 1,
+);
+
+sub _build_software_version {
+    my $self = shift;
+
+    my $t = DateTime->today();
+    return $DesignCreate::Role::Action::VERSION || 'dev_' . $t->dmy;
+}
 
 has all_oligo_pairs => (
     is         => 'ro',
@@ -66,7 +73,7 @@ has all_oligo_pairs => (
 sub _build_all_oligo_pairs {
     my $self = shift;
     my %oligo_pairs;
-    my @oligo_class = $self->design_method eq 'conditional' ? qw( G U D ) : qw( G );
+    my @oligo_class = $self->design_param( 'design_method' ) eq 'conditional' ? qw( G U D ) : qw( G );
 
     for my $class ( @oligo_class ) {
         my $oligo_pair_file = $self->get_file( $class . '_oligo_pairs.yaml', $self->validated_oligo_dir );
@@ -94,7 +101,7 @@ sub _build_all_valid_oligos {
     my $self = shift;
     my %oligos;
 
-    for my $oligo_type ( @{ $self->expected_oligos } ) {
+    for my $oligo_type ( $self->expected_oligos ) {
         my $oligo_file = $self->get_file( "$oligo_type.yaml", $self->validated_oligo_dir );
         my $oligos = LoadFile( $oligo_file );
         if ( !$oligos || !@{ $oligos } ) {
@@ -133,8 +140,9 @@ has alternate_designs_oligos => (
 sub consolidate_design_data {
     my ( $self, $opts, $args ) = @_;
 
-    $self->get_design_phase;
+    $self->add_design_parameters( \@DESIGN_PARAMETERS );
 
+    $self->get_design_phase;
     $self->build_primary_design_oligos;
     $self->build_alternate_design_oligos;
 
@@ -181,7 +189,7 @@ sub build_design_oligo_data {
     my ( $self, $design_num ) = @_;
     my @design_oligo_data;
 
-    for my $oligo_type ( @{ $self->expected_oligos } ) {
+    for my $oligo_type ( $self->expected_oligos ) {
          my $design_oligo_data = $self->get_oligo( $oligo_type, $design_num );
          return unless $design_oligo_data;
 
@@ -195,7 +203,7 @@ sub get_oligo {
     my ( $self, $oligo_type, $design_num ) = @_;
     my $oligo;
 
-    if ( $oligo_type =~ /^G/ || $self->design_method eq 'conditional' ) {
+    if ( $oligo_type =~ /^G/ || $self->design_param( 'design_method' ) eq 'conditional' ) {
         $oligo = $self->pick_oligo_from_pair( $oligo_type, $design_num );
     }
     else {
@@ -239,11 +247,11 @@ sub format_oligo_data {
         seq  => uc( $oligo->{oligo_seq} ),
         loci => [
             {
-                assembly   => $self->assembly,
+                assembly   => $self->design_param( 'assembly' ),
                 chr_start  => $oligo->{oligo_start},
                 chr_end    => $oligo->{oligo_end},
-                chr_name   => $self->chr_name,
-                chr_strand => $self->chr_strand,
+                chr_name   => $self->design_param( 'chr_name' ),
+                chr_strand => $self->design_param( 'chr_strand' ),
             }
         ]
     };
@@ -281,9 +289,9 @@ sub build_design_data {
     my ( $self, $oligos ) = @_;
 
     my %design_data = (
-        type       => $self->design_method,
-        species    => $self->species,
-        gene_ids   => [ @{ $self->target_genes } ],
+        type       => $self->design_param( 'design_method' ),
+        species    => $self->design_param( 'species' ),
+        gene_ids   => [ @{ $self->design_param( 'target_genes' ) } ],
         created_by => $self->created_by,
         oligos     => $oligos,
     );

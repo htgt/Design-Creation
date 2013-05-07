@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::PickGapOligos;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::PickGapOligos::VERSION = '0.004';
+    $DesignCreate::CmdRole::PickGapOligos::VERSION = '0.005';
 }
 ## use critic
 
@@ -28,6 +28,10 @@ use Const::Fast;
 use namespace::autoclean;
 
 const my $DEFAULT_GAP_OLIGO_LOG_DIR_NAME => 'gap_oligo_logs';
+
+const my @DESIGN_PARAMETERS => qw(
+tile_size
+);
 
 has g5_oligos_data => (
     is         => 'ro',
@@ -122,6 +126,7 @@ has oligo_pairs => (
 sub pick_gap_oligos {
     my ( $self, $opts, $args ) = @_;
 
+    $self->add_design_parameters( \@DESIGN_PARAMETERS );
     $self->generate_tiled_oligo_seqs;
     $self->find_oligos_with_matching_seqs;
     $self->get_gap_oligo_pairs;

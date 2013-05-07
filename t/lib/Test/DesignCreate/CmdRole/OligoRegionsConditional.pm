@@ -33,6 +33,7 @@ sub valid_run_cmd : Test(3) {
         '--chromosome'    ,11,
         '--strand'        ,1,
         '--design-method' ,'conditional',
+        '--target-gene'  ,'test_gene',
     );
 
     ok my $result = test_app($test->cmd_class => \@argv_contents), 'can run command';
@@ -51,7 +52,7 @@ sub check_oligo_block_coordinates : Test(4) {
             U_block_start => 101177528, U_block_end => 101177428,
             D_block_start => 101176328, D_block_end => 101176528,
             chr_name      => 11,        chr_strand  => 1,
-            design_method => 'conditional',
+            design_method => 'conditional', target_genes => [ 'test_gene' ],
         )->check_oligo_block_coordinates;
     } qr/U block start, 101177528, is greater than its end/
         , 'throws error when block start coordinate greater than its end coordinate';
@@ -62,7 +63,7 @@ sub check_oligo_block_coordinates : Test(4) {
             U_block_start => 101177328, U_block_end => 101177428,
             D_block_start => 101176328, D_block_end => 101176528,
             chr_name      => 11,        chr_strand  => 1,
-            design_method => 'conditional',
+            design_method => 'conditional', target_genes => [ 'test_gene' ],
         )->check_oligo_block_coordinates;
     } qr/U block has only 101 bases/
         , 'throws error when U or D block is too small';
@@ -73,7 +74,7 @@ sub check_oligo_block_coordinates : Test(4) {
             U_block_start => 101178328, U_block_end => 101178528,
             D_block_start => 101176328, D_block_end => 101176528,
             chr_name      => 11,        chr_strand  => 1,
-            design_method => 'conditional',
+            design_method => 'conditional', target_genes => [ 'test_gene' ],
         )->check_oligo_block_coordinates;
     } qr/U block end: 101178528 can not be greater than D block start/
         , 'throws error when U block end is greater than D block start, +ve strand';
@@ -84,7 +85,7 @@ sub check_oligo_block_coordinates : Test(4) {
             U_block_start => 101176328, U_block_end => 101176528,
             D_block_start => 101178328, D_block_end => 101178528,
             chr_name      => 11,        chr_strand  => -1,
-            design_method => 'conditional',
+            design_method => 'conditional', target_genes => [ 'test_gene' ],
         )->check_oligo_block_coordinates;
     } qr/D block end: 101178528 can not be greater than U block start/
         , 'throws error when D block end is greater than U block start, -ve strand';
@@ -176,6 +177,7 @@ sub get_oligo_region_gap_oligo : Test(15) {
         D_block_start => 101176328,     D_block_end      => 101176428,
         chr_name      => 11,            chr_strand       => 1,
         design_method => 'conditional', G5_region_length => 1,
+        target_genes => [ 'test_gene' ],
     );
 
     throws_ok {
@@ -229,6 +231,7 @@ sub get_oligo_region_u_or_d_oligo : Test(16) {
         D_block_start => 101176328,     D_block_end      => 101176428,
         chr_name      => 11,            chr_strand       => 1,
         design_method => 'conditional', G5_region_length => 1,
+        target_genes => [ 'test_gene' ],
     );
 
     throws_ok {
@@ -368,6 +371,7 @@ sub _get_test_object {
         chr_name        => 11,
         chr_strand      => $strand,
         design_method   => 'conditional',
+        target_genes    => [ 'test_gene' ],
     );
 }
 

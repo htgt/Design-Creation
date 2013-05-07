@@ -1,7 +1,7 @@
 package DesignCreate::Role::OligoRegionCoordinates;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Role::OligoRegionCoordinates::VERSION = '0.004';
+    $DesignCreate::Role::OligoRegionCoordinates::VERSION = '0.005';
 }
 ## use critic
 
@@ -19,18 +19,26 @@ Common code for oligo target ( candidate ) region coordinate finding commands.
 use Moose::Role;
 use DesignCreate::Exception;
 use DesignCreate::Exception::NonExistantAttribute;
-use DesignCreate::Types qw( PositiveInt NaturalNumber );
+use DesignCreate::Types qw( PositiveInt NaturalNumber Species );
 use Fcntl; # O_ constants
 use Const::Fast;
 use YAML::Any qw( DumpFile );
 use namespace::autoclean;
 
-with qw(
-DesignCreate::Role::TargetSequence
-DesignCreate::Role::Oligos
+const my $DEFAULT_OLIGO_COORD_FILE_NAME => 'oligo_region_coords.yaml';
+const my %CURRENT_ASSEMBLY => (
+    Mouse => 'GRCm38',
+    Human => 'GRCh37',
 );
 
-const my $DEFAULT_OLIGO_COORD_FILE_NAME => 'oligo_region_coords.yaml';
+has target_genes => (
+    is            => 'ro',
+    isa           => 'ArrayRef',
+    traits        => [ 'Getopt' ],
+    documentation => 'Name of target gene(s) of design',
+    required      => 1,
+    cmd_flag      => 'target-gene',
+);
 
 has oligo_region_coordinates => (
     is      => 'rw',
@@ -38,6 +46,27 @@ has oligo_region_coordinates => (
     traits  => [ 'NoGetopt' ],
     default => sub { {} },
 );
+
+has species => (
+    is            => 'ro',
+    isa           => Species,
+    traits        => [ 'Getopt' ],
+    documentation => 'The species of the design target ( default Mouse )',
+    default       => 'Mouse',
+);
+
+has assembly => (
+    is         => 'ro',
+    isa        => 'Str',
+    traits     => [ 'NoGetopt' ],
+    lazy_build => 1,
+);
+
+sub _build_assembly {
+    my $self = shift;
+
+    return $CURRENT_ASSEMBLY{ $self->species };
+}
 
 #
 # Gap oligo region parameters, common to all design types
@@ -85,19 +114,13 @@ has G3_region_offset => (
 sub _get_oligo_region_coordinates {
     my $self = shift;
 
-    for my $oligo ( @{ $self->expected_oligos } ) {
+    for my $oligo ( $self->expected_oligos ) {
         $self->log->info( "Getting target region for $oligo oligo" );
         # coordinates_for_oligo sub will be defined within consuming role;
         my ( $start, $end ) = $self->coordinates_for_oligo( $oligo );
         next if !defined $start || !defined $end;
 
-        my $oligo_coords = {
-            start      => $start,
-            end        => $end,
-            chromosome => $self->chr_name,
-        };
-
-        $self->oligo_region_coordinates->{$oligo} = $oligo_coords;
+        $self->oligo_region_coordinates->{$oligo} = { start => $start, end => $end };
     }
 
     $self->create_oligo_region_coordinate_file;
