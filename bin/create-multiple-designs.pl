@@ -20,6 +20,7 @@ GetOptions(
     'alt-designs' => \$alt_designs,
     'dir=s'       => \$base_dir_name,
     'conditional' => \my $conditional,
+    'del-exon'    => \my $del_exon,
     'debug'       => \my $debug,
     'gene=s'      => \my @genes,
     'param=s'     => \my %extra_params,
@@ -27,6 +28,7 @@ GetOptions(
 
 die( 'Specify base work dir' ) unless $base_dir_name;
 die( 'Specify file with design info' ) unless $file;
+die( 'Can not be both conditional and del-exon' ) if $conditional && $del_exon;
 
 my %targeted_genes;
 my $base_dir = dir( $base_dir_name );
@@ -52,8 +54,17 @@ sub process_design {
     my ( $params, $dir ) = get_params( $data );
     my @args;
 
-    push @args, $conditional ? 'conditional-design' : 'ins-del-design';
-    push @args, $debug       ? '--debug'            : '--verbose';
+    if ( $conditional ) {
+        push @args, 'conditional-design';
+    }
+    elsif ( $del_exon ) {
+        push @args, 'del-exon-design';
+    }
+    else {
+        push @args, 'ins-del-design';
+    }
+
+    push @args, $debug ? '--debug' : '--verbose';
     push @args, '--alt-designs' if $alt_designs;
     push @args, '--persist' if $persist;
 
@@ -127,6 +138,7 @@ create-multiple-designs.pl - Create multiple designs
       --persist         Persist newly created designs to LIMS2
       --dir             Directory where design-create output goes
       --conditional     Specify conditional design, default deletion
+      --del-exon        Specify deletion designs where we target a given exon
       --gene            Only create this gene(s), picked from input file
       --param           Specify additional param(s) not in file
 
