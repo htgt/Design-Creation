@@ -5,7 +5,7 @@ use warnings FATAL => 'all';
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use Log::Log4perl qw( :levels );
-use Test::DesignCreate::Action::ConditionalDesign;
+use Test::DesignCreate::Action::DelExonDesign;
 
 Log::Log4perl->easy_init( $WARN );
 

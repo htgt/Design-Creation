@@ -20,8 +20,8 @@ sub valid_del_exon_design_cmd : Test(4) {
         'del-exon-design'  ,
         '--dir'           , $dir->stringify,
         '--species'       , 'Human',
-        '--target-exon'   , 'ENSE00002468908',
-        '--target-gene'   , 'ENSG00000079246',
+        '--target-exon'   , 'ENSE00001764544',
+        '--target-gene'   , 'ATP2BF',
     );
 
     note('############################################');
