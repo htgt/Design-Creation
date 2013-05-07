@@ -94,7 +94,9 @@ has target_start => (
 );
 
 sub _build_target_start {
-    shift->exon->start;
+    my $self = shift;
+
+    return $self->exon->start;
 }
 
 has target_end => (
@@ -105,7 +107,9 @@ has target_end => (
 );
 
 sub _build_target_end {
-    shift->exon->end;
+    my $self = shift;
+
+    return $self->exon->end;
 }
 
 has chr_name => (
@@ -116,7 +120,9 @@ has chr_name => (
 );
 
 sub _build_chr_name {
-    shift->exon->seq_region_name;
+    my $self = shift;
+
+    return $self->exon->seq_region_name;
 }
 
 has chr_strand => (
@@ -127,7 +133,9 @@ has chr_strand => (
 );
 
 sub _build_chr_strand {
-    shift->exon->strand;
+    my $self = shift;
+
+    return $self->exon->strand;
 }
 
 #
