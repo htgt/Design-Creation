@@ -116,6 +116,38 @@ sub get_oligo_region_coordinates :  Test(5) {
         ,'throws error when target start greater than target end';
 }
 
+sub chr_name : Test(3) {
+    my $test = shift;
+
+    throws_ok{
+        $test->_get_test_object( { chr_strand => -1, chr_name => 30 } )
+    } qr/Invalid chromosome name, 30/, 'throws error with invalid chromosome name';
+
+    throws_ok{
+        $test->_get_test_object( { chr_strand => -1, chr_name => 'Z'} )
+    } qr/Invalid chromosome name, Z/, 'throws error with invalid chromosome name';
+
+    lives_ok{
+        $test->_get_test_object( { chr_strand => -1, chr_name => 'y'} )
+    } 'valid chromosome okay';
+}
+
+sub chr_strand : Test(3) {
+    my $test = shift;
+
+    throws_ok{
+        $test->_get_test_object( { chr_strand => 2, chr_name => '3'} )
+    } qr/Invalid strand 2/, 'throws error with invalid chromosome name';
+
+    throws_ok{
+        $test->_get_test_object( { chr_strand => -2, chr_name => 'X' } )
+    } qr/Invalid strand -2/, 'throws error with invalid chromosome name';
+
+    lives_ok{
+        $test->_get_test_object( { chr_strand => -1, chr_name => 'X' } )
+    } 'valid strand okay';
+}
+
 sub _get_test_object {
     my ( $test, $params ) = @_;
 
