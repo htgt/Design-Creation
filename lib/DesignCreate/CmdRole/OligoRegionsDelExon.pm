@@ -181,17 +181,24 @@ has D3_region_offset => (
 
 sub get_oligo_region_coordinates {
     my $self = shift;
-
     $self->add_design_parameters( \@DESIGN_PARAMETERS );
+
     DesignCreate::Exception->throw(
         "Target start " . $self->target_start . ", greater than target end " . $self->target_end
     ) if $self->target_start > $self->target_end;
 
-    $self->_get_oligo_region_coordinates;
+    for my $oligo ( $self->expected_oligos ) {
+        $self->log->info( "Getting target region for $oligo oligo" );
+        my ( $start, $end ) = $self->coordinates_for_oligo( $oligo );
+        next if !defined $start || !defined $end;
+
+        $self->oligo_region_coordinates->{$oligo} = { start => $start, end => $end };
+    }
+
+    $self->create_oligo_region_coordinate_file;
     return;
 }
 
-# work out coordinates for ins / del designs
 sub coordinates_for_oligo {
     my ( $self, $oligo ) = @_;
     my ( $start, $end );

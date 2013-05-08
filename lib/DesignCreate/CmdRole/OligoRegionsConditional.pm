@@ -153,15 +153,21 @@ has D_block_overlap => (
     cmd_flag      => 'd-block-overlap'
 );
 
-#TODO consider method overriding / renaming here
 sub get_oligo_region_coordinates {
     my $self = shift;
-
     $self->add_design_parameters( \@DESIGN_PARAMETERS );
     $self->check_oligo_block_coordinates;
-    # See DesignCreate::Role::OligoRegionCoordinates
-    $self->_get_oligo_region_coordinates;
 
+    for my $oligo ( $self->expected_oligos ) {
+        $self->log->info( "Getting target region for $oligo oligo" );
+        # coordinates_for_oligo sub will be defined within consuming role;
+        my ( $start, $end ) = $self->coordinates_for_oligo( $oligo );
+        next if !defined $start || !defined $end;
+
+        $self->oligo_region_coordinates->{$oligo} = { start => $start, end => $end };
+    }
+
+    $self->create_oligo_region_coordinate_file;
     return;
 }
 

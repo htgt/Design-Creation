@@ -104,24 +104,6 @@ has G3_region_offset => (
     cmd_flag      => 'g3-region-offset'
 );
 
-## no critic(Subroutines::ProhibitUnusedPrivateSubroutine)
-sub _get_oligo_region_coordinates {
-    my $self = shift;
-
-    for my $oligo ( $self->expected_oligos ) {
-        $self->log->info( "Getting target region for $oligo oligo" );
-        # coordinates_for_oligo sub will be defined within consuming role;
-        my ( $start, $end ) = $self->coordinates_for_oligo( $oligo );
-        next if !defined $start || !defined $end;
-
-        $self->oligo_region_coordinates->{$oligo} = { start => $start, end => $end };
-    }
-
-    $self->create_oligo_region_coordinate_file;
-    return;
-}
-## use critic
-
 sub create_oligo_region_coordinate_file {
     my $self = shift;
 
