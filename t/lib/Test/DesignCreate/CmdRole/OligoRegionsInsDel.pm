@@ -11,6 +11,7 @@ use base qw( Test::DesignCreate::Class Class::Data::Inheritable );
 
 # Testing
 # DesignCreate::CmdRole::OligoRegionsInsDel
+# DesignCreate::Role::OligoRegionCoordinatesInsDel
 # DesignCreate::Action::OligoRegionsInsDel ( through command line )
 
 BEGIN {
