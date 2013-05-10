@@ -1,5 +1,4 @@
 #!/usr/bin/env perl
-
 use strict;
 use warnings FATAL => 'all';
 
@@ -77,7 +76,7 @@ sub process_design {
     }
 
     try{
-        system( 'bin/design-create', @args );
+        system( 'design-create', @args );
     }
     catch{
         print $_;
