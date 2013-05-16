@@ -55,6 +55,16 @@ has oligo_region_data => (
     }
 );
 
+# default of masking all sequence ensembl considers to be a repeat region
+# means passing in undef as a mask method, otherwise pass in array ref of
+# repeat classes
+has repeat_mask_method => (
+    is      => 'ro',
+    isa     => 'Maybe[ArrayRef]',
+    traits  => [ 'NoGetopt' ],
+    default => undef,
+);
+
 sub _build_oligo_region_data {
     my $self = shift;
 
@@ -76,7 +86,7 @@ sub create_oligo_region_sequence_files {
         my $end      = $coords->{end};
         my $chr_name = $self->design_param( 'chr_name' );
 
-        my $oligo_seq = $self->get_repeat_masked_sequence( $start, $end, $chr_name );
+        my $oligo_seq = $self->get_repeat_masked_sequence( $start, $end, $chr_name, $self->repeat_mask_method );
         my $oligo_id  = $self->create_oligo_id( $oligo, $start, $end );
         $self->write_sequence_file( $oligo, $oligo_id, $oligo_seq );
     }
