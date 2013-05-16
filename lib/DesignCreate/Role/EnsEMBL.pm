@@ -40,18 +40,19 @@ sub get_sequence {
 }
 
 sub get_repeat_masked_sequence {
-    my ( $self, $start, $end, $chr_name ) = @_;
+    my ( $self, $start, $end, $chr_name, $mask_method ) = @_;
 
     my $slice = $self->_get_sequence( $start, $end, $chr_name );
 
     # softmasked
-    my $repeat_masked_slice = $slice->get_repeatmasked_seq( undef , 1 );
+    my $repeat_masked_slice = $slice->get_repeatmasked_seq( $mask_method , 1 );
 
     return $repeat_masked_slice->seq;
 }
 
 sub _get_sequence {
-    my ( $self, $start, $end, $chr_name ) = @_;
+    my ( $self, $start, $end, $chr_name, $try_count ) = @_;
+    $try_count //= 1;
     my $slice;
     $chr_name //= $self->chr_name;
 
@@ -68,10 +69,35 @@ sub _get_sequence {
         );
     }
     catch{
-        DesignCreate::Exception->throw( 'Error fetching Ensembl slice: ' . $_ );
+        if ( $try_count < 5 ) {
+            $self->log->debug( "Error fetching Ensembl slice: " . $_ );
+            $self->_reset_ensembl_connection( $try_count );
+            $self->_get_sequence( $start, $end, $chr_name, ++$try_count );
+        }
+        else {
+            DesignCreate::Exception->throw( 'Error fetching Ensembl slice: ' . $_ );
+        }
     };
 
+    # For some reason we can fail to get a slice and a error will not be thrown
+    # so i am adding this check in here
+    unless ( $slice ) {
+        DesignCreate::Exception->throw( 'Unable to fetch Ensembl slice' ) if $try_count >= 5;
+        $self->_reset_ensembl_connection( $try_count );
+        $self->_get_sequence( $start, $end, $chr_name, $try_count++ );
+    }
+
     return $slice;
+}
+
+sub _reset_ensembl_connection {
+    my ( $self, $try_count ) = @_;
+
+    $self->log->debug( "Resetting ensembl connection, try count $try_count" );
+    $self->clear_ensembl_util;
+    sleep( $try_count * 3 );
+
+    return;
 }
 
 1;
