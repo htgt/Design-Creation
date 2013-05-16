@@ -69,14 +69,11 @@ has exon => (
 
 sub _build_exon {
     my $self = shift;
-    my $exon;
 
-    try {
-        $exon = $self->exon_adaptor->fetch_by_stable_id( $self->target_exon );
+    my $exon = try{ $self->exon_adaptor->fetch_by_stable_id( $self->target_exon ) };
+    unless ( $exon ) {
+        DesignCreate::Exception->throw( 'Unable to retrieve exon ' . $self->target_exon);
     }
-    catch{
-        DesignCreate::Exception->throw( 'Unable to retrieve exon ' . $self->target_exon . ', error: ' . $_ );
-    };
 
     # check exon is on the chromosome coordinate system
     if ( $exon->coord_system_name ne 'chromosome' ) {
