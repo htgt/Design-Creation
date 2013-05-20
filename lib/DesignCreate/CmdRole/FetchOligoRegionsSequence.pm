@@ -25,6 +25,10 @@ with qw(
 DesignCreate::Role::EnsEMBL
 );
 
+const my @DESIGN_PARAMETERS => qw(
+repeat_mask_class
+);
+
 const my $DEFAULT_OLIGO_COORD_FILE_NAME => 'oligo_region_coords.yaml';
 
 has oligo_region_coordinate_file => (
@@ -58,11 +62,16 @@ has oligo_region_data => (
 # default of masking all sequence ensembl considers to be a repeat region
 # means passing in undef as a mask method, otherwise pass in array ref of
 # repeat classes
-has repeat_mask_method => (
-    is      => 'ro',
-    isa     => 'Maybe[ArrayRef]',
-    traits  => [ 'NoGetopt' ],
-    default => undef,
+has repeat_mask_class => (
+    is            => 'ro',
+    isa           => 'ArrayRef',
+    traits        => [ 'Getopt', 'Array' ],
+    default       => sub{ [] },
+    cmd_flag      => 'repeat-mask-class',
+    documentation => "Optional repeat type class(s) we can get masked in genomic sequence",
+    handles => {
+        no_repeat_mask_classes => 'is_empty'
+    },
 );
 
 sub _build_oligo_region_data {
@@ -73,6 +82,7 @@ sub _build_oligo_region_data {
 
 sub create_oligo_region_sequence_files {
     my $self = shift;
+    $self->add_design_parameters( \@DESIGN_PARAMETERS );
 
     for my $oligo ( $self->expected_oligos ) {
         $self->log->info( "Getting sequence for $oligo oligo region" );
@@ -86,7 +96,10 @@ sub create_oligo_region_sequence_files {
         my $end      = $coords->{end};
         my $chr_name = $self->design_param( 'chr_name' );
 
-        my $oligo_seq = $self->get_repeat_masked_sequence( $start, $end, $chr_name, $self->repeat_mask_method );
+        my $oligo_seq = $self->get_repeat_masked_sequence(
+            $start, $end, $chr_name,
+            $self->no_repeat_mask_classes ? undef : $self->repeat_mask_class
+        );
         my $oligo_id  = $self->create_oligo_id( $oligo, $start, $end );
         $self->write_sequence_file( $oligo, $oligo_id, $oligo_seq );
     }
