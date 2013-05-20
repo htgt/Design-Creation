@@ -39,6 +39,8 @@ sub get_sequence {
     return $slice->seq;
 }
 
+# mask_method is a array_ref of repeat classes,
+# WARNING: if this array_ref is empty then nothing will get masked.
 sub get_repeat_masked_sequence {
     my ( $self, $start, $end, $chr_name, $mask_method ) = @_;
 
