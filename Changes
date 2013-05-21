@@ -1,5 +1,12 @@
 {{$NEXT}}
 
+0.006     2013-05-21 07:48:30 Europe/London
+
+    Added script for finding human design targets.
+    Add option to specify classes of repeat masking to apply to sequence.
+    Re-try connecting to EnsEMBL API if there are any errors ( up to 5 times )
+    Various bug fixes and refactoring.
+
 0.005     2013-05-07 12:31:37 Europe/London
 
     Add species option, can now design on Mouse and Human targets.
