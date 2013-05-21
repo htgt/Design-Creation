@@ -14,11 +14,8 @@ use Log::Log4perl ':easy';
 use List::MoreUtils qw( all );
 use IO::Handle;
 use Pod::Usage;
-#use Data::Printer;
 use DDP colored => 1;
 use Const::Fast;
-
-#use Smart::Comments;
 
 my $log_level = $WARN;
 GetOptions(
@@ -97,7 +94,7 @@ sub process_target {
         return;
     }
 
-    my @exons = @{ get_all_critical_exons( $gene ) };
+    my @exons = @{ get_all_critical_exons( $gene, $data ) };
     unless ( @exons ) {
         ERROR('Unable to find any valid critical exons');
         return;
@@ -152,7 +149,10 @@ Return list of exons sorted on ascending length
 
 =cut
 sub get_all_critical_exons {
-    my $gene = shift;
+    my ( $gene, $data ) = @_;
+
+    return get_predefined_exons( $data->{exon_ids}, $gene, $data ) if $data->{exon_ids};
+
     my %valid_exons;
     my %transcript_exons;
     my @coding_transcript_names;
@@ -196,6 +196,25 @@ sub get_all_critical_exons {
     }
 
     return \@ordered_critical_exons;
+}
+
+sub get_predefined_exons {
+    my ( $exon_ids, $gene, $data ) = @_;
+    my @exons;
+    my @exon_ids = split /,/, $data->{exon_ids};
+
+    my %gene_exons = map{ $_->stable_id => 1 } @{ $gene->get_all_Exons };
+    for my $exon_id ( @exon_ids ) {
+        unless ( exists $gene_exons{$exon_id} ) {
+            ERROR("The exon $exon_id can not be found on the gene: " . $gene->stable_id);
+            next;
+        }
+        my $exon = $ensembl_util->exon_adaptor->fetch_by_stable_id( $exon_id );
+        LOGDIE("Can not find specified exon $exon_id") unless $exon;
+        push @exons, $exon;
+    }
+
+    return \@exons;
 }
 
 # exons that are less than 300 bases and will induce a phase shift
