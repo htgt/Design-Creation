@@ -29,12 +29,15 @@ requires:
   Bio::Seq: 0
   Bio::SeqIO: 0
   Const::Fast: 0
+  DDP: 0
   Data::Dump: 0
   DateTime: 0
   Fcntl: 0
   Getopt::Long: 0
+  IO::Handle: 0
   IPC::Run: 0
   IPC::System::Simple: 0
+  LIMS2::Model: 0
   LIMS2::REST::Client: 0
   LIMS2::Util::EnsEMBL: 0
   List::MoreUtils: 0
@@ -58,4 +61,4 @@ requires:
   namespace::autoclean: 0
   strict: 0
   warnings: 0
-version: 0.005
+version: 0.006

@@ -11,6 +11,7 @@ use base qw( Test::DesignCreate::Class Class::Data::Inheritable );
 
 # Testing
 # DesignCreate::CmdRole::OligoRegionsInsDel
+# DesignCreate::Role::OligoRegionCoordinatesInsDel
 # DesignCreate::Action::OligoRegionsInsDel ( through command line )
 
 BEGIN {
@@ -60,7 +61,7 @@ sub coordinates_for_oligo : Tests(16) {
     is $g3_end, $g3_real_end, 'correct end value';
 
     # -ve stranded design
-    ok $o = $test->_get_test_object( { strand => -1 } ), 'can grab test object';
+    ok $o = $test->_get_test_object( { chr_strand => -1 } ), 'can grab test object';
 
     ok my( $d3_start, $d3_end ) = $o->coordinates_for_oligo( 'D3' )
         , 'can call coordinates_for_oligo';
@@ -116,10 +117,43 @@ sub get_oligo_region_coordinates :  Test(5) {
         ,'throws error when target start greater than target end';
 }
 
+sub chr_name : Test(3) {
+    my $test = shift;
+
+    throws_ok{
+        $test->_get_test_object( { chr_strand => -1, chr_name => 30 } )
+    } qr/Invalid chromosome name, 30/, 'throws error with invalid chromosome name';
+
+    throws_ok{
+        $test->_get_test_object( { chr_strand => -1, chr_name => 'Z'} )
+    } qr/Invalid chromosome name, Z/, 'throws error with invalid chromosome name';
+
+    lives_ok{
+        $test->_get_test_object( { chr_strand => -1, chr_name => 'y'} )
+    } 'valid chromosome okay';
+}
+
+sub chr_strand : Test(3) {
+    my $test = shift;
+
+    throws_ok{
+        $test->_get_test_object( { chr_strand => 2, chr_name => '3'} )
+    } qr/Invalid strand 2/, 'throws error with invalid chromosome strand';
+
+    throws_ok{
+        $test->_get_test_object( { chr_strand => -2, chr_name => 'X' } )
+    } qr/Invalid strand -2/, 'throws error with invalid chromosome strand';
+
+    lives_ok{
+        $test->_get_test_object( { chr_strand => -1, chr_name => 'X' } )
+    } 'valid strand okay';
+}
+
 sub _get_test_object {
     my ( $test, $params ) = @_;
 
-    my $strand = $params->{strand} || 1;
+    my $chr_name = $params->{chr_name} || 11;
+    my $strand = $params->{chr_strand} || 1;
     my $start = $params->{target_start} || 101176328;
     my $end = $params->{target_end} || 101176428;
     my $u5_length = $params->{U5_region_length} || 200;
@@ -129,7 +163,7 @@ sub _get_test_object {
         dir              => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
         target_start     => $start,
         target_end       => $end,
-        chr_name         => 11,
+        chr_name         => $chr_name,
         chr_strand       => $strand,
         U5_region_length => $u5_length,
         design_method    => 'deletion',

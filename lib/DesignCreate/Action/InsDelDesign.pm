@@ -1,7 +1,7 @@
 package DesignCreate::Action::InsDelDesign;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::InsDelDesign::VERSION = '0.005';
+    $DesignCreate::Action::InsDelDesign::VERSION = '0.006';
 }
 ## use critic
 

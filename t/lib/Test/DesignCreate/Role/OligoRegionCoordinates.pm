@@ -40,15 +40,26 @@ sub get_oligo_region_length : Tests(4) {
 
 }
 
+sub species : Test(2) {
+    my $test = shift;
+
+    throws_ok{
+        $test->_get_test_object( 'Unicorn' )
+    } qr/Invalid species Unicorn/, 'throws error with invalid chromosome name';
+
+    lives_ok{
+        $test->_get_test_object( 'Mouse' )
+    } 'mouse species  okay';
+}
+
 sub _get_test_object {
-    my ( $test, $strand ) = @_;
-    $strand //= 1;
+    my ( $test, $species ) = @_;
+    $species //= 'Mouse';
 
     my $metaclass = $test->get_test_object_metaclass();
     return $metaclass->new_object(
         dir           => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
-        chr_name      => 11,
-        chr_strand    => $strand,
+        species       => $species,
         design_method => 'deletion',
         target_genes  => [ 'test_gene' ],
     );

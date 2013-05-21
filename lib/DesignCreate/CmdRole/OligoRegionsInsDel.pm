@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::OligoRegionsInsDel;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::OligoRegionsInsDel::VERSION = '0.005';
+    $DesignCreate::CmdRole::OligoRegionsInsDel::VERSION = '0.006';
 }
 ## use critic
 
@@ -21,13 +21,13 @@ design types is found in DesignCreate::Role::OligoTargetRegions.
 =cut
 
 use Moose::Role;
-use DesignCreate::Exception;
-use DesignCreate::Types qw( DesignMethod PositiveInt NaturalNumber Chromosome Strand );
+use DesignCreate::Types qw( DesignMethod PositiveInt Chromosome Strand );
 use Const::Fast;
 use namespace::autoclean;
 
 with qw(
 DesignCreate::Role::OligoRegionCoordinates
+DesignCreate::Role::OligoRegionCoordinatesInsDel
 );
 
 const my @DESIGN_PARAMETERS => qw(
@@ -95,91 +95,17 @@ has target_end => (
 );
 
 #
-# Oligo Region Parameters
-# Gap Oligo Parameter attributes in DesignCreate::Role::OligoTargetRegions
+# Gap Oligo Parameter attributes in DesignCreate::Role::OligoRegionCoordinates
 #
-
-has U5_region_length => (
-    is            => 'ro',
-    isa           => PositiveInt,
-    traits        => [ 'Getopt' ],
-    default       => 200,
-    documentation => 'Length of U5 oligo candidate region',
-    cmd_flag      => 'u5-region-length'
-);
-
-has U5_region_offset => (
-    is            => 'ro',
-    isa           => NaturalNumber,
-    traits        => [ 'Getopt' ],
-    default       => 0,
-    documentation => 'Offset from target region of U5 oligo candidate region',
-    cmd_flag      => 'u5-region-offset'
-);
-
-has D3_region_length => (
-    is            => 'ro',
-    isa           => PositiveInt,
-    traits        => [ 'Getopt' ],
-    default       => 200,
-    documentation => 'Length of D3 oligo candidate region',
-    cmd_flag      => 'd3-region-length'
-);
-
-has D3_region_offset => (
-    is            => 'ro',
-    isa           => NaturalNumber,
-    traits        => [ 'Getopt' ],
-    default       => 0,
-    documentation => 'Offset from target region of D3 oligo candidate region',
-    cmd_flag      => 'd3-region-offset'
-);
 
 sub get_oligo_region_coordinates {
     my $self = shift;
-
     $self->add_design_parameters( \@DESIGN_PARAMETERS );
-    DesignCreate::Exception->throw(
-        "Target start " . $self->target_start . ", greater than target end " . $self->target_end
-    ) if $self->target_start > $self->target_end;
 
+    # In DesignCreate::Role::OligoRegionCoordinatesInsDel
     $self->_get_oligo_region_coordinates;
+
     return;
-}
-
-# work out coordinates for ins / del designs
-sub coordinates_for_oligo {
-    my ( $self, $oligo ) = @_;
-    my ( $start, $end );
-
-    my $offset = $self->get_oligo_region_offset( $oligo );
-    my $length = $self->get_oligo_region_length( $oligo );
-
-    if ( $self->chr_strand == 1 ) {
-        if ( $oligo =~ /5$/ ) {
-            $start = $self->target_start - ( $offset + $length );
-            $end   = $self->target_start - ( $offset + 1 );
-        }
-        elsif ( $oligo =~ /3$/ ) {
-            $start = $self->target_end + ( $offset + 1 );
-            $end   = $self->target_end + ( $offset + $length );
-        }
-    }
-    else {
-        if ( $oligo =~ /5$/ ) {
-            $start = $self->target_end + ( $offset + 1 );
-            $end   = $self->target_end + ( $offset + $length );
-        }
-        elsif ( $oligo =~ /3$/ ) {
-            $start = $self->target_start - ( $offset + $length );
-            $end   = $self->target_start - ( $offset + 1 );
-        }
-    }
-
-    DesignCreate::Exception->throw( "Start $start, greater than or equal to end $end for oligo $oligo" )
-        if $start >= $end;
-
-    return( $start, $end );
 }
 
 1;

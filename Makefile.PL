@@ -32,7 +32,10 @@ my %WriteMakefileArgs = (
   "DISTNAME" => "Design-Creation",
   "EXE_FILES" => [
     "bin/create-multiple-designs.pl",
-    "bin/design-create"
+    "bin/design-create",
+    "bin/design_target_report.pl",
+    "bin/farm-wrapper-script.sh",
+    "bin/human_design_targets.pl"
   ],
   "LICENSE" => "perl",
   "NAME" => "Design::Creation",
@@ -40,12 +43,15 @@ my %WriteMakefileArgs = (
     "Bio::Seq" => 0,
     "Bio::SeqIO" => 0,
     "Const::Fast" => 0,
+    "DDP" => 0,
     "Data::Dump" => 0,
     "DateTime" => 0,
     "Fcntl" => 0,
     "Getopt::Long" => 0,
+    "IO::Handle" => 0,
     "IPC::Run" => 0,
     "IPC::System::Simple" => 0,
+    "LIMS2::Model" => 0,
     "LIMS2::REST::Client" => 0,
     "LIMS2::Util::EnsEMBL" => 0,
     "List::MoreUtils" => 0,
@@ -70,7 +76,7 @@ my %WriteMakefileArgs = (
     "strict" => 0,
     "warnings" => 0
   },
-  "VERSION" => "0.005",
+  "VERSION" => "0.006",
   "test" => {
     "TESTS" => "t/*.t"
   }
