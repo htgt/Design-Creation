@@ -52,6 +52,7 @@ has D3_region_offset => (
     cmd_flag      => 'd3-region-offset'
 );
 
+## no critic(Subroutines::ProhibitUnusedPrivateSubroutine)
 sub _get_oligo_region_coordinates {
     my $self = shift;
 
@@ -70,6 +71,7 @@ sub _get_oligo_region_coordinates {
     $self->create_oligo_region_coordinate_file;
     return;
 }
+## use critic
 
 sub coordinates_for_oligo {
     my ( $self, $oligo ) = @_;
