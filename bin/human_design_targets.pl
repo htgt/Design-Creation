@@ -60,11 +60,11 @@ my $io_output = IO::Handle->new_from_fd( \*STDOUT, 'w' );
 my $output_csv = Text::CSV->new( { eol => "\n" } );
 $output_csv->print( $io_output, \@COLUMN_HEADERS );
 
+## no critic(InputOutput::RequireBriefOpen)
 {
-    open ( my $input_fh, '<', $genes_file ) or die( "Can not open $genes_file " . $! );
     my $input_csv = Text::CSV->new();
+    open ( my $input_fh, '<', $genes_file ) or die( "Can not open $genes_file " . $! );
     $input_csv->column_names( @{ $input_csv->getline( $input_fh ) } );
-
     while ( my $data = $input_csv->getline_hr( $input_fh ) ) {
         Log::Log4perl::NDC->remove;
         Log::Log4perl::NDC->push( $data->{hgnc_symbol} );
@@ -79,6 +79,7 @@ $output_csv->print( $io_output, \@COLUMN_HEADERS );
     }
     close $input_fh;
 }
+## use critic
 
 sub process_target {
     my $data = shift;
@@ -106,6 +107,8 @@ sub process_target {
         print_design_parameters( $exon, $gene, $data->{hgnc_symbol} );
         $count++;
     }
+
+    return;
 }
 
 sub print_design_parameters {
@@ -121,6 +124,8 @@ sub print_design_parameters {
     $design_params{'exon-rank'} = $exon_rank;
 
     $output_csv->print( $io_output, [ @design_params{ @COLUMN_HEADERS } ] );
+
+    return;
 }
 
 sub get_exon_rank {
@@ -316,6 +321,7 @@ sub valid_coding_transcript {
 Rank critical exons by following criteria by closest to 5 prime
 
 =cut
+## no critic(RequireFinalReturn)
 sub most_five_prime {
     if ( $a->strand == 1 ) {
         $a->start <=> $b->start;
@@ -324,6 +330,7 @@ sub most_five_prime {
         $b->start <=> $a->start;
     }
 }
+## use critic
 
 sub _get_transcript_attribute {
     my ( $transcript, $code ) = @_;

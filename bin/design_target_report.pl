@@ -47,8 +47,9 @@ my $io_output = IO::Handle->new_from_fd( \*STDOUT, 'w' );
 my $output_csv = Text::CSV->new( { eol => "\n" } );
 $output_csv->print( $io_output, \@COLUMN_HEADERS );
 
-open ( my $fh, '<', $file ) or die( "Can not open $file " . $! );
+## no critic(InputOutput::RequireBriefOpen)
 my $csv = Text::CSV->new();
+open ( my $fh, '<', $file ) or die( "Can not open $file " . $! );
 $csv->column_names( @{ $csv->getline( $fh ) } );
 
 while ( my $data = $csv->getline_hr( $fh ) ) {
@@ -59,6 +60,7 @@ while ( my $data = $csv->getline_hr( $fh ) ) {
 }
 
 close $fh;
+## use critic
 
 sub process_design_target {
     my $data = shift;
@@ -85,6 +87,8 @@ sub process_design_target {
     my $design_exon_count = scalar( @{ $designs_for_exon } );
     INFO( "Found $design_exon_count designs for exon" );
     print_target_report( $data, $designs_for_exon );
+
+    return;
 }
 
 sub find_design_for_target_exon {
@@ -129,6 +133,8 @@ sub print_target_report {
     $design_params{'no-designs-for-gene'} = $no_designs_for_gene;
 
     $output_csv->print( $io_output, [ @design_params{ @COLUMN_HEADERS } ] );
+
+    return;
 }
 
 sub get_exon_rank {
