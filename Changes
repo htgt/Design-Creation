@@ -1,5 +1,10 @@
 {{$NEXT}}
 
+0.007     2013-05-22 08:13:30 Europe/London
+
+    Added more try / catch blocks to isolate the EnsEMBL API disconnect error.
+    Minor changes to reporting and run multiple designs scripts.
+
 0.006     2013-05-21 07:48:30 Europe/London
 
     Added script for finding human design targets.
