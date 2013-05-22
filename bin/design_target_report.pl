@@ -26,6 +26,7 @@ GetOptions(
     'verbose' => sub { $log_level = $INFO },
     'trace'   => sub { $log_level = $TRACE },
     'file=s'  => \my $file,
+    'gene=s'  => \my $gene,
 );
 
 const my @COLUMN_HEADERS => (
@@ -53,6 +54,7 @@ open ( my $fh, '<', $file ) or die( "Can not open $file " . $! );
 $csv->column_names( @{ $csv->getline( $fh ) } );
 
 while ( my $data = $csv->getline_hr( $fh ) ) {
+    next if $gene && $gene ne $data->{'target-gene'};
     Log::Log4perl::NDC->remove;
     Log::Log4perl::NDC->push( $data->{'target-gene'} );
     Log::Log4perl::NDC->push( $data->{'target-exon'} );
@@ -105,7 +107,7 @@ sub find_design_for_target_exon {
         };
 
         unless( @floxed_exons ) {
-            ERROR('No floxed exons');
+            ERROR('No floxed exons for design: ' . $design->id );
             next;
         }
         if ( any { $target_exon_name eq $_->stable_id } @floxed_exons ) {

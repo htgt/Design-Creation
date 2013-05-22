@@ -1,7 +1,7 @@
 package DesignCreate::Role::EnsEMBL;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Role::EnsEMBL::VERSION = '0.006';
+    $DesignCreate::Role::EnsEMBL::VERSION = '0.007';
 }
 ## use critic
 
@@ -87,13 +87,17 @@ sub _get_sequence {
         }
     };
 
-    # For some reason we can fail to get a slice and a error will not be thrown
-    # so i am adding this check in here
-    unless ( $slice ) {
-        DesignCreate::Exception->throw( 'Unable to fetch Ensembl slice' ) if $try_count >= 5;
+    # for some reason we can either fail to get a slice or there is trouble getting the sequence
+    # from the slice, so i am adding this check in here
+    try {
+        $slice->seq;
+    }
+    catch {
+        DesignCreate::Exception->throw( "Unable to fetch Ensembl slice $_" ) if $try_count >= 5;
+        $self->log->debug( "Error fetching Ensembl slice sequence: " . $_ );
         $self->_reset_ensembl_connection( $try_count );
         $self->_get_sequence( $start, $end, $chr_name, $try_count++ );
-    }
+    };
 
     return $slice;
 }

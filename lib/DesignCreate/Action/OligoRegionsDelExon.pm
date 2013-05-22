@@ -1,7 +1,7 @@
 package DesignCreate::Action::OligoRegionsDelExon;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::OligoRegionsDelExon::VERSION = '0.006';
+    $DesignCreate::Action::OligoRegionsDelExon::VERSION = '0.007';
 }
 ## use critic
 

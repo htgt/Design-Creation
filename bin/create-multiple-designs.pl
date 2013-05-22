@@ -91,8 +91,12 @@ sub get_params {
     my @params;
     while ( my( $cmd, $arg ) = each %{ $data } ) {
         next unless $arg;
-        push @params, '--' . _trim($cmd);
-        push @params, _trim($arg);
+        # if multiple args we need to split it
+        my @args = split /\|/, $arg;
+        for my $single_arg ( @args ) {
+            push @params, '--' . _trim($cmd);
+            push @params, _trim($single_arg);
+        }
     }
 
     my $target_gene = _trim( $data->{'target-gene'} );
