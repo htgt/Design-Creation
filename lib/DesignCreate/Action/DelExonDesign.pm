@@ -63,6 +63,7 @@ for my $attribute ( @ATTRIBUTES_NO_CMD_OPTION ) {
 sub execute {
     my ( $self, $opts, $args ) = @_;
     Log::Log4perl::NDC->push( @{ $self->target_genes }[0] );
+    Log::Log4perl::NDC->push( $self->target_exon );
 
     $self->log->info( 'Starting new design create run: ' . join(',', @{ $self->target_genes } ) );
     $self->log->debug( 'Design run args: ' . pp($opts) );
