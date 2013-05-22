@@ -28,7 +28,12 @@ sub _build_ensembl_util {
     require LIMS2::Util::EnsEMBL;
 
     my $species = $self->design_param( 'species' );
-    return LIMS2::Util::EnsEMBL->new( species => $species );
+    my $ensembl_util = LIMS2::Util::EnsEMBL->new( species => $species );
+
+    # this flag should stop the database connection being lost on long jobs
+    $ensembl_util->registry->set_reconnect_when_lost;
+
+    return $ensembl_util;
 }
 
 sub get_sequence {
@@ -85,10 +90,11 @@ sub _get_sequence {
     # from the slice, so i am adding this check in here
     try {
         $slice->seq;
+        die ('test die') if $try_count < 2;
     }
     catch {
         DesignCreate::Exception->throw( "Unable to fetch Ensembl slice $_" ) if $try_count >= 5;
-        $self->log->debug( "Error fetching Ensembl slice sequence or try $try_count: " . $_ );
+        $self->log->debug( "Error fetching Ensembl slice sequence on try $try_count: " . $_ );
         $self->_reset_ensembl_connection( $try_count );
         $self->_get_sequence( $start, $end, $chr_name, ++$try_count );
     };
@@ -99,6 +105,8 @@ sub _get_sequence {
 sub _reset_ensembl_connection {
     my ( $self, $try_count ) = @_;
 
+    $self->log->debug( "Disconnecting from EnsEMBL databases" );
+    $self->ensembl_util->registry->disconnect_all;
     $self->log->debug( "Clearing registry attribute" );
     $self->ensembl_util->clear_registry;
 
