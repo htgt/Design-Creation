@@ -1,7 +1,7 @@
 package DesignCreate::Action::FindOligos;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::FindOligos::VERSION = '0.007';
+    $DesignCreate::Action::FindOligos::VERSION = '0.008';
 }
 ## use critic
 

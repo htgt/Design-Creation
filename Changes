@@ -1,3 +1,8 @@
+0.008     2013-05-22 10:56:57 Europe/London
+
+    Bugfix for resetting ensembl connection.
+    Reset the ensembl registry properly, it is a class attribute.
+
 0.007     2013-05-22 08:13:30 Europe/London
 
     Added more try / catch blocks to isolate the EnsEMBL API disconnect error.

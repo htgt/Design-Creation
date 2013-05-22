@@ -1,7 +1,7 @@
 package DesignCreate::Action::ConditionalDesign;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::ConditionalDesign::VERSION = '0.007';
+    $DesignCreate::Action::ConditionalDesign::VERSION = '0.008';
 }
 ## use critic
 

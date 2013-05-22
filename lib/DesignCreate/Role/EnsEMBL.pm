@@ -1,7 +1,7 @@
 package DesignCreate::Role::EnsEMBL;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Role::EnsEMBL::VERSION = '0.007';
+    $DesignCreate::Role::EnsEMBL::VERSION = '0.008';
 }
 ## use critic
 
@@ -78,7 +78,7 @@ sub _get_sequence {
     }
     catch{
         if ( $try_count < 5 ) {
-            $self->log->debug( "Error fetching Ensembl slice: " . $_ );
+            $self->log->debug( "Error fetching Ensembl slice on try $try_count: " . $_ );
             $self->_reset_ensembl_connection( $try_count );
             $self->_get_sequence( $start, $end, $chr_name, ++$try_count );
         }
@@ -94,9 +94,9 @@ sub _get_sequence {
     }
     catch {
         DesignCreate::Exception->throw( "Unable to fetch Ensembl slice $_" ) if $try_count >= 5;
-        $self->log->debug( "Error fetching Ensembl slice sequence: " . $_ );
+        $self->log->debug( "Error fetching Ensembl slice sequence or try $try_count: " . $_ );
         $self->_reset_ensembl_connection( $try_count );
-        $self->_get_sequence( $start, $end, $chr_name, $try_count++ );
+        $self->_get_sequence( $start, $end, $chr_name, ++$try_count );
     };
 
     return $slice;
@@ -105,10 +105,13 @@ sub _get_sequence {
 sub _reset_ensembl_connection {
     my ( $self, $try_count ) = @_;
 
-    $self->log->debug( "Resetting ensembl connection, try count $try_count" );
-    $self->clear_ensembl_util;
-    sleep( $try_count * 3 );
+    $self->log->debug( "Clearing registry attribute" );
+    $self->ensembl_util->clear_registry;
 
+    $self->log->debug( "Deleting ensembl_util attribute" );
+    $self->clear_ensembl_util;
+
+    sleep( $try_count * 3 );
     return;
 }
 

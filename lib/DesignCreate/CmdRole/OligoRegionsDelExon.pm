@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::OligoRegionsDelExon;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::OligoRegionsDelExon::VERSION = '0.007';
+    $DesignCreate::CmdRole::OligoRegionsDelExon::VERSION = '0.008';
 }
 ## use critic
 
