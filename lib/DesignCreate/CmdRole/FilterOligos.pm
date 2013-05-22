@@ -21,6 +21,7 @@ use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
 use Const::Fast;
 use Fcntl; # O_ constants
 use Bio::SeqIO;
+use Try::Tiny;
 use namespace::autoclean;
 
 with qw(
@@ -272,7 +273,12 @@ sub define_exonerate_target_file {
     my $fh          = $target_file->open( O_WRONLY|O_CREAT ) or die( "Open $target_file: $!" );
     my $seq_out     = Bio::SeqIO->new( -fh => $fh, -format => 'fasta' );
 
-    my $target_seq = $self->get_sequence( $self->target_flanking_region_coordinates );
+    my $target_seq;
+    try{
+       $target_seq = $self->get_sequence( $self->target_flanking_region_coordinates );
+    } catch {
+        DesignCreate::Exception->throw( "We could not get exonerate target file sequence . $_" );
+    };
 
     my $bio_seq  = Bio::Seq->new( -seq => $target_seq, -id => 'exonerate_target_sequence' );
     $seq_out->write_seq( $bio_seq );
