@@ -90,7 +90,6 @@ sub _get_sequence {
     # from the slice, so i am adding this check in here
     try {
         $slice->seq;
-        die ('test die') if $try_count < 2;
     }
     catch {
         DesignCreate::Exception->throw( "Unable to fetch Ensembl slice $_" ) if $try_count >= 5;
