@@ -1,3 +1,8 @@
+0.009     2013-05-23 07:11:28 Europe/London
+
+    Set EnsEMBL registry to try to reconnect when connection lost.
+    When resetting registry first disconnect all connections to the the database.
+
 0.008     2013-05-22 10:56:57 Europe/London
 
     Bugfix for resetting ensembl connection.
