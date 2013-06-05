@@ -139,12 +139,14 @@ create-multiple-designs.pl - Create multiple designs
       --debug           Print debug messages
       --file            File with design details.
       --persist         Persist newly created designs to LIMS2
+      --alt-designs     Create alternate designs
       --dir             Directory where design-create output goes
       --conditional     Specify conditional design, default deletion
       --del-exon        Specify deletion designs where we target a given exon
       --gene            Only create this gene(s), picked from input file
       --param           Specify additional param(s) not in file
 
+    'param=s'     => \my %extra_params,
 =head1 DESCRIPTION
 
 Takes design information for multiple designs from file and tries to create these designs.
