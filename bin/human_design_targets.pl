@@ -2,10 +2,6 @@
 use strict;
 use warnings FATAL => 'all';
 
-#
-# Create design targets given list of human gene symbols
-#
-
 use Try::Tiny;
 use Text::CSV;
 use Getopt::Long;
@@ -346,7 +342,7 @@ __END__
 
 =head1 NAME
 
-human_design_targets.pl -
+human_design_targets.pl - Create human design targets list given list of gene names.
 
 =head1 SYNOPSIS
 
@@ -358,8 +354,23 @@ human_design_targets.pl -
       --verbose         Verbose output
       --trace           Trace output
       --genes-file      File with genes names.
+      --gene            Specify only one gene from the file
+
+      The genes file should be a csv file with 2 column headers: hgnc_symbol and ensembl_id.
+      A third optionally column is exon_id if the critical exons have been pre-defined.
 
 =head1 DESCRIPTION
+
+Given a list of gene targets, find the critical exons for that gene and write out a file
+with design parameters to target those critical exons.
+
+For our purposes a critical exon is:
+- Constitutive
+- Would induce a phase shift if removed
+- Less than 300 bases long.
+
+Exons are ranked according to which is most five prime.
+Currently a maximum of 5 critical exons are found for each gene target.
 
 =head1 AUTHOR
 
