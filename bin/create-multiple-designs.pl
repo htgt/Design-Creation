@@ -91,6 +91,7 @@ sub get_params {
     my @params;
     while ( my( $cmd, $arg ) = each %{ $data } ) {
         next unless $arg;
+        next if $cmd eq 'comment';
         # if multiple args we need to split it
         my @args = split /\|/, $arg;
         for my $single_arg ( @args ) {
@@ -100,6 +101,8 @@ sub get_params {
     }
 
     my $target_gene = _trim( $data->{'target-gene'} );
+    # can not have : symbols in dir name
+    $target_gene =~ s/://g;
 
     my $dir_name;
     # deal with same gene being targeted in multiple designs
