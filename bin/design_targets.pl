@@ -412,7 +412,7 @@ __END__
 
 =head1 NAME
 
-human_design_targets.pl - Create human design targets list given list of gene names.
+design_targets.pl - Create design targets list given list of gene names.
 
 =head1 SYNOPSIS
 
@@ -425,9 +425,11 @@ human_design_targets.pl - Create human design targets list given list of gene na
       --trace           Trace output
       --genes-file      File with genes names.
       --gene            Specify only one gene from the file
+      --species         Species linked to gene names
 
-      The genes file should be a csv file with 2 column headers: hgnc_symbol and ensembl_id.
-      A third optionally column is exon_id if the critical exons have been pre-defined.
+      The genes file should be a csv file with 3 column headers: gene_id, marker_symbol and ensembl_id.
+      The gene_id column will use HGNC / MGI ID's depending on the species.
+      A fourth optionally column is exon_id if the critical exons have been pre-defined.
 
 =head1 DESCRIPTION
 
