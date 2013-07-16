@@ -73,6 +73,9 @@ const my @TARGET_COLUMN_HEADERS => (
 );
 
 my $ensembl_util = LIMS2::Util::EnsEMBL->new( species => $species );
+my $db = $ensembl_util->db_adaptor;
+my $db_details = $db->to_hash;
+WARN("Ensembl DB: " . $db_details->{DBNAME});
 
 my $design_output = IO::File->new( 'design_parameters.csv' , 'w' );
 my $target_output = IO::File->new( 'target_parameters.csv' , 'w' );
@@ -91,6 +94,7 @@ $target_output_csv->print( $target_output, \@TARGET_COLUMN_HEADERS );
         Log::Log4perl::NDC->push( $data->{gene_id} );
         Log::Log4perl::NDC->push( $data->{marker_symbol} );
         next if $single_gene && $single_gene ne $data->{marker_symbol};
+
         try{
             process_target( $data );
         }
