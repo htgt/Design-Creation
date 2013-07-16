@@ -8,7 +8,7 @@ use Getopt::Long;
 use LIMS2::Util::EnsEMBL;
 use Log::Log4perl ':easy';
 use List::MoreUtils qw( all );
-use IO::Handle;
+use IO::File;
 use Pod::Usage;
 use DDP colored => 1;
 use Const::Fast;
@@ -22,10 +22,17 @@ GetOptions(
     'trace'         => sub { $log_level = $TRACE },
     'genes-file=s'  => \my $genes_file,
     'gene=s'        => \my $single_gene,
+    'species=s'     => \my $species,
 ) or pod2usage(2);
 
 Log::Log4perl->easy_init( { level => $log_level, layout => '%p %x %m%n' } );
 LOGDIE( 'Specify file with gene names' ) unless $genes_file;
+LOGDIE( 'Must specify species' ) unless $species;
+
+const my $DEFAULT_ASSEMBLY => $species eq 'Human' ? 'GRCh37' :  $species eq 'Mouse' ? 'GRCm38' : undef;
+const my $DEFAULT_BUILD => 70;
+
+WARN( "ASSEMBLY: $DEFAULT_ASSEMBLY, BUILD: $DEFAULT_BUILD" );
 
 const my %BASE_DESIGN_PARAMETERS => (
     'd3-region-length'   => 100,
@@ -37,24 +44,42 @@ const my %BASE_DESIGN_PARAMETERS => (
     'g5-region-length'   => 500,
     'g5-region-offset'   => 1000,
     'design-method'      => 'deletion',
-    'species'            => 'Human',
+    'species'            => $species,
     'mask-by-lower-case' => 'yes'
 );
 
-const my @COLUMN_HEADERS => (
+const my @DESIGN_COLUMN_HEADERS => (
 'target-gene',
-'ensembl-gene',
 'target-exon',
-'exon-size',
-'exon-rank',
 keys %BASE_DESIGN_PARAMETERS
 );
 
-my $ensembl_util = LIMS2::Util::EnsEMBL->new( species => 'Human' );
+const my @TARGET_COLUMN_HEADERS => (
+'gene_id',
+'marker_symbol',
+'ensembl_gene_id',
+'ensembl_exon_id',
+'exon_size',
+'exon_rank',
+'canonical_transcript',
+'assembly',
+'build',
+'species',
+'chr_name',
+'chr_start',
+'chr_end',
+'chr_strand',
+'automatically_picked',
+);
 
-my $io_output = IO::Handle->new_from_fd( \*STDOUT, 'w' );
-my $output_csv = Text::CSV->new( { eol => "\n" } );
-$output_csv->print( $io_output, \@COLUMN_HEADERS );
+my $ensembl_util = LIMS2::Util::EnsEMBL->new( species => $species );
+
+my $design_output = IO::File->new( 'design_parameters.csv' , 'w' );
+my $target_output = IO::File->new( 'target_parameters.csv' , 'w' );
+my $design_output_csv = Text::CSV->new( { eol => "\n" } );
+my $target_output_csv = Text::CSV->new( { eol => "\n" } );
+$design_output_csv->print( $design_output, \@DESIGN_COLUMN_HEADERS );
+$target_output_csv->print( $target_output, \@TARGET_COLUMN_HEADERS );
 
 ## no critic(InputOutput::RequireBriefOpen)
 {
@@ -63,9 +88,9 @@ $output_csv->print( $io_output, \@COLUMN_HEADERS );
     $input_csv->column_names( @{ $input_csv->getline( $input_fh ) } );
     while ( my $data = $input_csv->getline_hr( $input_fh ) ) {
         Log::Log4perl::NDC->remove;
-        Log::Log4perl::NDC->push( $data->{hgnc_symbol} );
-        Log::Log4perl::NDC->push( $data->{ensembl_id} );
-        next if $single_gene && $single_gene ne $data->{hgnc_symbol};
+        Log::Log4perl::NDC->push( $data->{gene_id} );
+        Log::Log4perl::NDC->push( $data->{marker_symbol} );
+        next if $single_gene && $single_gene ne $data->{marker_symbol};
         try{
             process_target( $data );
         }
@@ -79,15 +104,13 @@ $output_csv->print( $io_output, \@COLUMN_HEADERS );
 
 sub process_target {
     my $data = shift;
-    unless ( $data->{ensembl_id} ) {
-        WARN( 'Need ensembl id, none given for' );
-        return;
-    }
+    my $ensembl_id = get_ensembl_id( $data );
+    return unless $ensembl_id;
 
-    INFO( 'Target gene: ' . $data->{ensembl_id} );
-    my $gene = $ensembl_util->gene_adaptor->fetch_by_stable_id( $data->{ensembl_id} );
+    INFO( 'Target gene: ' . $ensembl_id );
+    my $gene = $ensembl_util->gene_adaptor->fetch_by_stable_id( $ensembl_id );
     unless ( $gene ) {
-        ERROR( "Can not find ensembl gene: " . $data->{ensembl_id} );
+        ERROR( "Can not find ensembl gene: " . $ensembl_id );
         return;
     }
 
@@ -100,35 +123,82 @@ sub process_target {
     my $count = 0;
     for my $exon ( @exons ) {
         last if $count > 4;
-        print_design_parameters( $exon, $gene, $data->{hgnc_symbol} );
+        print_design_parameters( $exon, $gene, $data );
         $count++;
     }
 
     return;
 }
 
-sub print_design_parameters {
-    my ( $exon, $gene, $gene_id ) = @_;
+sub get_ensembl_id {
+    my $data = shift;
 
-    my $exon_rank = get_exon_rank( $exon, $gene );
+    if ( $data->{ensembl_id} ) {
+        if ( $data->{ensembl_id_b} ) {
+           if ( $data->{ensembl_id} eq $data->{ensembl_id_b} ) {
+               return $data->{ensembl_id}
+           }
+           else {
+               ERROR( 'Mismatch in ensembl ids: ' . $data->{ensembl_id} . ' and ' . $data->{ensembl_id_b});
+               return;
+           }
+        }
+        else {
+            return $data->{ensembl_id}
+        }
+    }
+    else {
+        if ( $data->{ensembl_id_b} ) {
+            return $data->{ensembl_id_b}
+        }
+        else {
+            ERROR( 'No Ensembl ID found' );
+            return;
+        }
+    }
+
+    return;
+}
+
+sub print_design_parameters {
+    my ( $exon, $gene, $data ) = @_;
 
     my %design_params = %BASE_DESIGN_PARAMETERS;
-    $design_params{'target-gene'} = $gene_id;
-    $design_params{'ensembl-gene'} = $gene->stable_id;
+    $design_params{'target-gene'} = $data->{gene_id};
     $design_params{'target-exon'} = $exon->stable_id;
-    $design_params{'exon-size'} = $exon->length;
-    $design_params{'exon-rank'} = $exon_rank;
 
-    $output_csv->print( $io_output, [ @design_params{ @COLUMN_HEADERS } ] );
+    $design_output_csv->print( $design_output, [ @design_params{ @DESIGN_COLUMN_HEADERS } ] );
+
+    my %target_params = (
+        species  => $species,
+        assembly => $DEFAULT_ASSEMBLY,
+        build    => $DEFAULT_BUILD,
+        automatically_picked => 1,
+    );
+
+    my $canonical_transcript = $gene->canonical_transcript;
+    INFO( 'Canonical transcript: ' . $canonical_transcript->stable_id );
+    my $exon_rank = get_exon_rank( $exon, $canonical_transcript );
+
+    $target_params{ 'gene_id' } = $data->{gene_id};
+    $target_params{ 'marker_symbol' } = $data->{marker_symbol};
+    $target_params{ 'ensembl_gene_id' } = $gene->stable_id;
+    $target_params{ 'ensembl_exon_id' } = $exon->stable_id;
+    $target_params{ 'exon_size' } = $exon->length;
+    $target_params{ 'exon_rank' } = $exon_rank;
+    $target_params{ 'canonical_transcript' } = $canonical_transcript->stable_id;
+    $target_params{ 'chr_name' } = $exon->seq_region_name;
+    $target_params{ 'chr_start' } = $exon->seq_region_start;
+    $target_params{ 'chr_end' } = $exon->seq_region_end;
+    $target_params{ 'chr_strand' } = $exon->seq_region_strand;
+
+    $target_output_csv->print( $target_output, [ @target_params{ @TARGET_COLUMN_HEADERS } ] );
 
     return;
 }
 
 sub get_exon_rank {
-    my ( $exon, $gene ) = @_;
-
-    my $canonical_transcript = $gene->canonical_transcript;
-    INFO( 'Canonical transcript: ' . $canonical_transcript->stable_id );
+    my ( $exon, $canonical_transcript ) = @_;
 
     my $rank = 1;
     for my $current_exon ( @{ $canonical_transcript->get_all_Exons } ) {
