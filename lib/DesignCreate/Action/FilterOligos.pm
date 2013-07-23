@@ -36,18 +36,18 @@ sub execute {
     return;
 }
 
-# if running command by itself we want to check the aos output dir exists
+# if running command by itself we want to check the oligo finder output dir exists
 # default is to delete and re-create folder
-override _build_aos_output_dir => sub {
+override _build_oligo_finder_output_dir => sub {
     my $self = shift;
 
-    my $aos_output_dir = $self->dir->subdir( $self->aos_output_dir_name );
-    unless ( $self->dir->contains( $aos_output_dir ) ) {
-        $self->log->logdie( "Can't find aos output dir: "
-                           . $aos_output_dir->stringify );
+    my $oligo_finder_output_dir = $self->dir->subdir( $self->oligo_finder_output_dir_name );
+    unless ( $self->dir->contains( $oligo_finder_output_dir ) ) {
+        $self->log->logdie( "Can't find oligo finder output dir: "
+                           . $oligo_finder_output_dir->stringify );
     }
 
-    return $aos_output_dir->absolute;
+    return $oligo_finder_output_dir->absolute;
 };
 
 __PACKAGE__->meta->make_immutable;

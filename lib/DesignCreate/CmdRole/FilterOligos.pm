@@ -116,7 +116,7 @@ sub validate_oligos {
     my $self = shift;
 
     for my $oligo_type ( $self->expected_oligos ) {
-        my $oligo_file = $self->get_file( "$oligo_type.yaml", $self->aos_output_dir );
+        my $oligo_file = $self->get_file( "$oligo_type.yaml", $self->oligo_finder_output_dir );
 
         DesignCreate::Exception->throw("No valid $oligo_type oligos")
             unless $self->validate_oligos_of_type( $oligo_file, $oligo_type );

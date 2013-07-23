@@ -91,7 +91,7 @@ sub _build_oligos {
 #
 
 const my $DEFAULT_VALIDATED_OLIGO_DIR_NAME      => 'validated_oligos';
-const my $DEFAULT_AOS_OUTPUT_DIR_NAME           => 'aos_output';
+const my $DEFAULT_OLIGO_FINDER_OUTPUT_DIR_NAME  => 'oligo_finder_output';
 const my $DEFAULT_OLIGO_TARGET_REGIONS_DIR_NAME => 'oligo_target_regions';
 const my $DEFAULT_DESIGN_DATA_FILE_NAME         => 'design_data.yaml';
 const my $DEFAULT_ALT_DESIGN_DATA_FILE_NAME     => 'alt_designs.yaml';
@@ -103,10 +103,10 @@ has validated_oligo_dir_name => (
     traits  => [ 'NoGetopt' ],
 );
 
-has aos_output_dir_name => (
+has oligo_finder_output_dir_name => (
     is      => 'ro',
     isa     => 'Str',
-    default => $DEFAULT_AOS_OUTPUT_DIR_NAME,
+    default => $DEFAULT_OLIGO_FINDER_OUTPUT_DIR_NAME,
     traits  => [ 'NoGetopt' ],
 );
 
@@ -169,25 +169,25 @@ sub _build_validated_oligo_dir {
     return $validated_oligo_dir;
 }
 
-has aos_output_dir => (
+has oligo_finder_output_dir => (
     is            => 'ro',
     isa           => 'Path::Class::Dir',
     traits        => [ 'Getopt' ],
     documentation => 'Directory holding the oligo yaml files '
-                     . "( default [design_dir]/$DEFAULT_AOS_OUTPUT_DIR_NAME )",
+                     . "( default [design_dir]/$DEFAULT_OLIGO_FINDER_OUTPUT_DIR_NAME )",
     coerce        => 1,
     lazy_build    => 1,
-    cmd_flag      => 'aos-output-dir',
+    cmd_flag      => 'oligo-finder-output-dir',
 );
 
-sub _build_aos_output_dir {
+sub _build_oligo_finder_output_dir {
     my $self = shift;
 
-    my $aos_output_dir = $self->dir->subdir( $self->aos_output_dir_name )->absolute;
-    $aos_output_dir->rmtree();
-    $aos_output_dir->mkpath();
+    my $oligo_finder_output_dir = $self->dir->subdir( $self->oligo_finder_output_dir_name )->absolute;
+    $oligo_finder_output_dir->rmtree();
+    $oligo_finder_output_dir->mkpath();
 
-    return $aos_output_dir;
+    return $oligo_finder_output_dir;
 }
 
 has oligo_target_regions_dir => (

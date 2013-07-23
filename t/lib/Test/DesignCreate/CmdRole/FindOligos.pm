@@ -113,17 +113,17 @@ sub check_aos_output : Test(6) {
     my $test = shift;
 
     ok my $o = $test->_get_test_object, 'can grab test object';
-    ok my $aos_output_dir = $o->aos_output_dir, 'grab aos_output_dir';
+    ok my $oligo_finder_output_dir = $o->oligo_finder_output_dir, 'grab oligo_finder_output_dir';
 
     lives_ok {
-        $aos_output_dir->file( $_ . '.yaml' )->touch for qw( G5 U5 D3 G3 );
+        $oligo_finder_output_dir->file( $_ . '.yaml' )->touch for qw( G5 U5 D3 G3 );
     } 'can create test oligo output files';
 
     lives_ok{
         $o->check_aos_output
     } 'can call check_aos_output';
 
-    ok $aos_output_dir->file( 'U5.yaml' )->remove, 'can remove U5 yaml file';
+    ok $oligo_finder_output_dir->file( 'U5.yaml' )->remove, 'can remove U5 yaml file';
 
     throws_ok{
         $o->check_aos_output

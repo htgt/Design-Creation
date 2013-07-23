@@ -28,7 +28,7 @@ DesignCreate::Role::AOS
 
 requires qw(
 oligo_target_regions_dir
-aos_output_dir
+oligo_finder_output_dir
 );
 
 const my %DEFAULT_CHROMOSOME_DIR => (
@@ -183,7 +183,7 @@ sub check_aos_output {
     for my $oligo ( $self->expected_oligos ) {
         try{
             #this will throw a error if file does not exist
-            $self->get_file( "$oligo.yaml", $self->aos_output_dir );
+            $self->get_file( "$oligo.yaml", $self->oligo_finder_output_dir );
         }
         catch {
             push @missing_oligos, $oligo;

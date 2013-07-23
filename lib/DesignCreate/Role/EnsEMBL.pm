@@ -49,7 +49,7 @@ sub get_sequence {
 sub get_repeat_masked_sequence {
     my ( $self, $start, $end, $chr_name, $mask_method ) = @_;
 
-    my $repeat_masked_slice = $self->get_repeatmasked_slice( $start, $end, $chr_name, $mask_method );
+    my $repeat_masked_slice = $self->get_repeat_masked_slice( $start, $end, $chr_name, $mask_method );
 
     return $repeat_masked_slice->seq;
 }

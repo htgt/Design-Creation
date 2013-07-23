@@ -108,8 +108,8 @@ sub create_oligo_files : Test(6) {
         $o->create_oligo_files;
     } 'Can create_oligo_files';
 
-    my $file = $o->aos_output_dir->file( 'U5.yaml' );
-    ok $o->aos_output_dir->contains( $file ), "File U5.yaml has been created";
+    my $file = $o->oligo_finder_output_dir->file( 'U5.yaml' );
+    ok $o->oligo_finder_output_dir->contains( $file ), "File U5.yaml has been created";
 
     #no oligos
     ok $o = $test->_get_test_object, 'can grab test object';

@@ -24,7 +24,7 @@ use Fcntl; # O_ constants
 use Try::Tiny;
 use namespace::autoclean;
 
-requires 'aos_output_dir';
+requires 'oligo_finder_output_dir';
 # TODO
 # also required query_file and target_file attribute but errors are thrown when this is added
 
@@ -136,7 +136,7 @@ sub run_aos {
     }
     catch {
         DesignCreate::Exception->throw( 'Problem running AOS wrapper, check log files in this dir: '
-            . $self->aos_output_dir->stringify );
+            . $self->oligo_finder_output_dir->stringify );
     };
 
     return;
@@ -164,7 +164,7 @@ sub run_aos_scripts {
     #oligo_fasta file should have some data in it
     unless ( $oligo_fasta_aos->slurp ) {
         DesignCreate::Exception->throw( "AOS oligo_fasta file has no data in it"
-            . $self->aos_output_dir->stringify  );
+            . $self->aos_work_dir->stringify  );
     }
 
     return;
@@ -189,7 +189,7 @@ sub run_aos_script1 {
     );
 
     $self->log->debug('AOS script1 cmd: ' . join( ' ', @step1_cmd ) );
-    my $output_log = $self->aos_output_dir->file( 'script1_output.log' );
+    my $output_log = $self->oligo_finder_output_dir->file( 'script1_output.log' );
     my $output_log_fh = $output_log->open( O_WRONLY|O_CREAT ) or die( "Open $output_log: $!" );
 
     # run script and redirect STDOUT and STDERR to log file
@@ -215,7 +215,7 @@ sub run_aos_script2 {
     );
 
     $self->log->debug('AOS script2 cmd: ' . join( ' ', @step2_cmd ) );
-    my $output_log = $self->aos_output_dir->file( 'script2_output.log' );
+    my $output_log = $self->oligo_finder_output_dir->file( 'script2_output.log' );
     my $output_log_fh = $output_log->open( O_WRONLY|O_CREAT ) or die( "Open $output_log: $!" );
 
     # run script and redirect STDOUT and STDERR to log file
@@ -290,7 +290,7 @@ sub create_oligo_files {
         unless $self->has_oligos;
 
     for my $oligo ( keys %{ $self->aos_oligos } ) {
-        my $filename = $self->aos_output_dir->stringify . '/' . $oligo . '.yaml';
+        my $filename = $self->oligo_finder_output_dir->stringify . '/' . $oligo . '.yaml';
         DumpFile( $filename, $self->get_oligos( $oligo ) );
     }
 

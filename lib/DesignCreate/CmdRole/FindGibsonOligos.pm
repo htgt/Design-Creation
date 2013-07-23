@@ -28,8 +28,6 @@ with qw(
 DesignCreate::Role::EnsEMBL
 );
 
-const my $DEFAULT_PRIMER3_WORK_DIR_NAME => 'primer3_work';
-
 const my @FIND_GIBSON_OLIGOS_PARAMETERS => qw(
 species
 target_exon
@@ -221,23 +219,6 @@ has mask_by_lower_case => (
     cmd_flag      => 'mask-by-lower-case',
 );
 
-has primer3_work_dir => (
-    is            => 'ro',
-    isa           => 'Path::Class::Dir',
-    traits        => [ 'NoGetopt' ],
-    lazy_build    => 1,
-);
-
-sub _build_primer3_work_dir {
-    my $self = shift;
-
-    my $primer3_work_dir = $self->dir->subdir( $DEFAULT_PRIMER3_WORK_DIR_NAME )->absolute;
-    $primer3_work_dir->rmtree();
-    $primer3_work_dir->mkpath();
-
-    return $primer3_work_dir;
-}
-
 has primer3_results => (
     is         => 'ro',
     isa        => 'HashRef[Bio::Tools::Primer3Redux::Result]',
@@ -298,13 +279,14 @@ blah
 sub run_primer3 {
     my ( $self ) = @_;
 
+    #TODO make this a attribute sp12 Tue 23 Jul 2013 07:43:42 BST
     my $p3 = DesignCreate::Util::Primer3->new_with_config(
         configfile => '/nfs/users/nfs_s/sp12/workspace/Design-Creation/tmp/primer3/primer3_config.yaml',
     );
 
     for my $region ( keys %PRIMER_DETAILS ) {
         $self->log->debug("Finding primers for $region primer region");
-        my $file = $self->primer3_work_dir->file( 'primer3_output_' . $region . '.log' );
+        my $file = $self->oligo_finder_output_dir->file( 'primer3_output_' . $region . '.log' );
 
         my $target_string = $self->build_primer3_sequence_target_string( $region );
 
@@ -422,12 +404,12 @@ sub create_oligo_files {
         unless $self->has_oligos;
 
     for my $oligo ( keys %{ $self->primer3_oligos } ) {
-        my $filename = $self->primer3_work_dir->stringify . '/' . $oligo . '.yaml';
+        my $filename = $self->oligo_finder_output_dir->stringify . '/' . $oligo . '.yaml';
         DumpFile( $filename, $self->get_oligos( $oligo ) );
     }
 
     for my $region ( keys %{ $self->oligo_pairs } ) {
-        my $filename = $self->primer3_work_dir->stringify . '/' . $region . '_oligo_pairs.yaml';
+        my $filename = $self->oligo_finder_output_dir->stringify . '/' . $region . '_oligo_pairs.yaml';
         DumpFile( $filename, $self->get_pairs( $region ) );
     }
 

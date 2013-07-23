@@ -41,7 +41,7 @@ sub check_oligo_length : Test(4) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
-    ok my $oligos_data = LoadFile( $o->aos_output_dir->file( 'U5.yaml' )->stringify )
+    ok my $oligos_data = LoadFile( $o->oligo_finder_output_dir->file( 'U5.yaml' )->stringify )
         , 'can load oligo yaml data file';
     my $oligo_data = $oligos_data->[0];
 
@@ -54,7 +54,7 @@ sub check_oligo_sequence : Test(5) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
-    ok my $oligos_data = LoadFile( $o->aos_output_dir->file( 'U5.yaml' )->stringify )
+    ok my $oligos_data = LoadFile( $o->oligo_finder_output_dir->file( 'U5.yaml' )->stringify )
         , 'can load oligo yaml data file';
     my $oligo_data = $oligos_data->[0];
 
@@ -71,7 +71,7 @@ sub check_oligo_coordinates : Test(5) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
-    ok my $oligos_data = LoadFile( $o->aos_output_dir->file( 'U5.yaml' )->stringify )
+    ok my $oligos_data = LoadFile( $o->oligo_finder_output_dir->file( 'U5.yaml' )->stringify )
         , 'can load oligo yaml data file';
     my $oligo_data = $oligos_data->[0];
 
@@ -88,7 +88,7 @@ sub validate_oligo : Test(5) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
-    ok my $oligos_data = LoadFile( $o->aos_output_dir->file( 'U5.yaml' )->stringify )
+    ok my $oligos_data = LoadFile( $o->oligo_finder_output_dir->file( 'U5.yaml' )->stringify )
         , 'can load oligo yaml data file';
     my $oligo_data = $oligos_data->[0];
 
@@ -102,10 +102,10 @@ sub validate_oligos_of_type : Test(5) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
-    ok my $oligo_file = $o->aos_output_dir->file( 'U5.yaml' ), 'can get U5.yaml oligo file';
+    ok my $oligo_file = $o->oligo_finder_output_dir->file( 'U5.yaml' ), 'can get U5.yaml oligo file';
     ok $o->validate_oligos_of_type( $oligo_file, 'U5' ), 'validate_oligo check passes';
 
-    my $empty_file = $o->aos_output_dir->file( 'test.yaml' );
+    my $empty_file = $o->oligo_finder_output_dir->file( 'test.yaml' );
     $empty_file->touch;
     ok !$o->validate_oligos_of_type( $empty_file, 'U5' ), 'validate_oligo check fails, empty oligo file';
 
@@ -119,13 +119,13 @@ sub validate_oligos : Test(5) {
 
     ok $o->validate_oligos(), 'validate_oligos check passes';
 
-    ok $o->aos_output_dir->file( 'U5.yaml' )->remove, 'can remove U5.yaml file';
+    ok $o->oligo_finder_output_dir->file( 'U5.yaml' )->remove, 'can remove U5.yaml file';
 
     throws_ok{
         $o->validate_oligos()
     } qr/Cannot find file/, 'throws error when no U5.yaml file';
 
-    $o->aos_output_dir->file( 'U5.yaml' )->touch;
+    $o->oligo_finder_output_dir->file( 'U5.yaml' )->touch;
 
     throws_ok{
         $o->validate_oligos()
@@ -305,7 +305,7 @@ sub _get_test_object {
         $data_dir = dir($FindBin::Bin)->absolute->subdir('test_data/filter_oligos_data_minus');
     }
 
-    # need 4 aos oligo files to test against, in aos_output dir
+    # need 4 aos oligo files to test against, in oligo_finder_output dir
     dircopy( $data_dir->stringify, $dir->stringify );
 
     my $metaclass = $test->get_test_object_metaclass();

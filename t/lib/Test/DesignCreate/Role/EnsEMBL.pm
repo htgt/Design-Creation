@@ -18,12 +18,12 @@ sub get_sequence : Test(4) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
-    my $seq = $o->_get_sequence( 1, 10, 11 );
+    my $seq = $o->get_slice( 1, 10, 11 );
     isa_ok $seq, 'Bio::EnsEMBL::Slice';
     is $seq->seq, 'NNNNNNNNNN', 'sequence is correct';
 
     throws_ok{
-        $o->_get_sequence( 10, 1, 11 );
+        $o->get_slice( 10, 1, 11 );
     } qr/Start must be less than end/
         , 'throws error if start after end';
 }

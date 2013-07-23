@@ -49,7 +49,7 @@ target_file
 exonerate_target_file
 design_data_file
 validated_oligo_dir
-aos_output_dir
+oligo_finder_output_dir
 oligo_target_regions_dir
 aos_location
 base_chromosome_dir
