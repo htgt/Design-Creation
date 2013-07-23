@@ -2,7 +2,7 @@ package DesignCreate::CmdRole::FindGibsonOligos;
 
 =head1 NAME
 
-DesignCreate::Action::FindGibsonOligos - 
+DesignCreate::Action::FindGibsonOligos -
 
 =head1 DESCRIPTION
 
@@ -14,6 +14,7 @@ use DesignCreate::Util::Primer3;
 use DesignCreate::Exception;
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
 use DesignCreate::Types qw( PositiveInt YesNo Species );
+use YAML::Any qw( DumpFile );
 use Bio::SeqIO;
 use Bio::Seq;
 use Fcntl; # O_ constants
@@ -51,17 +52,17 @@ const my %PRIMER_DETAILS => (
     exon => {
         forward => 'ef',
         reverse => 'er',
-        region  => 'exon_region_seq'
+        slice  => 'exon_region_slice'
     },
     five_prime => {
         forward => '5f',
         reverse => '5r',
-        region  => 'five_prime_region_seq'
+        slice  => 'five_prime_region_slice'
     },
     three_prime => {
         forward => '3f',
         reverse => '3r',
-        region  => 'three_prime_region_seq'
+        slice  => 'three_prime_region_slice'
     },
 );
 
@@ -95,8 +96,8 @@ has [
         #isa      => PositiveInt,
         #traits   => [ 'Getopt' ],
         #required => 1,
-        #documentation => 
-        #cmd_flag => 
+        #documentation =>
+        #cmd_flag =>
     #);
 #}
 
@@ -162,52 +163,52 @@ sub _build_exon_end {
     shift->exon->seq_region_end;
 }
 
-has exon_region_seq => (
+has exon_region_slice => (
     is         => 'ro',
-    isa        => 'Bio::Seq',
+    isa        => 'Bio::EnsEMBL::Slice',
     traits     => [ 'NoGetopt' ],
     lazy_build => 1,
 );
 
-sub _build_exon_region_seq {
+sub _build_exon_region_slice {
     my $self = shift;
 
     my $start = $self->exon_start - ( $self->offset_ef + $self->size_ef );
     my $end = $self->exon_end + ( $self->offset_er + $self->size_er );
 
-    return $self->_get_region_seq( $start, $end, 'exon_region' );
+    return $self->get_repeat_masked_slice( $start, $end, $self->exon->seq_region_name, undef );
 }
 
-has five_prime_region_seq => (
+has five_prime_region_slice => (
     is         => 'ro',
-    isa        => 'Bio::Seq',
+    isa        => 'Bio::EnsEMBL::Slice',
     traits     => [ 'NoGetopt' ],
     lazy_build => 1,
 );
 
-sub _build_five_prime_region_seq {
+sub _build_five_prime_region_slice {
     my $self = shift;
 
     my $start = $self->exon_start - ( $self->offset_5f + $self->size_5f );
     my $end = $self->exon_start - $self->offset_5r;
 
-    return $self->_get_region_seq( $start, $end, 'five_prime_region' );
+    return $self->get_repeat_masked_slice( $start, $end, $self->exon->seq_region_name, undef );
 }
 
-has three_prime_region_seq => (
+has three_prime_region_slice => (
     is         => 'ro',
-    isa        => 'Bio::Seq',
+    isa        => 'Bio::EnsEMBL::Slice',
     traits     => [ 'NoGetopt' ],
     lazy_build => 1,
 );
 
-sub _build_three_prime_region_seq {
+sub _build_three_prime_region_slice {
     my $self = shift;
 
     my $start = $self->exon_end + $self->offset_3f;
     my $end = $self->exon_end + ( $self->offset_3r + $self->size_3r );
 
-    return $self->_get_region_seq( $start, $end, 'three_prime_region' );
+    return $self->get_repeat_masked_slice( $start, $end, $self->exon->seq_region_name, undef );
 }
 
 #TODO respect this flag sp12 Thu 18 Jul 2013 11:04:06 BST
@@ -237,6 +238,39 @@ sub _build_primer3_work_dir {
     return $primer3_work_dir;
 }
 
+has primer3_results => (
+    is         => 'ro',
+    isa        => 'HashRef[Bio::Tools::Primer3Redux::Result]',
+    traits     => [ 'NoGetopt' , 'Hash' ],
+    default    => sub{ {  } },
+    handles => {
+        add_primer3_result => 'set',
+        get_primer3_result => 'get',
+    }
+);
+
+has primer3_oligos => (
+    is      => 'rw',
+    isa     => 'HashRef',
+    traits  => [ 'NoGetopt', 'Hash' ],
+    default => sub { {  } },
+    handles => {
+        has_oligos => 'count',
+        get_oligos => 'get',
+    }
+);
+
+has oligo_pairs => (
+    is      => 'ro',
+    isa     => 'HashRef',
+    traits  => [ 'Hash', 'NoGetopt' ],
+    default => sub{ {} },
+    handles => {
+        has_pairs => 'count',
+        get_pairs => 'get',
+    }
+);
+
 =head2 find_oligos
 
 blah
@@ -249,12 +283,9 @@ sub find_oligos {
 
     $self->run_primer3;
 
-    #$self->check_primer3_output; #??
+    $self->parse_primer3_results;
 
-    #$self->parse_primer3_output;
-
-    #$self->create_oligo_files;
-    # create the oligo pair files as well
+    $self->create_oligo_files;
 
     return;
 }
@@ -271,63 +302,97 @@ sub run_primer3 {
         configfile => '/nfs/users/nfs_s/sp12/workspace/Design-Creation/tmp/primer3/primer3_config.yaml',
     );
 
-    for my $type ( keys %PRIMER_DETAILS ) {
-        my $file = $self->primer3_work_dir->file( 'primer3_output_' . $type );
+    for my $region ( keys %PRIMER_DETAILS ) {
+        $self->log->debug("Finding primers for $region primer region");
+        my $file = $self->primer3_work_dir->file( 'primer3_output_' . $region . '.log' );
 
-        my $region_name = $PRIMER_DETAILS{$type}{region};
-        my $region_seq = $self->$region_name;
+        my $target_string = $self->build_primer3_sequence_target_string( $region );
 
-        my $target_string = $self->build_primer3_sequence_target_string( $type );
+        my $slice_name = $PRIMER_DETAILS{$region}{slice};
+        my $region_slice = $self->$slice_name;
+        my $region_bio_seq = Bio::Seq->new( -display_id => $region, -seq => $region_slice->seq );
 
-        my $result = $p3->run_primer3( $file->absolute, $region_seq, { SEQUENCE_TARGET => $target_string } );
-
-        ### num primer pairs : $result->num_primer_pairs
+        my $result = $p3->run_primer3( $file->absolute, $region_bio_seq, { SEQUENCE_TARGET => $target_string } );
 
         if ( $result->warnings ) {
-            ### warnings : $result->warnings
+            $self->log->warn( "Primer3 warning: $_" ) for $result->warnings;
         };
         if ( $result->errors ) {
-            ### errors : $result->errors
+            $self->log->error( "Primer3 error: $_" ) for $result->errors;
         };
 
-        while ( my $pair = $result->next_primer_pair ) {
-            # are Bio::SeqFeature::Generic plus few other methods
-            my $fp = $pair->forward_primer;
-            my $rp = $pair->reverse_primer;
+        if ( $result->num_primer_pairs ) {
+            $self->log->info( "$region primer region primer pairs: " . $result->num_primer_pairs );
+            $self->add_primer3_result( $region => $result );
         }
-
-    }
-    
-}
-
-sub create_aos_query_file {
-    my $self = shift;
-
-    my $fh = $self->query_file->open( O_WRONLY|O_CREAT )
-        or die( $self->query_file->stringify . " open failure: $!" );
-
-    my $seq_out = Bio::SeqIO->new( -fh => $fh, -format => 'fasta' );
-
-    for my $oligo ( $self->expected_oligos ) {
-        my $oligo_file = $self->get_file( "$oligo.fasta", $self->oligo_target_regions_dir );
-
-        my $seq_in = Bio::SeqIO->new( -fh => $oligo_file->openr, -format => 'fasta' );
-        $self->log->debug( "Adding $oligo oligo target sequence to query file" );
-
-        while ( my $seq_obj = $seq_in->next_seq ) {
-            $self->check_masked_seq( $seq_obj->seq, $oligo ) if $self->mask_by_lower_case eq 'yes';
-            $seq_out->write_seq( $seq_obj );
+        else {
+            die( "Can not find any primer pairs for $region primer region" );
         }
-    }
-
-    if ( $self->has_repeat_masked_oligo_regions ) {
-        DesignCreate::Exception->throw(
-            'Following oligo regions are completely repeat masked: '
-            . $self->list_repeat_masked_oligo_regions( ',' )
-        );
     }
 
     return;
+}
+
+=head2 parse_primer3_results
+
+Extract the required information from the primer3 result objects
+
+=cut
+sub parse_primer3_results {
+    my ( $self ) = @_;
+
+    for my $region ( keys %PRIMER_DETAILS ) {
+
+        my $result = $self->get_primer3_result( $region );
+        while ( my $pair = $result->next_primer_pair ) {
+            # are Bio::SeqFeature::Generic plus few other methods
+            my $forward_id = $self->parse_primer( $pair->forward_primer, $region, 'forward' );
+            my $reverse_id = $self->parse_primer( $pair->reverse_primer, $region, 'reverse' );
+
+            push @{ $self->oligo_pairs->{ $region } }, {
+                uc($PRIMER_DETAILS{$region}{forward}) => $forward_id,
+                uc($PRIMER_DETAILS{$region}{reverse}) => $reverse_id,
+            };
+        }
+    }
+
+    return;
+}
+
+=head2 parse_primer
+
+desc
+
+=cut
+sub parse_primer {
+    my ( $self, $primer, $region, $direction ) = @_;
+    my %oligo_data;
+
+    unless ( $primer->validate_seq ) {
+        die( 'failed to validate sequence' );
+    }
+
+    my $oligo_type = uc($PRIMER_DETAILS{$region}{$direction});
+    my $region_slice_name = $PRIMER_DETAILS{$region}{slice};
+    my $region_slice = $self->$region_slice_name;
+
+    $oligo_data{target_region_start} = $region_slice->start + $primer->start;
+    $oligo_data{target_region_end} = $region_slice->start + $primer->end;
+    $oligo_data{oligo_start} = $primer->start;
+    $oligo_data{oligo_end} = $primer->end;
+    $oligo_data{oligo_length} = $primer->length;
+    $oligo_data{oligo_seq} = $primer->seq->seq;
+    $oligo_data{melting_temp} = $primer->melting_temp;
+    $oligo_data{gc_content} = $primer->gc_content;
+    $oligo_data{oligo_direction} = $direction;
+    $oligo_data{rank} = $primer->rank;
+    $oligo_data{region} = $region;
+    $oligo_data{oligo} = $oligo_type;
+    $oligo_data{id} = $oligo_type . '-' . $primer->rank;
+
+    push @{ $self->primer3_oligos->{ $oligo_type } }, \%oligo_data;
+
+    return $oligo_data{id};
 }
 
 =head2 check_masked_seq
@@ -345,17 +410,6 @@ sub check_masked_seq {
     return;
 }
 
-# parse oligo data
-#$oligo_data{target_region_start}
-#$oligo_data{target_region_end}
-#$oligo_data{oligo_start}
-#$oligo_data{oligo_end}
-#$oligo_data{oligo_length}
-#$oligo_data{oligo_seq}
-#$oligo_data{offset} ??
-#$oligo_data{oligo}
-#$oligo_data{id}
-
 =head2 create_oligo_files
 
 
@@ -367,29 +421,17 @@ sub create_oligo_files {
     DesignCreate::Exception->throw( 'No oligos found' )
         unless $self->has_oligos;
 
-     #TODO also oligo pair files sp12 Thu 18 Jul 2013 11:07:52 BST
-
-    for my $oligo ( keys %{ $self->aos_oligos } ) {
-        my $filename = $self->aos_output_dir->stringify . '/' . $oligo . '.yaml';
+    for my $oligo ( keys %{ $self->primer3_oligos } ) {
+        my $filename = $self->primer3_work_dir->stringify . '/' . $oligo . '.yaml';
         DumpFile( $filename, $self->get_oligos( $oligo ) );
     }
 
+    for my $region ( keys %{ $self->oligo_pairs } ) {
+        my $filename = $self->primer3_work_dir->stringify . '/' . $region . '_oligo_pairs.yaml';
+        DumpFile( $filename, $self->get_pairs( $region ) );
+    }
+
     return;
-}
-
-=head2 _get_region_seq
-
-Get Bio::Seq object of primer region, repeat masked.
-
-=cut
-sub _get_region_seq {
-    my ( $self, $start, $end, $type ) = @_;
-
-    my $seq = $self->get_repeat_masked_sequence( $start, $end, $self->exon->seq_region_name, undef );
-
-    my $bio_seq = Bio::Seq->new( -display_id => $type, -seq => $seq );
-
-    return $bio_seq;
 }
 
 =head2 build_primer3_sequence_target_string
@@ -398,14 +440,14 @@ Build sequence target string that tells primer3 what region the primers must sur
 
 =cut
 sub build_primer3_sequence_target_string {
-    my ( $self, $type ) = @_;
-    my $forward_primer_size_attr = 'size_' . $PRIMER_DETAILS{$type}{forward};
-    my $reverse_primer_size_attr = 'size_' . $PRIMER_DETAILS{$type}{reverse};
-    my $region_name = $PRIMER_DETAILS{$type}{region};
+    my ( $self, $region ) = @_;
+    my $forward_primer_size_attr = 'size_' . $PRIMER_DETAILS{$region}{forward};
+    my $reverse_primer_size_attr = 'size_' . $PRIMER_DETAILS{$region}{reverse};
+    my $slice_name = $PRIMER_DETAILS{$region}{slice};
 
     my $target_start = $self->$forward_primer_size_attr;
-    my $target_length = $self->$region_name->length - $target_start - $self->$reverse_primer_size_attr; 
-    return $target_start . ',' . $target_length; 
+    my $target_length = $self->$slice_name->length - $target_start - $self->$reverse_primer_size_attr;
+    return $target_start . ',' . $target_length;
 }
 
 1;
