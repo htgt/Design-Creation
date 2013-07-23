@@ -39,7 +39,7 @@ sub _build_ensembl_util {
 sub get_sequence {
     my ( $self, $start, $end, $chr_name ) = @_;
 
-    my $slice = $self->_get_sequence( $start, $end, $chr_name );
+    my $slice = $self->get_slice( $start, $end, $chr_name );
 
     return $slice->seq;
 }
@@ -49,15 +49,21 @@ sub get_sequence {
 sub get_repeat_masked_sequence {
     my ( $self, $start, $end, $chr_name, $mask_method ) = @_;
 
-    my $slice = $self->_get_sequence( $start, $end, $chr_name );
-
-    # softmasked
-    my $repeat_masked_slice = $slice->get_repeatmasked_seq( $mask_method , 1 );
+    my $repeat_masked_slice = $self->get_repeatmasked_slice( $start, $end, $chr_name, $mask_method );
 
     return $repeat_masked_slice->seq;
 }
 
-sub _get_sequence {
+sub get_repeat_masked_slice {
+    my ( $self, $start, $end, $chr_name, $mask_method ) = @_;
+
+    my $slice = $self->get_slice( $start, $end, $chr_name );
+
+    # softmasked
+    return $slice->get_repeatmasked_seq( $mask_method , 1 );
+}
+
+sub get_slice {
     my ( $self, $start, $end, $chr_name, $try_count ) = @_;
     $try_count //= 1;
     my $slice;
