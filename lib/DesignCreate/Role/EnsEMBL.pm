@@ -30,6 +30,8 @@ sub _build_ensembl_util {
     my $species = $self->design_param( 'species' );
     my $ensembl_util = LIMS2::Util::EnsEMBL->new( species => $species );
 
+    #TODO log ensembl database used sp12 Wed 24 Jul 2013 09:23:47 BST
+
     # this flag should stop the database connection being lost on long jobs
     $ensembl_util->registry->set_reconnect_when_lost;
 
