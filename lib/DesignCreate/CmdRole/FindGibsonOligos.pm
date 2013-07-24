@@ -227,6 +227,21 @@ sub _build_chr_strand {
     shift->exon->strand;
 }
 
+# default of masking all sequence ensembl considers to be a repeat region
+# means passing in undef as a mask method, otherwise pass in array ref of
+# repeat classes
+has repeat_mask_class => (
+    is            => 'ro',
+    isa           => 'ArrayRef',
+    traits        => [ 'Getopt', 'Array' ],
+    default       => sub{ [] },
+    cmd_flag      => 'repeat-mask-class',
+    documentation => "Optional repeat type class(s) we can get masked in genomic sequence",
+    handles => {
+        no_repeat_mask_classes => 'is_empty'
+    },
+);
+
 # primer3 expects sequence in a 5' to 3' direction
 has exon_region_slice => (
     is         => 'ro',
@@ -249,7 +264,10 @@ sub _build_exon_region_slice {
     }
     $self->log->debug( "Exon region start: $start, end: $end" );
 
-    my $slice = $self->get_repeat_masked_slice( $start, $end, $self->exon->seq_region_name, undef );
+    my $slice = $self->get_repeat_masked_slice(
+        $start, $end, $self->exon->seq_region_name,
+        $self->no_repeat_mask_classes ? undef : $self->repeat_mask_class
+    );
 
     return $self->chr_strand == 1 ? $slice : $slice->invert;
 }
@@ -275,7 +293,10 @@ sub _build_five_prime_region_slice {
     }
     $self->log->debug( "Five prime region start: $start, end: $end" );
 
-    my $slice = $self->get_repeat_masked_slice( $start, $end, $self->exon->seq_region_name, undef );
+    my $slice = $self->get_repeat_masked_slice(
+        $start, $end, $self->exon->seq_region_name,
+        $self->no_repeat_mask_classes ? undef : $self->repeat_mask_class
+    );
 
     return $self->chr_strand == 1 ? $slice : $slice->invert;
 }
@@ -301,7 +322,10 @@ sub _build_three_prime_region_slice {
     }
     $self->log->debug( "Three prime region start: $start, end: $end" );
 
-    my $slice = $self->get_repeat_masked_slice( $start, $end, $self->exon->seq_region_name, undef );
+    my $slice = $self->get_repeat_masked_slice(
+        $start, $end, $self->exon->seq_region_name,
+        $self->no_repeat_mask_classes ? undef : $self->repeat_mask_class
+    );
 
     return $self->chr_strand == 1 ? $slice : $slice->invert;
 }
