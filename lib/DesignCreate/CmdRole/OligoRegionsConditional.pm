@@ -23,6 +23,7 @@ use namespace::autoclean;
 
 with qw(
 DesignCreate::Role::OligoRegionCoordinates
+DesignCreate::Role::GapOligoCoordinates
 );
 
 const my $MIN_BLOCK_LENGTH => 102;

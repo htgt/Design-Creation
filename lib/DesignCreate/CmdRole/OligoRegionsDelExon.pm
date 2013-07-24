@@ -18,6 +18,7 @@ use namespace::autoclean;
 
 with qw(
 DesignCreate::Role::OligoRegionCoordinates
+DesignCreate::Role::GapOligoCoordinates
 DesignCreate::Role::OligoRegionCoordinatesInsDel
 DesignCreate::Role::EnsEMBL
 );

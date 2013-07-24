@@ -13,8 +13,7 @@ Common code for oligo target ( candidate ) region coordinate finding commands.
 use Moose::Role;
 use DesignCreate::Exception;
 use DesignCreate::Exception::NonExistantAttribute;
-use DesignCreate::Types qw( PositiveInt NaturalNumber Species );
-use Fcntl; # O_ constants
+use DesignCreate::Types qw( Species );
 use Const::Fast;
 use YAML::Any qw( DumpFile );
 use namespace::autoclean;
@@ -45,8 +44,8 @@ has species => (
     is            => 'ro',
     isa           => Species,
     traits        => [ 'Getopt' ],
-    documentation => 'The species of the design target ( default Mouse )',
-    default       => 'Mouse',
+    documentation => 'The species of the design target ( Mouse or Human )',
+    required      => 1,
 );
 
 has assembly => (
@@ -61,49 +60,6 @@ sub _build_assembly {
 
     return $CURRENT_ASSEMBLY{ $self->species };
 }
-
-#
-# Gap oligo region parameters, common to all design types
-# TODO: Think about moving these to seperate role, because there maybe more
-#       than one way we will want to specify the G oligo regions
-# Now for gibson oligos we must move this to make this role generic
-#
-
-has G5_region_length => (
-    is            => 'ro',
-    isa           => PositiveInt,
-    traits        => [ 'Getopt' ],
-    default       => 1000,
-    documentation => 'Length of G5 oligo candidate region',
-    cmd_flag      => 'g5-region-length'
-);
-
-has G5_region_offset => (
-    is            => 'ro',
-    isa           => PositiveInt,
-    traits        => [ 'Getopt' ],
-    default       => 4000,
-    documentation => 'Offset from target region of G5 oligo candidate region',
-    cmd_flag      => 'g5-region-offset'
-);
-
-has G3_region_length => (
-    is            => 'ro',
-    isa           => PositiveInt,
-    traits        => [ 'Getopt' ],
-    default       => 1000,
-    documentation => 'Length of G3 oligo candidate region',
-    cmd_flag      => 'g3-region-length'
-);
-
-has G3_region_offset => (
-    is            => 'ro',
-    isa           => PositiveInt,
-    traits        => [ 'Getopt' ],
-    default       => 4000,
-    documentation => 'Offset from target region of G3 oligo candidate region',
-    cmd_flag      => 'g3-region-offset'
-);
 
 sub create_oligo_region_coordinate_file {
     my $self = shift;

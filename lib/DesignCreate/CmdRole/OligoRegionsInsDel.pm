@@ -22,6 +22,7 @@ use namespace::autoclean;
 with qw(
 DesignCreate::Role::OligoRegionCoordinates
 DesignCreate::Role::OligoRegionCoordinatesInsDel
+DesignCreate::Role::GapOligoCoordinates
 );
 
 const my @DESIGN_PARAMETERS => qw(
@@ -87,10 +88,6 @@ has target_end => (
     required      => 1,
     cmd_flag      => 'target-end'
 );
-
-#
-# Gap Oligo Parameter attributes in DesignCreate::Role::OligoRegionCoordinates
-#
 
 sub get_oligo_region_coordinates {
     my $self = shift;
