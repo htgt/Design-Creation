@@ -79,6 +79,9 @@ sub _build_oligos {
     elsif ( $design_method eq 'conditional' ) {
         return [ qw( G5 U5 U3 D5 D3 G3 ) ];
     }
+    elsif ( $design_method eq 'gibson' ) {
+        return [ qw( 5F 5R EF ER 3F 3R ) ];
+    }
     else {
         DesignCreate::Exception->throw( 'Unknown design method ' . $design_method );
     }
