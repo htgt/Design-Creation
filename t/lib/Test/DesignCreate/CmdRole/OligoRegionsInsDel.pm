@@ -33,6 +33,7 @@ sub valid_run_cmd : Test(3) {
         '--strand', 1,
         '--design-method', 'deletion',
         '--target-gene'  ,'test_gene',
+        '--species'      ,'Mouse',
     );
 
     ok my $result = test_app($test->cmd_class => \@argv_contents), 'can run command';
@@ -161,6 +162,7 @@ sub _get_test_object {
     my $metaclass = $test->get_test_object_metaclass();
     return $metaclass->new_object(
         dir              => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
+        species          => 'Mouse',
         target_start     => $start,
         target_end       => $end,
         chr_name         => $chr_name,

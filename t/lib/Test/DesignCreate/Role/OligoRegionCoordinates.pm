@@ -56,7 +56,7 @@ sub _get_test_object {
     my ( $test, $species ) = @_;
     $species //= 'Mouse';
 
-    my $metaclass = $test->get_test_object_metaclass();
+    my $metaclass = $test->get_test_object_metaclass( [ 'DesignCreate::Role::GapOligoCoordinates' ] );
     return $metaclass->new_object(
         dir           => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
         species       => $species,

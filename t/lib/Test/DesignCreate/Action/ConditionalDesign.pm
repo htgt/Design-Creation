@@ -19,6 +19,7 @@ sub valid_conditional_design_aos_cmd : Test(4) {
     my @argv_contents = (
         'conditional-design'  ,
         '--dir'               , $dir->stringify,
+        '--species'           , 'Mouse',
         '--chromosome'        , 11,
         '--strand'            , 1,
         '--u-block-start'     , 10000100,

@@ -28,6 +28,8 @@ sub get_sequence : Test(4) {
         , 'throws error if start after end';
 }
 
+#TODO add test for repeat masked sequence sp12 Wed 24 Jul 2013 12:55:17 BST
+
 sub ensembl_util : Test(7) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
