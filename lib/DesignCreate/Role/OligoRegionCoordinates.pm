@@ -66,6 +66,7 @@ sub _build_assembly {
 # Gap oligo region parameters, common to all design types
 # TODO: Think about moving these to seperate role, because there maybe more
 #       than one way we will want to specify the G oligo regions
+# Now for gibson oligos we must move this to make this role generic
 #
 
 has G5_region_length => (
