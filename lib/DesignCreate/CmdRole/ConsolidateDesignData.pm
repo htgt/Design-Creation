@@ -67,7 +67,11 @@ has all_oligo_pairs => (
 sub _build_all_oligo_pairs {
     my $self = shift;
     my %oligo_pairs;
-    my @oligo_class = $self->design_param( 'design_method' ) eq 'conditional' ? qw( G U D ) : qw( G );
+    my $design_method = $self->design_param( 'design_method' );
+    #TODO this information should be global somewhere sp12 Wed 24 Jul 2013 08:56:54 BST
+    my @oligo_class = $design_method eq 'conditional' ? qw( G U D )
+                    : $design_method eq 'gibson' ? qw( exon five_prime three_prime )
+                    : qw( G );
 
     for my $class ( @oligo_class ) {
         my $oligo_pair_file = $self->get_file( $class . '_oligo_pairs.yaml', $self->validated_oligo_dir );
