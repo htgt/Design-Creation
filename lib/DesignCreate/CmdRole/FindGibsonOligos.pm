@@ -14,7 +14,7 @@ use DesignCreate::Util::Primer3;
 use DesignCreate::Exception;
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
 use DesignCreate::Types qw( PositiveInt YesNo Species Strand DesignMethod Chromosome );
-use YAML::Any qw( DumpFile );
+use YAML::Any qw( DumpFile LoadFile );
 use Bio::SeqIO;
 use Bio::Seq;
 use Fcntl; # O_ constants
@@ -22,44 +22,14 @@ use Const::Fast;
 use Try::Tiny;
 use namespace::autoclean;
 
-use Smart::Comments;
-
-with qw(
-DesignCreate::Role::EnsEMBL
-);
-
-#TODO split out coordinate finding code? sp12 Wed 24 Jul 2013 08:58:55 BST
-
-#TODO this should be in a constant module sp12 Wed 24 Jul 2013 09:02:27 BST
-const my %CURRENT_ASSEMBLY => (
-    Mouse => 'GRCm38',
-    Human => 'GRCh37',
-);
+with qw( DesignCreate::Role::EnsEMBL );
 
 const my @FIND_GIBSON_OLIGOS_PARAMETERS => qw(
-design_method
-species
-assembly
-target_genes
-target_exon
-target_start
-target_end
-chr_name
-chr_strand
 mask_by_lower_case
-offset_ef
-size_ef
-offset_er
-size_er
-offset_5f
-size_5f
-offset_5r
-size_5r
-offset_3f
-size_3f
-offset_3r
-size_3r
+repeat_mask_class
 );
+
+const my $DEFAULT_OLIGO_COORD_FILE_NAME => 'oligo_region_coords.yaml';
 
 const my %PRIMER_DETAILS => (
     exon => {
@@ -79,154 +49,6 @@ const my %PRIMER_DETAILS => (
     },
 );
 
-has [
-    qw(
-        offset_ef
-        size_ef
-        offset_er
-        size_er
-        offset_5f
-        size_5f
-        offset_5r
-        size_5r
-        offset_3f
-        size_3f
-        offset_3r
-        size_3r
-    )
-] => (
-    is       => 'ro',
-    isa      => PositiveInt,
-    traits   => [ 'Getopt' ],
-    required => 1,
-);
-
-#for my $name ( @GIBSON_PARAMETERS )  {
-    #my $cmd_flag =
-
-    #has $name => (
-        #is       => 'ro',
-        #isa      => PositiveInt,
-        #traits   => [ 'Getopt' ],
-        #required => 1,
-        #documentation =>
-        #cmd_flag =>
-    #);
-#}
-
-has design_method => (
-    is      => 'ro',
-    isa     => DesignMethod,
-    traits  => [ 'NoGetopt' ],
-    default => 'gibson'
-);
-
-has species => (
-    is            => 'ro',
-    isa           => Species,
-    traits        => [ 'Getopt' ],
-    documentation => 'The species of the design target ( Human or Mouse )',
-    required      => 1,
-);
-
-has assembly => (
-    is         => 'ro',
-    isa        => 'Str',
-    traits     => [ 'NoGetopt' ],
-    lazy_build => 1,
-);
-
-sub _build_assembly {
-    my $self = shift;
-
-    return $CURRENT_ASSEMBLY{ $self->species };
-}
-
-has target_genes => (
-    is            => 'ro',
-    isa           => 'ArrayRef',
-    traits        => [ 'Getopt' ],
-    documentation => 'Name of target gene(s) of design',
-    required      => 1,
-    cmd_flag      => 'target-gene',
-);
-
-has target_exon => (
-    is            => 'ro',
-    isa           => 'Str',
-    traits        => [ 'Getopt' ],
-    documentation => 'EnsEMBL exon id we are targeting',
-    required      => 1,
-    cmd_flag      => 'target-exon'
-);
-
-has exon => (
-    is         => 'ro',
-    isa        => 'Bio::EnsEMBL::Exon',
-    traits     => [ 'NoGetopt' ],
-    lazy_build => 1,
-);
-
-sub _build_exon {
-    my $self = shift;
-
-    my $exon = try{ $self->exon_adaptor->fetch_by_stable_id( $self->target_exon ) };
-    unless ( $exon ) {
-        DesignCreate::Exception->throw( 'Unable to retrieve exon ' . $self->target_exon);
-    }
-
-    # check exon is on the chromosome coordinate system
-    if ( $exon->coord_system_name ne 'chromosome' ) {
-        $exon = $exon->transform( 'chromosome' );
-    }
-
-    return $exon;
-}
-
-has target_start => (
-    is         => 'ro',
-    isa        => PositiveInt,
-    traits     => [ 'NoGetopt' ],
-    lazy_build => 1,
- );
-
-sub _build_target_start {
-    shift->exon->seq_region_start;
-}
-
-has target_end => (
-    is         => 'ro',
-    isa        => PositiveInt,
-    traits     => [ 'NoGetopt' ],
-    lazy_build => 1,
-);
-
-sub _build_target_end {
-    shift->exon->seq_region_end;
-}
-
-has chr_name => (
-    is         => 'ro',
-    isa        => Chromosome,
-    traits     => [ 'NoGetopt' ],
-    lazy_build => 1,
-);
-
-sub _build_chr_name {
-    shift->exon->seq_region_name;
-}
-
-has chr_strand => (
-    is         => 'ro',
-    isa        => Strand,
-    traits     => [ 'NoGetopt' ],
-    lazy_build => 1,
-);
-
-sub _build_chr_strand {
-    shift->exon->strand;
-}
-
 # default of masking all sequence ensembl considers to be a repeat region
 # means passing in undef as a mask method, otherwise pass in array ref of
 # repeat classes
@@ -242,6 +64,40 @@ has repeat_mask_class => (
     },
 );
 
+has oligo_region_coordinate_file => (
+    is            => 'ro',
+    isa           => AbsFile,
+    traits        => [ 'Getopt' ],
+    documentation => 'File containing oligo region coordinates ( default '
+                     . "[design_dir]/oligo_target_regions/$DEFAULT_OLIGO_COORD_FILE_NAME  )",
+    cmd_flag      => 'oligo-region-coord-file',
+    coerce        => 1,
+    lazy_build    => 1,
+);
+
+sub _build_oligo_region_coordinate_file {
+    my $self = shift;
+
+    return $self->get_file( $DEFAULT_OLIGO_COORD_FILE_NAME, $self->oligo_target_regions_dir );
+}
+
+has oligo_region_data => (
+    is         => 'ro',
+    isa        => 'HashRef',
+    traits     => [ 'NoGetopt', 'Hash' ],
+    lazy_build => 1,
+    handles    => {
+        get_region_coords  => 'get',
+        have_region_coords => 'exists',
+    }
+);
+
+sub _build_oligo_region_data {
+    my $self = shift;
+
+    return LoadFile( $self->oligo_region_coordinate_file );
+}
+
 # primer3 expects sequence in a 5' to 3' direction
 has exon_region_slice => (
     is         => 'ro',
@@ -252,24 +108,17 @@ has exon_region_slice => (
 
 sub _build_exon_region_slice {
     my $self = shift;
-    my ( $start, $end );
 
-    if ( $self->chr_strand == 1 ) {
-        $start = $self->target_start - ( $self->offset_ef + $self->size_ef );
-        $end = $self->target_end + ( $self->offset_er + $self->size_er );
-    }
-    else {
-        $start = $self->target_start - ( $self->offset_er + $self->size_er );
-        $end = $self->target_end + ( $self->offset_ef + $self->size_ef );
-    }
-    $self->log->debug( "Exon region start: $start, end: $end" );
+    my $coords = $self->get_region_coords( 'exon' );
+    my $start  = $coords->{start};
+    my $end    = $coords->{end};
 
     my $slice = $self->get_repeat_masked_slice(
-        $start, $end, $self->exon->seq_region_name,
+        $start, $end, $self->design_param( 'chr_name' ),
         $self->no_repeat_mask_classes ? undef : $self->repeat_mask_class
     );
 
-    return $self->chr_strand == 1 ? $slice : $slice->invert;
+    return $self->design_param( 'chr_strand' ) == 1 ? $slice : $slice->invert;
 }
 
 has five_prime_region_slice => (
@@ -281,24 +130,17 @@ has five_prime_region_slice => (
 
 sub _build_five_prime_region_slice {
     my $self = shift;
-    my ( $start, $end );
 
-    if ( $self->chr_strand == 1 ) {
-        $start = $self->target_start - ( $self->offset_5f + $self->size_5f );
-        $end = $self->target_start - $self->offset_5r;
-    }
-    else {
-        $start = $self->target_end + $self->offset_5r;
-        $end = $self->target_end + ( $self->offset_5f + $self->size_5f );
-    }
-    $self->log->debug( "Five prime region start: $start, end: $end" );
+    my $coords = $self->get_region_coords( 'five_prime' );
+    my $start  = $coords->{start};
+    my $end    = $coords->{end};
 
     my $slice = $self->get_repeat_masked_slice(
-        $start, $end, $self->exon->seq_region_name,
+        $start, $end, $self->design_param( 'chr_name' ),
         $self->no_repeat_mask_classes ? undef : $self->repeat_mask_class
     );
 
-    return $self->chr_strand == 1 ? $slice : $slice->invert;
+    return $self->design_param( 'chr_strand' ) == 1 ? $slice : $slice->invert;
 }
 
 has three_prime_region_slice => (
@@ -310,24 +152,17 @@ has three_prime_region_slice => (
 
 sub _build_three_prime_region_slice {
     my $self = shift;
-    my ( $start, $end );
 
-    if ( $self->chr_strand == 1 ) {
-        $start = $self->target_end + $self->offset_3f;
-        $end = $self->target_end + ( $self->offset_3r + $self->size_3r );
-    }
-    else {
-        $start = $self->target_start - ( $self->offset_3r + $self->size_3r );
-        $end = $self->target_start - $self->offset_3f;
-    }
-    $self->log->debug( "Three prime region start: $start, end: $end" );
+    my $coords = $self->get_region_coords( 'three_prime' );
+    my $start  = $coords->{start};
+    my $end    = $coords->{end};
 
     my $slice = $self->get_repeat_masked_slice(
-        $start, $end, $self->exon->seq_region_name,
+        $start, $end, $self->design_param( 'chr_name' ),
         $self->no_repeat_mask_classes ? undef : $self->repeat_mask_class
     );
 
-    return $self->chr_strand == 1 ? $slice : $slice->invert;
+    return $self->design_param( 'chr_strand' ) == 1 ? $slice : $slice->invert;
 }
 
 #TODO respect this flag sp12 Thu 18 Jul 2013 11:04:06 BST
@@ -382,10 +217,6 @@ sub find_oligos {
     my ( $self, $opts, $args ) = @_;
 
     $self->add_design_parameters( \@FIND_GIBSON_OLIGOS_PARAMETERS );
-
-    # check coordinates
-    # EF offset + ef size = 5r offset - 1 ???
-    # or maybe check for overlaps
 
     $self->run_primer3;
 
@@ -479,6 +310,7 @@ sub parse_primer {
         die( 'failed to validate sequence' );
     }
 
+    #TODO could replace this is variables worked out in last step?
     my $oligo_type = uc($PRIMER_DETAILS{$region}{$direction});
     my $region_slice_name = $PRIMER_DETAILS{$region}{slice};
     my $region_slice = $self->$region_slice_name;
@@ -488,9 +320,8 @@ sub parse_primer {
 
     # Maybe able to use feature of Primer3Redux to help with all this
     # the forward seq is okay, the reverse primer sequence needs to be rev-comped
-
     # STRAND DEPENDANT
-    if ( $self->chr_strand == 1 ) {
+    if ( $self->design_param( 'chr_strand' ) == 1 ) {
         $oligo_data{oligo_start} = $region_slice->start + $primer->start - 1;
         $oligo_data{oligo_end} = $region_slice->start + $primer->end - 1;
         $oligo_data{offset} = $primer->start;
@@ -515,21 +346,6 @@ sub parse_primer {
     push @{ $self->primer3_oligos->{ $oligo_type } }, \%oligo_data;
 
     return $oligo_data{id};
-}
-
-=head2 check_masked_seq
-
-check if entire region is repeat masked
-
-=cut
-sub check_masked_seq {
-    my ( $self, $seq, $oligo ) = @_;
-
-    if ( $seq =~ /^[actg]+$/ ) {
-        $self->add_repeat_masked_oligo_region( $oligo );
-    }
-
-    return;
 }
 
 =head2 create_oligo_files
@@ -563,13 +379,13 @@ Build sequence target string that tells primer3 what region the primers must sur
 =cut
 sub build_primer3_sequence_target_string {
     my ( $self, $region ) = @_;
-    my $forward_primer_size_attr = 'size_' . $PRIMER_DETAILS{$region}{forward};
-    my $reverse_primer_size_attr = 'size_' . $PRIMER_DETAILS{$region}{reverse};
+
+    my $forward_primer_size = $self->design_param( 'size_' . $PRIMER_DETAILS{$region}{forward} );
+    my $reverse_primer_size = $self->design_param( 'size_' . $PRIMER_DETAILS{$region}{reverse} );
     my $slice_name = $PRIMER_DETAILS{$region}{slice};
 
-    my $target_start = $self->$forward_primer_size_attr;
-    my $target_length = $self->$slice_name->length - $target_start - $self->$reverse_primer_size_attr;
-    return $target_start . ',' . $target_length;
+    my $target_length = $self->$slice_name->length - $forward_primer_size - $reverse_primer_size;
+    return $forward_primer_size . ',' . $target_length;
 }
 
 1;

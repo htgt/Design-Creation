@@ -23,6 +23,7 @@ use Data::Dump qw( pp );
 #TODO this almost exactly mimics the InsDelDesign Action, need to factor things out
 extends qw( DesignCreate::Action );
 with qw(
+DesignCreate::CmdRole::OligoPairRegionsGibson;
 DesignCreate::CmdRole::FindGibsonOligos
 DesignCreate::CmdRole::FilterGibsonOligos
 DesignCreate::CmdRole::ConsolidateDesignData
@@ -61,6 +62,7 @@ sub execute {
     $self->log->debug( 'Design run args: ' . pp($opts) );
 
     try {
+        $self->get_oligo_pair_region_coordinates;
         $self->find_oligos;
         $self->filter_oligos;
         $self->consolidate_design_data;
