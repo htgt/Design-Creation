@@ -53,7 +53,7 @@ has [
     'primer_explain_flag',
 ] => (
     is       => 'ro',
-    isa      => 'Int',
+    isa      => 'Bool',
     required => 1,
 );
 
