@@ -1,12 +1,13 @@
 package DesignCreate::Util::Primer3;
 
 use Moose;
-use namespace::autoclean;
+use DesignCreate::Exception;
 use Bio::Tools::Primer3Redux;
 use Bio::Tools::Run::Primer3Redux;
 use DesignCreate::Types qw( PositiveInt );
 use Const::Fast;
 use Scalar::Util qw( blessed reftype );
+use namespace::autoclean;
 
 with qw( MooseX::Log::Log4perl MooseX::SimpleConfig );
 
@@ -47,7 +48,6 @@ has [
     required => 1,
 );
 
-#TODO make isa Booleon sp12 Wed 17 Jul 2013 14:05:50 BST
 has [
     'primer_lowercase_masking',
     'primer_explain_flag',
@@ -97,38 +97,40 @@ sub _build_primer3_global_arguments {
 #the PrimerTarget object
 #
 
-#TODO add logging sp12 Thu 18 Jul 2013 10:49:36 BST
 sub run_primer3 {
     my ( $self, $outfile, $seq, $target ) = @_;
+    $self->log->debug( 'Running Primer3' );
 
-    #TODO throw exceptions sp12 Thu 18 Jul 2013 10:49:20 BST
     if ( ! blessed( $outfile ) || ! $outfile->isa( 'Path::Class::File' ) ) {
-        die( 'Outfile variable  must be Path::Class::File object' );
+        DesignCreate::Exception->throw( 'Outfile variable  must be Path::Class::File object' );
     }
     if ( ! blessed( $seq ) || ! $seq->isa( 'Bio::SeqI' ) ) {
-        die( 'Sequence variable must be Bio::SeqI object' );
+        DesignCreate::Exception->throw( 'Sequence variable must be Bio::SeqI object' );
     }
     if ( $target && reftype $target ne 'HASH' ) {
-        die( 'Target variable must be a hashref or undef' );
+        DesignCreate::Exception->throw( 'Target variable must be a hashref or undef' );
     }
 
     my $primer3 = Bio::Tools::Run::Primer3Redux->new(
         -outfile => $outfile->stringify,
         -path    => $self->primer3_path
     );
-    die( "primer3 can not be found" ) unless $primer3->executable;
+    DesignCreate::Exception->throw( "primer3 can not be found" )
+        unless $primer3->executable;
 
     $primer3->set_parameters( %{ $self->primer3_global_arguments } );
 
     # Setup specific target which primers must flank
     if ( $target && exists $target->{SEQUENCE_TARGET} ) {
+        $self->log->debug('Specify target primers must flank: ' . $target->{SEQUENCE_TARGET} );
         $primer3->set_parameters( SEQUENCE_TARGET => $target->{SEQUENCE_TARGET} );
     }
 
     my $results = $primer3->pick_pcr_primers( $seq );
+    # we are only sending in one sequence so we will only have one result
     my $result = $results->next_result;
     unless ( $result ) {
-        die( "No results returned from primer3" );
+        DesignCreate::Exception->throw( "No results returned from primer3" );
     }
 
     return $result;
