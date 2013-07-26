@@ -23,7 +23,7 @@ use Data::Dump qw( pp );
 #TODO this almost exactly mimics the InsDelDesign Action, need to factor things out
 extends qw( DesignCreate::Action );
 with qw(
-DesignCreate::CmdRole::OligoPairRegionsGibson;
+DesignCreate::CmdRole::OligoPairRegionsGibson
 DesignCreate::CmdRole::FindGibsonOligos
 DesignCreate::CmdRole::FilterGibsonOligos
 DesignCreate::CmdRole::ConsolidateDesignData
