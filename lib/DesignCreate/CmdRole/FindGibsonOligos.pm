@@ -24,7 +24,6 @@ use namespace::autoclean;
 with qw( DesignCreate::Role::EnsEMBL );
 
 const my @FIND_GIBSON_OLIGOS_PARAMETERS => qw(
-primer3_config_file
 mask_by_lower_case
 repeat_mask_class
 );
@@ -60,7 +59,6 @@ has primer3_config_file => (
     cmd_flag      => 'primer3-config-file',
     coerce        => 1,
     default       => sub{ Path::Class::File->new( $DEFAULT_PRIMER3_CONFIG_FILE )->absolute },
-
 );
 
 # default of masking all sequence ensembl considers to be a repeat region
@@ -145,7 +143,6 @@ sub _build_three_prime_region_slice {
     shift->_build_region_slice( 'three_prime' );
 }
 
-#TODO respect this flag sp12 Thu 18 Jul 2013 11:04:06 BST
 has mask_by_lower_case => (
     is            => 'ro',
     isa           => YesNo,
@@ -190,18 +187,15 @@ has oligo_pairs => (
 
 =head2 find_oligos
 
-blah
+Find the oligos for the 3 target regions using primer3
 
 =cut
 sub find_oligos {
     my ( $self, $opts, $args ) = @_;
 
     $self->add_design_parameters( \@FIND_GIBSON_OLIGOS_PARAMETERS );
-
     $self->run_primer3;
-
     $self->parse_primer3_results;
-
     $self->create_oligo_files;
 
     return;
@@ -216,26 +210,28 @@ sub run_primer3 {
     my ( $self ) = @_;
 
     my $p3 = DesignCreate::Util::Primer3->new_with_config(
-        configfile => $self->primer3_config_file->stringify
+        configfile => $self->primer3_config_file->stringify,
+        primer_lowercase_masking => $self->mask_by_lower_case eq 'yes' ? 1 : 0,
     );
 
     for my $region ( keys %PRIMER_DETAILS ) {
         $self->log->debug("Finding primers for $region primer region");
-        my $file = $self->oligo_finder_output_dir->file( 'primer3_output_' . $region . '.log' );
+        my $log_file = $self->oligo_finder_output_dir->file( 'primer3_output_' . $region . '.log' );
 
-        my $target_string = $self->build_primer3_sequence_target_string( $region );
-
-        my $slice_name = $PRIMER_DETAILS{$region}{slice};
-        my $region_slice = $self->$slice_name;
+        my $target_string  = $self->build_primer3_sequence_target_string($region);
+        my $slice_name     = $PRIMER_DETAILS{$region}{slice};
+        my $region_slice   = $self->$slice_name;
         my $region_bio_seq = Bio::Seq->new( -display_id => $region, -seq => $region_slice->seq );
 
-        my $result = $p3->run_primer3( $file->absolute, $region_bio_seq, { SEQUENCE_TARGET => $target_string } );
+        my $result = $p3->run_primer3( $log_file->absolute, $region_bio_seq,
+            { SEQUENCE_TARGET => $target_string } );
 
         if ( $result->warnings ) {
             $self->log->warn( "Primer3 warning: $_" ) for $result->warnings;
         };
         if ( $result->errors ) {
             $self->log->error( "Primer3 error: $_" ) for $result->errors;
+            DesignCreate::Exception->throw( "Errors running primer3 on $region region" );
         };
 
         if ( $result->num_primer_pairs ) {
@@ -243,7 +239,7 @@ sub run_primer3 {
             $self->add_primer3_result( $region => $result );
         }
         else {
-            die( "Can not find any primer pairs for $region primer region" );
+            DesignCreate::Exception->throw( "Can not find any primer pairs for $region primer region" );
         }
     }
 
@@ -263,10 +259,10 @@ sub parse_primer3_results {
 
         my $result = $self->get_primer3_result( $region );
         while ( my $pair = $result->next_primer_pair ) {
-            # are Bio::SeqFeature::Generic plus few other methods
             my $forward_id = $self->parse_primer( $pair->forward_primer, $region, 'forward' );
             my $reverse_id = $self->parse_primer( $pair->reverse_primer, $region, 'reverse' );
 
+            # store primer pair information seperately
             push @{ $self->oligo_pairs->{ $region } }, {
                 $PRIMER_DETAILS{$region}{forward} => $forward_id,
                 $PRIMER_DETAILS{$region}{reverse} => $reverse_id,
@@ -279,50 +275,47 @@ sub parse_primer3_results {
 
 =head2 parse_primer
 
-Parse output from Bio::Tools::Primer3Redux::Primer into a hash along
-with other data we need about the primer.
+Parse output required data from the Bio::Tools::Primer3Redux::Primer objects
+( basically a Bio::SeqFeature::Generic object plus few other methods ).
+Also add other calulated data about primer.
 
 =cut
 sub parse_primer {
     my ( $self, $primer, $region, $direction ) = @_;
     my %oligo_data;
+    my $oligo_type  = $PRIMER_DETAILS{$region}{$direction};
+    my $primer_id   = $oligo_type . '-' . $primer->rank;
+    $oligo_data{id} = $primer_id;
 
-    unless ( $primer->validate_seq ) {
-        die( 'failed to validate sequence' );
-    }
+    DesignCreate::Exception->throw( "primer3 failed to validate sequence for primer: $primer_id" )
+        unless $primer->validate_seq;
 
-    #TODO could replace this is variables worked out in last step?
-    my $oligo_type = $PRIMER_DETAILS{$region}{$direction};
-    my $region_slice_name = $PRIMER_DETAILS{$region}{slice};
-    my $region_slice = $self->$region_slice_name;
+    my $region_coords = $self->get_region_coords( $region );
+    $oligo_data{target_region_start} = $region_coords->{start};
+    $oligo_data{target_region_end}   = $region_coords->{end};
 
-    $oligo_data{target_region_start} = $region_slice->start;
-    $oligo_data{target_region_end} = $region_slice->end;
-
-    # Maybe able to use feature of Primer3Redux to help with all this
-    # the forward seq is okay, the reverse primer sequence needs to be rev-comped
-    # STRAND DEPENDANT
+    # primer3 takes in sequence 5' to 3' so we need to work out the sequence in the
+    # +ve strand plus its coordinates
     if ( $self->design_param( 'chr_strand' ) == 1 ) {
-        $oligo_data{oligo_start} = $region_slice->start + $primer->start - 1;
-        $oligo_data{oligo_end} = $region_slice->start + $primer->end - 1;
-        $oligo_data{offset} = $primer->start;
-        $oligo_data{oligo_seq} = $direction eq 'forward' ? $primer->seq->seq : $primer->seq->revcom->seq;
+        $oligo_data{oligo_start} = $region_coords->{start} + $primer->start - 1;
+        $oligo_data{oligo_end}   = $region_coords->{start} + $primer->end - 1;
+        $oligo_data{offset}      = $primer->start;
+        $oligo_data{oligo_seq}   = $direction eq 'forward' ? $primer->seq->seq : $primer->seq->revcom->seq;
     }
     else {
-        $oligo_data{oligo_start} = $region_slice->end - $primer->end + 1;
-        $oligo_data{oligo_end} = $region_slice->end - $primer->start + 1;
-        $oligo_data{offset} = $region_slice->length - $primer->end;
-        $oligo_data{oligo_seq} = $direction eq 'forward' ? $primer->seq->revcom->seq : $primer->seq->seq;
+        $oligo_data{oligo_start} = $region_coords->{end} - $primer->end + 1;
+        $oligo_data{oligo_end}   = $region_coords->{end} - $primer->start + 1;
+        $oligo_data{offset}      = ( $region_coords->{end} - $region_coords->{start} + 1 ) - $primer->end;
+        $oligo_data{oligo_seq}   = $direction eq 'forward' ? $primer->seq->revcom->seq : $primer->seq->seq;
     }
 
-    $oligo_data{oligo_length} = $primer->length;
-    $oligo_data{melting_temp} = $primer->melting_temp;
-    $oligo_data{gc_content} = $primer->gc_content;
+    $oligo_data{oligo_length}    = $primer->length;
+    $oligo_data{melting_temp}    = $primer->melting_temp;
+    $oligo_data{gc_content}      = $primer->gc_content;
     $oligo_data{oligo_direction} = $direction;
-    $oligo_data{rank} = $primer->rank;
-    $oligo_data{region} = $region;
-    $oligo_data{oligo} = $oligo_type;
-    $oligo_data{id} = $oligo_type . '-' . $primer->rank;
+    $oligo_data{rank}            = $primer->rank;
+    $oligo_data{region}          = $region;
+    $oligo_data{oligo}           = $oligo_type;
 
     push @{ $self->primer3_oligos->{ $oligo_type } }, \%oligo_data;
 
