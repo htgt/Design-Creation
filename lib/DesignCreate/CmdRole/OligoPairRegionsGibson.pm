@@ -2,7 +2,7 @@ package DesignCreate::CmdRole::OligoPairRegionsGibson;
 
 =head1 NAME
 
-DesignCreate::Action::OligoPairRegionsGibson -
+DesignCreate::Action::OligoPairRegionsGibson - Coordinates for oligo regions in gibson designs
 
 =head1 DESCRIPTION
 
@@ -32,60 +32,18 @@ target_start
 target_end
 chr_name
 chr_strand
-offset_ef
-size_ef
-offset_er
-size_er
-offset_5f
-size_5f
-offset_5r
-size_5r
-offset_3f
-size_3f
-offset_3r
-size_3r
-);
-
-has [
-    qw(
-        offset_ef
-        size_ef
-        offset_er
-        size_er
-        offset_5f
-        size_5f
-        offset_5r
-        size_5r
-        offset_3f
-        size_3f
-        offset_3r
-        size_3r
-    )
-] => (
-    is       => 'ro',
-    isa      => PositiveInt,
-    traits   => [ 'Getopt' ],
-    required => 1,
-);
-
-#for my $name ( @GIBSON_PARAMETERS )  {
-    #my $cmd_flag =
-
-    #has $name => (
-        #is       => 'ro',
-        #isa      => PositiveInt,
-        #traits   => [ 'Getopt' ],
-        #required => 1,
-        #documentation =>
-        #cmd_flag =>
-    #);
-#}
-
-has design_method => (
-    is      => 'ro',
-    isa     => DesignMethod,
-    traits  => [ 'NoGetopt' ],
-    default => 'gibson'
+region_length_5F
+region_offset_5F
+region_length_3R
+region_offset_3R
+region_length_5R_EF
+region_offset_5R_EF
+region_length_ER_3F
+region_offset_ER_3F
+region_length_5R
+region_length_EF
+region_length_ER
+region_length_3F
 );
 
 has target_exon => (
@@ -96,6 +54,132 @@ has target_exon => (
     required      => 1,
     cmd_flag      => 'target-exon'
 );
+
+has design_method => (
+    is      => 'ro',
+    isa     => DesignMethod,
+    traits  => [ 'NoGetopt' ],
+    default => 'gibson'
+);
+
+has region_length_5F => (
+    is            => 'ro',
+    isa           => PositiveInt,
+    traits        => [ 'Getopt' ],
+    default       => 500,
+    documentation => 'Length of 5F oligo candidate region',
+    cmd_flag      => 'region-length-5f'
+);
+
+has region_offset_5F => (
+    is            => 'ro',
+    isa           => PositiveInt,
+    traits        => [ 'Getopt' ],
+    default       => 1400,
+    documentation => 'Offset from target region of 5F oligo candidate region',
+    cmd_flag      => 'region-offset-5f'
+);
+
+has region_length_3R => (
+    is            => 'ro',
+    isa           => PositiveInt,
+    traits        => [ 'Getopt' ],
+    default       => 500,
+    documentation => 'Length of 3R oligo candidate region',
+    cmd_flag      => 'region-length-3r'
+);
+
+has region_offset_3R => (
+    is            => 'ro',
+    isa           => PositiveInt,
+    traits        => [ 'Getopt' ],
+    default       => 1300,
+    documentation => 'Offset from target region of 3R oligo candidate region',
+    cmd_flag      => 'region-offset-3r'
+);
+
+has region_length_5R_EF => (
+    is            => 'ro',
+    isa           => PositiveInt,
+    traits        => [ 'Getopt' ],
+    default       => 200,
+    documentation => 'Length of 5R / EF oligo candidate region block, will be split in two',
+    cmd_flag      => 'region-length-5r-ef'
+);
+
+has region_offset_5R_EF => (
+    is            => 'ro',
+    isa           => PositiveInt,
+    traits        => [ 'Getopt' ],
+    default       => 200,
+    documentation => 'Offset from target region of 5R / EF oligo candidate region block',
+    cmd_flag      => 'region-offset-5r-ef'
+);
+
+has region_length_ER_3F => (
+    is            => 'ro',
+    isa           => PositiveInt,
+    traits        => [ 'Getopt' ],
+    default       => 200,
+    documentation => 'Length of ER / 3F oligo candidate region block, will be split in two',
+    cmd_flag      => 'region-length-er-3f'
+);
+
+has region_offset_ER_3F => (
+    is            => 'ro',
+    isa           => PositiveInt,
+    traits        => [ 'Getopt' ],
+    default       => 100,
+    documentation => 'Offset from target region of ER / 3F oligo candidate region block',
+    cmd_flag      => 'region-offset-er-3f'
+);
+
+#
+# Following values can be deduced from already given design parameters
+#
+has region_length_ER => (
+    is         => 'ro',
+    isa        => PositiveInt,
+    traits     => [ 'NoGetopt' ],
+    lazy_build => 1,
+);
+
+sub _build_region_length_ER {
+    int( shift->region_length_ER_3F / 2 );
+}
+
+has region_length_3F => (
+    is         => 'ro',
+    isa        => PositiveInt,
+    traits     => [ 'NoGetopt' ],
+    lazy_build => 1,
+);
+
+sub _build_region_length_3F {
+    int( shift->region_length_ER_3F / 2 );
+}
+
+has region_length_5R => (
+    is         => 'ro',
+    isa        => PositiveInt,
+    traits     => [ 'NoGetopt' ],
+    lazy_build => 1,
+);
+
+sub _build_region_length_5R {
+    int( shift->region_length_5R_EF / 2 );
+}
+
+has region_length_EF => (
+    is         => 'ro',
+    isa        => PositiveInt,
+    traits     => [ 'NoGetopt' ],
+    lazy_build => 1,
+);
+
+sub _build_region_length_EF {
+    int( shift->region_length_5R_EF / 2 );
+}
 
 has exon => (
     is         => 'ro',
@@ -164,14 +248,6 @@ sub _build_chr_strand {
     shift->exon->strand;
 }
 
-# primer3 expects sequence in a 5' to 3' direction
-has exon_region_slice => (
-    is         => 'ro',
-    isa        => 'Bio::EnsEMBL::Slice',
-    traits     => [ 'NoGetopt' ],
-    lazy_build => 1,
-);
-
 has exon_region_start => (
     is         => 'ro',
     isa        => PositiveInt,
@@ -184,10 +260,12 @@ sub _build_exon_region_start {
     my $start;
 
     if ( $self->chr_strand == 1 ) {
-        $start = $self->target_start - ( $self->offset_ef + $self->size_ef );
+        $start = $self->target_start
+            - ( $self->region_offset_5R_EF + int( $self->region_length_5R_EF / 2 ) );
     }
     else {
-        $start = $self->target_start - ( $self->offset_er + $self->size_er );
+        $start = $self->target_start
+            - ( $self->region_offset_ER_3F + int( $self->region_length_ER_3F / 2 ) );
     }
     $self->log->debug( "Exon region start: $start" );
 
@@ -206,10 +284,10 @@ sub _build_exon_region_end {
     my $end;
 
     if ( $self->chr_strand == 1 ) {
-        $end = $self->target_end + ( $self->offset_er + $self->size_er );
+        $end = $self->target_end + ( $self->region_offset_ER_3F + int( $self->region_length_ER_3F / 2 ) );
     }
     else {
-        $end = $self->target_end + ( $self->offset_ef + $self->size_ef );
+        $end = $self->target_end + ( $self->region_offset_5R_EF + int( $self->region_length_5R_EF / 2 ) );
     }
     $self->log->debug( "Exon region end: $end" );
 
@@ -228,10 +306,10 @@ sub _build_five_prime_region_start {
     my $start;
 
     if ( $self->chr_strand == 1 ) {
-        $start = $self->target_start - ( $self->offset_5f + $self->size_5f );
+        $start = $self->target_start - ( $self->region_offset_5F + $self->region_length_5F );
     }
     else {
-        $start = $self->target_end + $self->offset_5r;
+        $start = $self->exon_region_end + 1;
     }
     $self->log->debug( "Exon region start: $start" );
 
@@ -250,10 +328,10 @@ sub _build_five_prime_region_end {
     my $end;
 
     if ( $self->chr_strand == 1 ) {
-        $end = $self->target_start - $self->offset_5r;
+        $end = $self->exon_region_start - 1; 
     }
     else {
-        $end = $self->target_end + ( $self->offset_5f + $self->size_5f );
+        $end = $self->target_end + ( $self->region_offset_5F + $self->region_length_5F );
     }
     $self->log->debug( "Exon region end: $end" );
 
@@ -272,10 +350,10 @@ sub _build_three_prime_region_start {
     my $start;
 
     if ( $self->chr_strand == 1 ) {
-        $start = $self->target_end + $self->offset_3f;
+        $start = $self->exon_region_end + 1;
     }
     else {
-        $start = $self->target_start - ( $self->offset_3r + $self->size_3r );
+        $start = $self->target_start - ( $self->region_offset_3R + $self->region_length_3R );
     }
     $self->log->debug( "Exon region start: $start" );
 
@@ -294,10 +372,10 @@ sub _build_three_prime_region_end {
     my $end;
 
     if ( $self->chr_strand == 1 ) {
-        $end = $self->target_end + ( $self->offset_3r + $self->size_3r );
+        $end = $self->target_end + ( $self->region_offset_3R + $self->region_length_3R );
     }
     else {
-        $end = $self->target_start - $self->offset_3f;
+        $end = $self->exon_region_start - 1;
     }
     $self->log->debug( "Exon region end: $end" );
 
@@ -323,7 +401,7 @@ sub get_oligo_pair_region_coordinates {
         my $end_attr_name = $region . '_region_end';
         $self->oligo_region_coordinates->{ $region } = {
             start => $self->$start_attr_name,
-            end => $self->$end_attr_name
+            end   => $self->$end_attr_name
         };
     }
 
