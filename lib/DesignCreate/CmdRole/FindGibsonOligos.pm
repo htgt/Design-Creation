@@ -33,18 +33,18 @@ const my $DEFAULT_OLIGO_COORD_FILE_NAME => 'oligo_region_coords.yaml';
 
 const my %PRIMER_DETAILS => (
     exon => {
-        forward => 'ef',
-        reverse => 'er',
+        forward => 'EF',
+        reverse => 'ER',
         slice  => 'exon_region_slice'
     },
     five_prime => {
-        forward => '5f',
-        reverse => '5r',
+        forward => '5F',
+        reverse => '5R',
         slice  => 'five_prime_region_slice'
     },
     three_prime => {
-        forward => '3f',
-        reverse => '3r',
+        forward => '3F',
+        reverse => '3R',
         slice  => 'three_prime_region_slice'
     },
 );
@@ -288,8 +288,8 @@ sub parse_primer3_results {
             my $reverse_id = $self->parse_primer( $pair->reverse_primer, $region, 'reverse' );
 
             push @{ $self->oligo_pairs->{ $region } }, {
-                uc($PRIMER_DETAILS{$region}{forward}) => $forward_id,
-                uc($PRIMER_DETAILS{$region}{reverse}) => $reverse_id,
+                $PRIMER_DETAILS{$region}{forward} => $forward_id,
+                $PRIMER_DETAILS{$region}{reverse} => $reverse_id,
             };
         }
     }
@@ -311,7 +311,7 @@ sub parse_primer {
     }
 
     #TODO could replace this is variables worked out in last step?
-    my $oligo_type = uc($PRIMER_DETAILS{$region}{$direction});
+    my $oligo_type = $PRIMER_DETAILS{$region}{$direction};
     my $region_slice_name = $PRIMER_DETAILS{$region}{slice};
     my $region_slice = $self->$region_slice_name;
 
@@ -380,8 +380,8 @@ Build sequence target string that tells primer3 what region the primers must sur
 sub build_primer3_sequence_target_string {
     my ( $self, $region ) = @_;
 
-    my $forward_primer_size = $self->design_param( 'size_' . $PRIMER_DETAILS{$region}{forward} );
-    my $reverse_primer_size = $self->design_param( 'size_' . $PRIMER_DETAILS{$region}{reverse} );
+    my $forward_primer_size = $self->design_param( 'region_length_' . $PRIMER_DETAILS{$region}{forward} );
+    my $reverse_primer_size = $self->design_param( 'region_length_' . $PRIMER_DETAILS{$region}{reverse} );
     my $slice_name = $PRIMER_DETAILS{$region}{slice};
 
     my $target_length = $self->$slice_name->length - $forward_primer_size - $reverse_primer_size;
