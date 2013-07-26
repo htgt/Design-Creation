@@ -2,10 +2,12 @@ package DesignCreate::CmdRole::FindGibsonOligos;
 
 =head1 NAME
 
-DesignCreate::Action::FindGibsonOligos -
+DesignCreate::Action::FindGibsonOligos - Use primer3 to find oligo pairs
 
 =head1 DESCRIPTION
 
+Using primer3 find oligo pairs for the three seperate regions in a
+gibson design.
 
 =cut
 
@@ -13,23 +15,24 @@ use Moose::Role;
 use DesignCreate::Util::Primer3;
 use DesignCreate::Exception;
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
-use DesignCreate::Types qw( PositiveInt YesNo Species Strand DesignMethod Chromosome );
+use DesignCreate::Types qw( YesNo );
 use YAML::Any qw( DumpFile LoadFile );
-use Bio::SeqIO;
 use Bio::Seq;
-use Fcntl; # O_ constants
 use Const::Fast;
-use Try::Tiny;
 use namespace::autoclean;
 
 with qw( DesignCreate::Role::EnsEMBL );
 
 const my @FIND_GIBSON_OLIGOS_PARAMETERS => qw(
+primer3_config_file
 mask_by_lower_case
 repeat_mask_class
 );
 
 const my $DEFAULT_OLIGO_COORD_FILE_NAME => 'oligo_region_coords.yaml';
+#TODO move this to somewhere sensible sp12 Fri 26 Jul 2013 08:30:53 BST
+const my $DEFAULT_PRIMER3_CONFIG_FILE =>
+    '/nfs/users/nfs_s/sp12/workspace/Design-Creation/tmp/primer3/primer3_config.yaml';
 
 const my %PRIMER_DETAILS => (
     exon => {
@@ -47,6 +50,17 @@ const my %PRIMER_DETAILS => (
         reverse => '3R',
         slice  => 'three_prime_region_slice'
     },
+);
+
+has primer3_config_file => (
+    is            => 'ro',
+    isa           => AbsFile,
+    traits        => [ 'Getopt' ],
+    documentation => "File containing primer3 config details ( default $DEFAULT_PRIMER3_CONFIG_FILE )",
+    cmd_flag      => 'primer3-config-file',
+    coerce        => 1,
+    default       => sub{ Path::Class::File->new( $DEFAULT_PRIMER3_CONFIG_FILE )->absolute },
+
 );
 
 # default of masking all sequence ensembl considers to be a repeat region
@@ -98,7 +112,6 @@ sub _build_oligo_region_data {
     return LoadFile( $self->oligo_region_coordinate_file );
 }
 
-# primer3 expects sequence in a 5' to 3' direction
 has exon_region_slice => (
     is         => 'ro',
     isa        => 'Bio::EnsEMBL::Slice',
@@ -107,18 +120,7 @@ has exon_region_slice => (
 );
 
 sub _build_exon_region_slice {
-    my $self = shift;
-
-    my $coords = $self->get_region_coords( 'exon' );
-    my $start  = $coords->{start};
-    my $end    = $coords->{end};
-
-    my $slice = $self->get_repeat_masked_slice(
-        $start, $end, $self->design_param( 'chr_name' ),
-        $self->no_repeat_mask_classes ? undef : $self->repeat_mask_class
-    );
-
-    return $self->design_param( 'chr_strand' ) == 1 ? $slice : $slice->invert;
+    shift->_build_region_slice( 'exon' );
 }
 
 has five_prime_region_slice => (
@@ -129,18 +131,7 @@ has five_prime_region_slice => (
 );
 
 sub _build_five_prime_region_slice {
-    my $self = shift;
-
-    my $coords = $self->get_region_coords( 'five_prime' );
-    my $start  = $coords->{start};
-    my $end    = $coords->{end};
-
-    my $slice = $self->get_repeat_masked_slice(
-        $start, $end, $self->design_param( 'chr_name' ),
-        $self->no_repeat_mask_classes ? undef : $self->repeat_mask_class
-    );
-
-    return $self->design_param( 'chr_strand' ) == 1 ? $slice : $slice->invert;
+    shift->_build_region_slice( 'five_prime' );
 }
 
 has three_prime_region_slice => (
@@ -151,18 +142,7 @@ has three_prime_region_slice => (
 );
 
 sub _build_three_prime_region_slice {
-    my $self = shift;
-
-    my $coords = $self->get_region_coords( 'three_prime' );
-    my $start  = $coords->{start};
-    my $end    = $coords->{end};
-
-    my $slice = $self->get_repeat_masked_slice(
-        $start, $end, $self->design_param( 'chr_name' ),
-        $self->no_repeat_mask_classes ? undef : $self->repeat_mask_class
-    );
-
-    return $self->design_param( 'chr_strand' ) == 1 ? $slice : $slice->invert;
+    shift->_build_region_slice( 'three_prime' );
 }
 
 #TODO respect this flag sp12 Thu 18 Jul 2013 11:04:06 BST
@@ -229,15 +209,14 @@ sub find_oligos {
 
 =head2 run_primer3
 
-blah
+Run primer3 against the 3 target regions.
 
 =cut
 sub run_primer3 {
     my ( $self ) = @_;
 
-    #TODO make this a attribute sp12 Tue 23 Jul 2013 07:43:42 BST
     my $p3 = DesignCreate::Util::Primer3->new_with_config(
-        configfile => '/nfs/users/nfs_s/sp12/workspace/Design-Creation/tmp/primer3/primer3_config.yaml',
+        configfile => $self->primer3_config_file->stringify
     );
 
     for my $region ( keys %PRIMER_DETAILS ) {
@@ -273,7 +252,8 @@ sub run_primer3 {
 
 =head2 parse_primer3_results
 
-Extract the required information from the primer3 result objects
+Extract the required information from the Bio::Tools::Primer3Redux::Result object
+It outputs information about each primer pair.
 
 =cut
 sub parse_primer3_results {
@@ -299,7 +279,8 @@ sub parse_primer3_results {
 
 =head2 parse_primer
 
-desc
+Parse output from Bio::Tools::Primer3Redux::Primer into a hash along
+with other data we need about the primer.
 
 =cut
 sub parse_primer {
@@ -350,6 +331,8 @@ sub parse_primer {
 
 =head2 create_oligo_files
 
+Create a yaml file for a oligo type giving details
+of the candidate oligos.
 
 =cut
 sub create_oligo_files {
@@ -386,6 +369,28 @@ sub build_primer3_sequence_target_string {
 
     my $target_length = $self->$slice_name->length - $forward_primer_size - $reverse_primer_size;
     return $forward_primer_size . ',' . $target_length;
+}
+
+=head2 _build_region_slice
+
+Build a Bio::EnsEMBL::Slice for a given target regions
+
+=cut
+sub _build_region_slice {
+    my ( $self, $region_name  ) = @_;
+
+    my $coords = $self->get_region_coords( $region_name );
+    my $start  = $coords->{start};
+    my $end    = $coords->{end};
+
+    my $slice = $self->get_repeat_masked_slice(
+        $start, $end, $self->design_param( 'chr_name' ),
+        $self->no_repeat_mask_classes ? undef : $self->repeat_mask_class
+    );
+
+    # primer3 expects sequence in a 5' to 3' direction, so invert if
+    # target is on the -ve strand
+    return $self->design_param( 'chr_strand' ) == 1 ? $slice : $slice->invert;
 }
 
 1;
