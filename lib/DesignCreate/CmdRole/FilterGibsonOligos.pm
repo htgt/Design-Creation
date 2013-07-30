@@ -13,10 +13,10 @@ meet our requirments.
 =cut
 
 use Moose::Role;
-use DesignCreate::Types qw( PositiveInt );
 use DesignCreate::Util::Exonerate;
 use DesignCreate::Exception;
 use YAML::Any qw( LoadFile DumpFile );
+use DesignCreate::Types qw( PositiveInt );
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
 use Const::Fast;
 use Fcntl; # O_ constants
@@ -30,6 +30,19 @@ DesignCreate::Role::EnsEMBL
 );
 
 const my $DEFAULT_EXONERATE_OLIGO_DIR_NAME => 'exonerate_oligos';
+
+const my @DESIGN_PARAMETERS => qw(
+exon_check_flank_length
+);
+
+has exon_check_flank_length => (
+    is            => 'ro',
+    isa           => PositiveInt,
+    traits        => [ 'Getopt' ],
+    documentation => "Number of flanking bases surrounding middle oligos to check for exons",
+    cmd_flag      => 'exon-check-flank-length',
+    default       => 100,
+);
 
 has exonerate_query_file => (
     is     => 'rw',
@@ -111,7 +124,7 @@ has validated_oligo_pairs => (
 sub filter_oligos {
     my ( $self, $opts, $args ) = @_;
 
-    #$self->add_design_parameters( \@DESIGN_PARAMETERS );
+    $self->add_design_parameters( \@DESIGN_PARAMETERS );
 
     $self->validate_oligos;
     $self->have_required_validated_oligos;
@@ -179,26 +192,28 @@ sub validate_oligo {
         return;
     }
 
-    #TODO check all but the 2 outer oligos are not near exons ( 100 bases ) sp12 Wed 24 Jul 2013 09:56:47 BST
-    $self->check_oligo_sequence( $oligo_data ) or return;
-    $self->check_oligo_length( $oligo_data ) or return;
-
-    return 1;
-}
-
-sub check_oligo_sequence {
-    my ( $self, $oligo_data ) = @_;
-
-    my $ensembl_slice = $self->get_slice(
+    my $oligo_slice = $self->get_slice(
         $oligo_data->{oligo_start},
         $oligo_data->{oligo_end},
         $self->design_param( 'chr_name' ),
     );
 
-    if ( $ensembl_slice->seq ne uc( $oligo_data->{oligo_seq} ) ) {
+    $self->check_oligo_sequence( $oligo_data, $oligo_slice ) or return;
+    $self->check_oligo_length( $oligo_data ) or return;
+    if ( $oligo_type =~ /5R|EF|ER|3F/ ) {
+        $self->check_oligo_not_near_exon( $oligo_data, $oligo_slice ) or return;
+    }
+
+    return 1;
+}
+
+sub check_oligo_sequence {
+    my ( $self, $oligo_data, $oligo_slice ) = @_;
+
+    if ( $oligo_slice->seq ne uc( $oligo_data->{oligo_seq} ) ) {
         $self->log->error( 'Oligo seq does not match coordinate sequence: ' . $oligo_data->{id} );
         $self->log->trace( 'Oligo seq  : ' . $oligo_data->{oligo_seq} );
-        $self->log->trace( "Ensembl seq: " . $ensembl_slice->seq );
+        $self->log->trace( "Ensembl seq: " . $oligo_slice->seq );
         return 0;
     }
 
@@ -218,6 +233,33 @@ sub check_oligo_length {
 
     $self->log->debug('Oligo length correct for: ' . $oligo_data->{id} );
     return 1;
+}
+
+=head2 check_oligo_not_near_exon
+
+Check that the oligo is not within a certain number of bases of a exon
+
+Not sure this belongs here, should either check before we invoke design creation
+that the oligo candidate regions are valid, or validate the design after it is
+created.
+
+=cut
+sub check_oligo_not_near_exon {
+    my ( $self, $oligo_data, $oligo_slice  ) = @_;
+
+    my $expanded_slice
+        = $oligo_slice->expand( $self->exon_check_flank_length, $self->exon_check_flank_length );
+
+    my $exons = $expanded_slice->get_all_Exons;
+
+    # if no exons in slice we pass the check
+    return 1 unless @{ $exons };
+
+    my $exon_ids = join( ', ', map { $_->stable_id } @{$exons} );
+    $self->log->debug(
+        'Oligo ' . $oligo_data->{id} . " overlaps or is too close to exon(s): $exon_ids" );
+
+    return 0;
 }
 
 sub run_exonerate {
@@ -378,7 +420,7 @@ sub validate_oligo_pairs {
     my $self = shift;
 
     #TODO if not invalid oligos sp12 Wed 24 Jul 2013 08:26:44 BST
-    # if there are not invalid oligos then all the pairs of valid 
+    # if there are not invalid oligos then all the pairs of valid
     # we can just copy the files over from one folder to another
     #return unless $self->have_invalid_oligos;
 
