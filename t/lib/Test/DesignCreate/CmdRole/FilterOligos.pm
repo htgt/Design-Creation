@@ -58,13 +58,19 @@ sub check_oligo_sequence : Test(5) {
         , 'can load oligo yaml data file';
     my $oligo_data = $oligos_data->[0];
 
-    ok $o->check_oligo_sequence( $oligo_data ), 'check_oligo_sequence check passes';
+    my $oligo_slice = $o->get_slice(
+        $oligo_data->{oligo_start},
+        $oligo_data->{oligo_end},
+        $o->design_param( 'chr_name' ),
+    );
+
+    ok $o->check_oligo_sequence( $oligo_data, $oligo_slice ), 'check_oligo_sequence check passes';
     $oligo_data->{oligo_seq} = 'ATCG';
-    ok !$o->check_oligo_sequence( $oligo_data ), 'check_oligo_sequence check fails';
+    ok !$o->check_oligo_sequence( $oligo_data, $oligo_slice ), 'check_oligo_sequence check fails';
 
     $oligo_data = $oligos_data->[1];
     $oligo_data->{oligo_start} = $oligo_data->{oligo_start} + 1;
-    ok !$o->check_oligo_sequence( $oligo_data ), 'check_oligo_sequence check fails';
+    ok !$o->check_oligo_sequence( $oligo_data, $oligo_slice ), 'check_oligo_sequence check fails';
 }
 
 sub check_oligo_coordinates : Test(5) {
@@ -308,7 +314,7 @@ sub _get_test_object {
     # need 4 aos oligo files to test against, in oligo_finder_output dir
     dircopy( $data_dir->stringify, $dir->stringify );
 
-    my $metaclass = $test->get_test_object_metaclass();
+    my $metaclass = $test->get_test_object_metaclass( [ 'DesignCreate::Role::EnsEMBL' ] );
     return $metaclass->new_object( dir => $dir);
 }
 
