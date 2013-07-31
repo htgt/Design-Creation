@@ -328,7 +328,7 @@ sub _build_five_prime_region_end {
     my $end;
 
     if ( $self->chr_strand == 1 ) {
-        $end = $self->exon_region_start - 1; 
+        $end = $self->exon_region_start - 1;
     }
     else {
         $end = $self->target_end + ( $self->region_offset_5F + $self->region_length_5F );
@@ -384,7 +384,10 @@ sub _build_three_prime_region_end {
 
 =head2 get_oligo_pair_region_coordinates
 
-blah
+Get coordinates for the three oligo pair regions:
+exon
+five_prime
+three_prime
 
 =cut
 sub get_oligo_pair_region_coordinates {
@@ -392,16 +395,13 @@ sub get_oligo_pair_region_coordinates {
 
     $self->add_design_parameters( \@DESIGN_PARAMETERS );
 
-    #TODO check coordinates sp12 Thu 25 Jul 2013 11:21:58 BST
-    # EF offset + ef size = 5r offset - 1 ???
-    # or maybe check for overlaps
+    $self->check_oligo_region_sizes;
 
     for my $region ( qw( exon five_prime three_prime ) ) {
-        my $start_attr_name = $region . '_region_start';
-        my $end_attr_name = $region . '_region_end';
+        my ( $start, $end ) = $self->check_region_coordinates( $region );
         $self->oligo_region_coordinates->{ $region } = {
-            start => $self->$start_attr_name,
-            end   => $self->$end_attr_name
+            start => $start,
+            end   => $end,
         };
     }
 
@@ -409,6 +409,47 @@ sub get_oligo_pair_region_coordinates {
     $self->create_oligo_region_coordinate_file;
 
     return;
+}
+
+=head2 check_oligo_region_sizes
+
+Check size of region we search for oligos in is big enough
+
+=cut
+sub check_oligo_region_sizes {
+    my ( $self ) = @_;
+
+    for my $oligo_type ( $self->expected_oligos ) {
+        my $length_attr =  'region_length_' . $oligo_type;
+        my $length = $self->$length_attr;
+
+        # currently 22 is the smaller oligo we allow from primer
+        DesignCreate::Exception->throw( "$oligo_type region too small: $length" )
+            if $length < 22;
+    }
+
+    return;
+}
+
+=head2 check_region_coordinates
+
+Check region coordinates and sizes.
+Return start and end values
+
+=cut
+sub check_region_coordinates {
+    my ( $self, $region ) = @_;
+
+    my $start_attr_name = $region . '_region_start';
+    my $end_attr_name = $region . '_region_end';
+    my $start = $self->$start_attr_name;
+    my $end = $self->$end_attr_name;
+
+    DesignCreate::Exception->throw(
+        "Start greater than or equal to end for $region region coordinates: $start - $end"
+    ) if $start >= $end;
+
+    return ( $start, $end );
 }
 
 1;
