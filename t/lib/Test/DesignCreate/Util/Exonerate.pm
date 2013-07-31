@@ -1,4 +1,4 @@
-package Test::DesignCreate::Utils::Exonerate;
+package Test::DesignCreate::Util::Exonerate;
 
 use strict;
 use warnings FATAL => 'all';
