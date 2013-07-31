@@ -178,30 +178,6 @@ sub check_oligo_region_sizes : Test(no_plan) {
         , 'throws error if a oligo region is too small';
 }
 
-sub check_region_coordinates : Test(no_plan) {
-    my $test = shift;
-    ok my $o = $test->_get_test_object, 'can grab test object';
-
-    lives_ok{
-        $o->check_region_coordinates('five_prime')
-    } 'checks pass for valid region coordinates';
-
-    my $metaclass = $test->get_test_object_metaclass();
-    my $new_obj = $metaclass->new_object(
-        dir             => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
-        species         => 'Human',
-        target_exon     => 'ENSE00002184393',
-        target_genes    => [ 'test_gene' ],
-        region_offset_5F => 100,
-        region_length_5F => 50,
-    );
-
-    throws_ok{
-        $new_obj->check_region_coordinates( 'five_prime' )
-    } qr/Start greater than or equal to end for five_prime region coordinates/
-        ,'throws error when start greater than end for any region';
-}
-
 sub get_oligo_pair_region_coordinates : Test(no_plan) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';

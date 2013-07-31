@@ -75,7 +75,7 @@ has region_offset_5F => (
     is            => 'ro',
     isa           => PositiveInt,
     traits        => [ 'Getopt' ],
-    default       => 1400,
+    default       => 1000,
     documentation => 'Offset from target region of 5F oligo candidate region',
     cmd_flag      => 'region-offset-5f'
 );
@@ -93,7 +93,7 @@ has region_offset_3R => (
     is            => 'ro',
     isa           => PositiveInt,
     traits        => [ 'Getopt' ],
-    default       => 1300,
+    default       => 1000,
     documentation => 'Offset from target region of 3R oligo candidate region',
     cmd_flag      => 'region-offset-3r'
 );
@@ -306,7 +306,8 @@ sub _build_five_prime_region_start {
     my $start;
 
     if ( $self->chr_strand == 1 ) {
-        $start = $self->target_start - ( $self->region_offset_5F + $self->region_length_5F );
+        $start = $self->exon_region_start
+            - ( $self->region_offset_5F + $self->region_length_5F + $self->region_length_5R );
     }
     else {
         $start = $self->exon_region_end + 1;
@@ -331,7 +332,8 @@ sub _build_five_prime_region_end {
         $end = $self->exon_region_start - 1;
     }
     else {
-        $end = $self->target_end + ( $self->region_offset_5F + $self->region_length_5F );
+        $end = $self->exon_region_end
+            + ( $self->region_offset_5F + $self->region_length_5F + $self->region_length_5R );
     }
     $self->log->debug( "Exon region end: $end" );
 
@@ -353,7 +355,8 @@ sub _build_three_prime_region_start {
         $start = $self->exon_region_end + 1;
     }
     else {
-        $start = $self->target_start - ( $self->region_offset_3R + $self->region_length_3R );
+        $start = $self->exon_region_start
+            - ( $self->region_offset_3R + $self->region_length_3R + $self->region_length_3F );
     }
     $self->log->debug( "Exon region start: $start" );
 
@@ -372,7 +375,7 @@ sub _build_three_prime_region_end {
     my $end;
 
     if ( $self->chr_strand == 1 ) {
-        $end = $self->target_end + ( $self->region_offset_3R + $self->region_length_3R );
+        $end = $self->exon_region_end + ( $self->region_offset_3R + $self->region_length_3R + $self->region_length_3F );
     }
     else {
         $end = $self->exon_region_start - 1;
@@ -398,10 +401,11 @@ sub get_oligo_pair_region_coordinates {
     $self->check_oligo_region_sizes;
 
     for my $region ( qw( exon five_prime three_prime ) ) {
-        my ( $start, $end ) = $self->check_region_coordinates( $region );
+        my $start_attr_name = $region . '_region_start';
+        my $end_attr_name = $region . '_region_end';
         $self->oligo_region_coordinates->{ $region } = {
-            start => $start,
-            end   => $end,
+            start => $self->$start_attr_name,
+            end   => $self->$end_attr_name,
         };
     }
 
@@ -429,27 +433,6 @@ sub check_oligo_region_sizes {
     }
 
     return;
-}
-
-=head2 check_region_coordinates
-
-Check region coordinates and sizes.
-Return start and end values
-
-=cut
-sub check_region_coordinates {
-    my ( $self, $region ) = @_;
-
-    my $start_attr_name = $region . '_region_start';
-    my $end_attr_name = $region . '_region_end';
-    my $start = $self->$start_attr_name;
-    my $end = $self->$end_attr_name;
-
-    DesignCreate::Exception->throw(
-        "Start greater than or equal to end for $region region coordinates: $start - $end"
-    ) if $start >= $end;
-
-    return ( $start, $end );
 }
 
 1;
