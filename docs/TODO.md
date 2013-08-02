@@ -23,10 +23,10 @@ FUNCTIONALITY
     * only really use it with one log file
     * seems to suppress the --help option
 
-# Consume EnsEMBL role in main Action.pm module
+### Consume EnsEMBL role in main Action.pm module
 * Makes these attributes / subroutines available everywhere
 
-# Cut down complexity of the OligoCoordinate roles
+### Cut down complexity of the OligoCoordinate roles
 * too many roles at the moment
 
 Location Specified Designs
