@@ -78,11 +78,28 @@ sub _build_exonerate_oligo_dir {
 }
 
 has all_oligos => (
-    is      => 'rw',
-    isa     => 'HashRef',
-    traits  => [ 'NoGetopt' ],
-    default => sub { {  } },
+    is         => 'ro',
+    isa        => 'HashRef',
+    traits     => [ 'NoGetopt' ],
+    lazy_build => 1,
 );
+
+sub _build_all_oligos {
+    my $self = shift;
+    my %all_oligos;
+
+    for my $oligo_type ( $self->expected_oligos ) {
+        my $oligo_file = $self->get_file( "$oligo_type.yaml", $self->oligo_finder_output_dir );
+
+        my $oligos = LoadFile( $oligo_file );
+        DesignCreate::Exception->throw( "No oligo data in $oligo_file for $oligo_type oligo" )
+            unless $oligos;
+
+        $all_oligos{$oligo_type} = $oligos;
+    }
+
+    return \%all_oligos;
+}
 
 has exonerate_matches => (
     is      => 'rw',
@@ -102,10 +119,8 @@ sub filter_oligos {
     my ( $self, $opts, $args ) = @_;
 
     $self->add_design_parameters( \@DESIGN_PARAMETERS );
-    $self->validate_oligos;
     $self->run_exonerate;
-    $self->filter_out_non_specific_oligos;
-    $self->have_required_validated_oligos;
+    $self->validate_oligos;
     $self->output_validated_oligos;
 
     return;
@@ -116,40 +131,30 @@ sub validate_oligos {
     my $self = shift;
 
     for my $oligo_type ( $self->expected_oligos ) {
-        my $oligo_file = $self->get_file( "$oligo_type.yaml", $self->oligo_finder_output_dir );
+        $self->log->debug( "Validating $oligo_type oligos" );
 
-        DesignCreate::Exception->throw("No valid $oligo_type oligos")
-            unless $self->validate_oligos_of_type( $oligo_file, $oligo_type );
+        for my $oligo_data ( @{ $self->all_oligos->{$oligo_type} } ) {
+            if ( $self->validate_oligo( $oligo_data, $oligo_type ) ) {
+                push @{ $self->validated_oligos->{$oligo_type} }, $oligo_data;
+            }
+        }
 
-        $self->log->info("We have $oligo_type oligos that pass initial checks");
+        unless ( exists $self->validated_oligos->{$oligo_type} ) {
+            DesignCreate::Exception->throw("No valid $oligo_type oligos, halting filter process");
+        }
+
+        $self->log->info("We have $oligo_type oligos that pass checks");
     }
 
     return 1;
 }
 
-sub validate_oligos_of_type {
-    my ( $self, $oligo_file, $oligo_type ) = @_;
-    $self->log->debug( "Validating $oligo_type oligos" );
+=head2 validate_oligo
 
-    my $oligos = LoadFile( $oligo_file );
-    unless ( $oligos ) {
-        $self->log->error( "No oligo data in $oligo_file for $oligo_type oligo" );
-        return;
-    }
+Run checks against individual oligo to make sure it is valid.
+If it passes all checks return 1, otherwise return undef.
 
-    for my $oligo_data ( @{ $oligos } ) {
-        push @{ $self->all_oligos->{$oligo_type} }, $oligo_data
-            if $self->validate_oligo( $oligo_data, $oligo_type );
-    }
-
-    unless ( exists $self->all_oligos->{$oligo_type} ) {
-        $self->log->error("No valid $oligo_type oligos");
-        return;
-    }
-
-    return 1;
-}
-
+=cut
 sub validate_oligo {
     my ( $self, $oligo_data, $oligo_type ) = @_;
     $self->log->debug( "$oligo_type oligo, id: " . $oligo_data->{id} );
@@ -161,8 +166,12 @@ sub validate_oligo {
     }
 
     $self->check_oligo_coordinates( $oligo_data ) or return;
-    $self->check_oligo_sequence( $oligo_data ) or return;
-    $self->check_oligo_length( $oligo_data ) or return;
+    $self->check_oligo_sequence( $oligo_data )    or return;
+    $self->check_oligo_length( $oligo_data )      or return;
+    $self->check_oligo_specificity(
+        $oligo_data->{id},
+        $self->exonerate_matches->{ $oligo_data->{id} }
+    ) or return;
 
     return 1;
 }
@@ -219,6 +228,43 @@ sub check_oligo_length {
     return 1;
 }
 
+=head2 check_oligo_specificity
+
+Send in exonerate match information for a given oligo.
+Return 1 if it passes checks, undef otherwise.
+
+=cut
+sub check_oligo_specificity {
+    my ( $self, $oligo_id, $match_info ) = @_;
+    # if we have no match info then fail oligo
+    return unless $match_info;
+
+    if ( !$match_info->{exact_matches} ) {
+        $self->log->error( 'Oligo ' . $oligo_id
+            . ' does not have any exact matches, somethings wrong' );
+        return;
+    }
+    elsif ( $match_info->{exact_matches} > 1 ) {
+        $self->log->info( 'Oligo ' . $oligo_id
+            . ' is invalid, has multiple exact matches: ' . $match_info->{exact_matches} );
+        return;
+    }
+    # a hit is above 80% similarity
+    elsif ( $match_info->{hits} > 1 ) {
+        $self->log->info( 'Oligo ' . $oligo_id
+            . ' is invalid, has multiple hits: ' . $match_info->{hits} );
+        return;
+    }
+
+    return 1;
+}
+
+=head2 run_exonerate
+
+Run exonerate against all our oligo candidates.
+Build up a hash of exonerate hits keyed against the oligo ids.
+
+=cut
 sub run_exonerate {
     my $self = shift;
     $self->define_exonerate_query_file;
@@ -310,56 +356,6 @@ sub target_flanking_region_coordinates {
     my $flanking_region_end = $end + $self->flank_length;
 
     return( $flanking_region_start, $flanking_region_end, $self->design_param( 'chr_name' ) );
-}
-
-sub filter_out_non_specific_oligos {
-    my ( $self ) = @_;
-
-    for my $oligo_type ( $self->expected_oligos ) {
-        for my $oligo ( @{ $self->all_oligos->{$oligo_type} } ) {
-            next unless my $match_info = $self->exonerate_matches->{ $oligo->{id} };
-            next unless $self->check_oligo_specificity( $oligo->{id}, $match_info );
-
-            push @{ $self->validated_oligos->{$oligo_type} }, $oligo;
-        }
-    }
-
-    return;
-}
-
-sub check_oligo_specificity {
-    my ( $self, $oligo_id, $match_info ) = @_;
-
-    if ( !$match_info->{exact_matches} ) {
-        $self->log->error( 'Oligo ' . $oligo_id
-            . ' does not have any exact matches, somethings wrong ' );
-        return;
-    }
-    elsif ( $match_info->{exact_matches} > 1 ) {
-        $self->log->info( 'Oligo ' . $oligo_id
-            . ' is invalid, has multiple exact matches: ' . $match_info->{exact_matches} );
-        return;
-    }
-    # a hit is above 80% similarity
-    elsif ( $match_info->{hits} > 1 ) {
-        $self->log->info( 'Oligo ' . $oligo_id
-            . ' is invalid, has multiple hits: ' . $match_info->{hits} );
-        return;
-    }
-
-    return 1;
-}
-
-# go through output and filter out oligos that are not specific enough
-sub have_required_validated_oligos {
-    my $self = shift;
-
-    for my $oligo_type ( $self->expected_oligos ) {
-        DesignCreate::Exception->throw( "No valid $oligo_type oligos, halting filter process" )
-            unless exists $self->validated_oligos->{$oligo_type};
-    }
-
-    return 1;
 }
 
 sub output_validated_oligos {
