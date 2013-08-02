@@ -42,7 +42,6 @@ has persist => (
 # these values should be set when running the design creation process
 # end to end
 const my @ATTRIBUTES_NO_CMD_OPTION => qw(
-exonerate_target_file
 design_data_file
 validated_oligo_dir
 oligo_finder_output_dir

@@ -13,23 +13,17 @@ meet our requirments.
 =cut
 
 use Moose::Role;
-use DesignCreate::Util::Exonerate;
 use DesignCreate::Exception;
 use YAML::Any qw( LoadFile DumpFile );
 use DesignCreate::Types qw( PositiveInt );
-use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
 use Const::Fast;
 use Fcntl; # O_ constants
-use Bio::SeqIO;
-use Try::Tiny;
 use List::MoreUtils qw( any );
 use namespace::autoclean;
 
 with qw(
 DesignCreate::Role::EnsEMBL
 );
-
-const my $DEFAULT_EXONERATE_OLIGO_DIR_NAME => 'exonerate_oligos';
 
 const my @DESIGN_PARAMETERS => qw(
 exon_check_flank_length
@@ -43,39 +37,6 @@ has exon_check_flank_length => (
     cmd_flag      => 'exon-check-flank-length',
     default       => 100,
 );
-
-has exonerate_query_file => (
-    is     => 'rw',
-    isa    => AbsFile,
-    traits => [ 'NoGetopt' ],
-);
-
-has exonerate_target_file => (
-    is            => 'rw',
-    isa           => AbsFile,
-    traits        => [ 'Getopt' ],
-    coerce        => 1,
-    documentation => "Target file for exonerate ( defaults to 100000 bases flanking design target )",
-    cmd_flag      => 'exonerate-target-file',
-    predicate     => 'has_exonerate_target_file',
-);
-
-has exonerate_oligo_dir => (
-    is         => 'ro',
-    isa        => 'Path::Class::Dir',
-    traits     => [ 'NoGetopt' ],
-    lazy_build => 1,
-);
-
-sub _build_exonerate_oligo_dir {
-    my $self = shift;
-
-    my $exonerate_oligo_dir = $self->dir->subdir( $DEFAULT_EXONERATE_OLIGO_DIR_NAME )->absolute;
-    $exonerate_oligo_dir->rmtree();
-    $exonerate_oligo_dir->mkpath();
-
-    return $exonerate_oligo_dir;
-}
 
 has all_oligos => (
     is      => 'rw',
@@ -94,13 +55,6 @@ has invalid_oligos => (
         oligo_is_invalid    => 'exists',
         have_invalid_oligos => 'count',
     }
-);
-
-has exonerate_matches => (
-    is      => 'rw',
-    isa     => 'HashRef',
-    traits  => [ 'NoGetopt' ],
-    default => sub { {  } },
 );
 
 has validated_oligos => (
@@ -260,137 +214,6 @@ sub check_oligo_not_near_exon {
         'Oligo ' . $oligo_data->{id} . " overlaps or is too close to exon(s): $exon_ids" );
 
     return 0;
-}
-
-sub run_exonerate {
-    my $self = shift;
-    $self->define_exonerate_query_file;
-    $self->define_exonerate_target_file;
-
-    # now run exonerate
-    my $exonerate = DesignCreate::Util::Exonerate->new(
-        target_file => $self->exonerate_target_file->stringify,
-        query_file  => $self->exonerate_query_file->stringify,
-    );
-
-    $exonerate->run_exonerate;
-    # put exonerate output in a log file
-    my $exonerate_output = $self->exonerate_oligo_dir->file('exonerate_output.log');
-    my $fh = $exonerate_output->open( O_WRONLY|O_CREAT ) or die( "Open $exonerate_output: $!" );
-    print $fh $exonerate->raw_output;
-
-    my $matches = $exonerate->parse_exonerate_output;
-    DesignCreate::Exception->throw("No output from exonerate")
-        unless $matches;
-
-    $self->exonerate_matches( $matches );
-
-    return;
-}
-
-sub define_exonerate_query_file {
-    my $self = shift;
-
-    my $query_file = $self->exonerate_oligo_dir->file('exonerate_query.fasta');
-    my $fh         = $query_file->open( O_WRONLY|O_CREAT ) or die( "Open $query_file: $!" );
-    my $seq_out    = Bio::SeqIO->new( -fh => $fh, -format => 'fasta' );
-
-    for my $oligo_type ( keys %{ $self->all_oligos } ) {
-        for my $oligo ( @{ $self->all_oligos->{$oligo_type} } ) {
-            my $bio_seq  = Bio::Seq->new( -seq => $oligo->{oligo_seq}, -id => $oligo->{id} );
-            $seq_out->write_seq( $bio_seq );
-        }
-    }
-
-    $self->log->debug("Created exonerate query file $query_file");
-    $self->exonerate_query_file( $query_file );
-    return;
-}
-
-sub define_exonerate_target_file {
-    my $self = shift;
-
-    if ( $self->has_exonerate_target_file ) {
-        $self->log->debug( 'We have a user defined exonerate target file: '
-            . $self->exonerate_target_file->stringify );
-        return;
-    }
-
-    my $target_file = $self->exonerate_oligo_dir->file('exonerate_target.fasta');
-    my $fh          = $target_file->open( O_WRONLY|O_CREAT ) or die( "Open $target_file: $!" );
-    my $seq_out     = Bio::SeqIO->new( -fh => $fh, -format => 'fasta' );
-
-    my $target_seq;
-    try{
-       $target_seq = $self->get_sequence( $self->target_flanking_region_coordinates );
-    } catch {
-        DesignCreate::Exception->throw( "We could not get exonerate target file sequence . $_" );
-    };
-
-    my $bio_seq  = Bio::Seq->new( -seq => $target_seq, -id => 'exonerate_target_sequence' );
-    $seq_out->write_seq( $bio_seq );
-
-    $self->log->debug("Created exonerate target file $target_file");
-    $self->exonerate_target_file( $target_file );
-    return;
-}
-
-sub target_flanking_region_coordinates {
-    my $self = shift;
-    my ( $start, $end );
-
-    my $strand = $self->design_param( 'chr_strand' );
-    if ( $strand == 1 ) {
-        $start = $self->all_oligos->{'G5'}[0]{target_region_start};
-        $end   = $self->all_oligos->{'G3'}[0]{target_region_end};
-    }
-    else {
-        $start = $self->all_oligos->{'G3'}[0]{target_region_start};
-        $end   = $self->all_oligos->{'G5'}[0]{target_region_end};
-    }
-
-    my $flanking_region_start = $start - $self->flank_length;
-    my $flanking_region_end = $end + $self->flank_length;
-
-    return( $flanking_region_start, $flanking_region_end, $self->design_param( 'chr_name' ) );
-}
-
-sub filter_out_non_specific_oligos {
-    my ( $self ) = @_;
-
-    for my $oligo_type ( $self->expected_oligos ) {
-        for my $oligo ( @{ $self->all_oligos->{$oligo_type} } ) {
-            next unless my $match_info = $self->exonerate_matches->{ $oligo->{id} };
-            next unless $self->check_oligo_specificity( $oligo->{id}, $match_info );
-
-            push @{ $self->validated_oligos->{$oligo_type} }, $oligo;
-        }
-    }
-
-    return;
-}
-
-sub check_oligo_specificity {
-    my ( $self, $oligo_id, $match_info ) = @_;
-
-    if ( !$match_info->{exact_matches} ) {
-        $self->log->error( 'Oligo ' . $oligo_id
-            . ' does not have any exact matches, somethings wrong ' );
-        return;
-    }
-    elsif ( $match_info->{exact_matches} > 1 ) {
-        $self->log->info( 'Oligo ' . $oligo_id
-            . ' is invalid, has multiple exact matches: ' . $match_info->{exact_matches} );
-        return;
-    }
-    # a hit is above 80% similarity
-    elsif ( $match_info->{hits} > 1 ) {
-        $self->log->info( 'Oligo ' . $oligo_id
-            . ' is invalid, has multiple hits: ' . $match_info->{hits} );
-        return;
-    }
-
-    return 1;
 }
 
 # go through output and filter out oligos that are not specific enough
