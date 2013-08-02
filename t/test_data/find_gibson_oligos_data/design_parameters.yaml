@@ -1,0 +1,25 @@
+---
+assembly: GRCh37
+chr_name: '13'
+chr_strand: '1'
+design_method: gibson
+mask_by_lower_case: yes
+region_length_3F: 100
+region_length_3R: 500
+region_length_5F: 500
+region_length_5R: 100
+region_length_5R_EF: 200
+region_length_EF: 100
+region_length_ER: 100
+region_length_ER_3F: 200
+region_offset_3R: 1000
+region_offset_5F: 1000
+region_offset_5R_EF: 200
+region_offset_ER_3F: 100
+repeat_mask_class: []
+species: Human
+target_end: 32907524
+target_exon: ENSE00000939167
+target_genes:
+- BRCA2
+target_start: 32906409
