@@ -26,6 +26,7 @@ use namespace::autoclean;
 
 with qw(
 DesignCreate::Role::EnsEMBL
+DesignCreate::Role::FilterOligos
 );
 
 const my $DEFAULT_EXONERATE_OLIGO_DIR_NAME => 'exonerate_oligos';
@@ -77,38 +78,7 @@ sub _build_exonerate_oligo_dir {
     return $exonerate_oligo_dir;
 }
 
-has all_oligos => (
-    is         => 'ro',
-    isa        => 'HashRef',
-    traits     => [ 'NoGetopt' ],
-    lazy_build => 1,
-);
-
-sub _build_all_oligos {
-    my $self = shift;
-    my %all_oligos;
-
-    for my $oligo_type ( $self->expected_oligos ) {
-        my $oligo_file = $self->get_file( "$oligo_type.yaml", $self->oligo_finder_output_dir );
-
-        my $oligos = LoadFile( $oligo_file );
-        DesignCreate::Exception->throw( "No oligo data in $oligo_file for $oligo_type oligo" )
-            unless $oligos;
-
-        $all_oligos{$oligo_type} = $oligos;
-    }
-
-    return \%all_oligos;
-}
-
 has exonerate_matches => (
-    is      => 'rw',
-    isa     => 'HashRef',
-    traits  => [ 'NoGetopt' ],
-    default => sub { {  } },
-);
-
-has validated_oligos => (
     is      => 'rw',
     isa     => 'HashRef',
     traits  => [ 'NoGetopt' ],
@@ -126,44 +96,14 @@ sub filter_oligos {
     return;
 }
 
-#Validate oligo coordinates, sequence and length
-sub validate_oligos {
-    my $self = shift;
-
-    for my $oligo_type ( $self->expected_oligos ) {
-        $self->log->debug( "Validating $oligo_type oligos" );
-
-        for my $oligo_data ( @{ $self->all_oligos->{$oligo_type} } ) {
-            if ( $self->validate_oligo( $oligo_data, $oligo_type ) ) {
-                push @{ $self->validated_oligos->{$oligo_type} }, $oligo_data;
-            }
-        }
-
-        unless ( exists $self->validated_oligos->{$oligo_type} ) {
-            DesignCreate::Exception->throw("No valid $oligo_type oligos, halting filter process");
-        }
-
-        $self->log->info("We have $oligo_type oligos that pass checks");
-    }
-
-    return 1;
-}
-
-=head2 validate_oligo
+=head2 _validate_oligo
 
 Run checks against individual oligo to make sure it is valid.
 If it passes all checks return 1, otherwise return undef.
 
 =cut
-sub validate_oligo {
-    my ( $self, $oligo_data, $oligo_type ) = @_;
-    $self->log->debug( "$oligo_type oligo, id: " . $oligo_data->{id} );
-
-    if ( !defined $oligo_data->{oligo} || $oligo_data->{oligo} ne $oligo_type )   {
-        $self->log->error("Oligo name mismatch, expecting $oligo_type, got: "
-            . $oligo_data->{oligo} . 'for: ' . $oligo_data->{id} );
-        return;
-    }
+sub _validate_oligo {
+    my ( $self, $oligo_data, $oligo_type, $oligo_slice ) = @_;
 
     $self->check_oligo_coordinates( $oligo_data ) or return;
     $self->check_oligo_sequence( $oligo_data )    or return;
@@ -356,17 +296,6 @@ sub target_flanking_region_coordinates {
     my $flanking_region_end = $end + $self->flank_length;
 
     return( $flanking_region_start, $flanking_region_end, $self->design_param( 'chr_name' ) );
-}
-
-sub output_validated_oligos {
-    my $self = shift;
-
-    for my $oligo_type ( keys %{ $self->validated_oligos } ) {
-        my $filename = $self->validated_oligo_dir->stringify . '/' . $oligo_type . '.yaml';
-        DumpFile( $filename, $self->validated_oligos->{$oligo_type} );
-    }
-
-    return;
 }
 
 1;
