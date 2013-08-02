@@ -312,7 +312,7 @@ sub _build_five_prime_region_start {
     else {
         $start = $self->exon_region_end + 1;
     }
-    $self->log->debug( "Exon region start: $start" );
+    $self->log->debug( "Five_prime region start: $start" );
 
     return $start;
 }
@@ -335,7 +335,7 @@ sub _build_five_prime_region_end {
         $end = $self->exon_region_end
             + ( $self->region_offset_5F + $self->region_length_5F + $self->region_length_5R );
     }
-    $self->log->debug( "Exon region end: $end" );
+    $self->log->debug( "Five prime region end: $end" );
 
     return $end;
 }
@@ -358,7 +358,7 @@ sub _build_three_prime_region_start {
         $start = $self->exon_region_start
             - ( $self->region_offset_3R + $self->region_length_3R + $self->region_length_3F );
     }
-    $self->log->debug( "Exon region start: $start" );
+    $self->log->debug( "Three prime region start: $start" );
 
     return $start;
 }
@@ -380,7 +380,7 @@ sub _build_three_prime_region_end {
     else {
         $end = $self->exon_region_start - 1;
     }
-    $self->log->debug( "Exon region end: $end" );
+    $self->log->debug( "Three prime region end: $end" );
 
     return $end;
 }
