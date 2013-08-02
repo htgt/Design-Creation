@@ -1,7 +1,15 @@
 package DesignCreate::Util::Exonerate;
 
-use strict;
-use warnings FATAL => 'all';
+=head1 NAME
+
+DesignCreate::Util::Exonerate
+
+=head1 DESCRIPTION
+
+Align sequence(s) against a genome to find number of hits
+pass a input file (sequences in fasta file) into exonerate
+
+=cut
 
 use Moose;
 use DesignCreate::Exception;
@@ -17,10 +25,6 @@ const my $RYO => "RESULT: %qi %qal %ql %pi %s %em %tab %tae\n";
 const my $EXONERATE_CMD => $ENV{EXONERATE_CMD}
     || '/software/team87/brave_new_world/app/exonerate-2.2.0-x86_64/bin/exonerate';
 
-#
-#Align sequence(s) against a genome to find number of hits
-#pass a input file (sequences in fasta file) into exonerate
-#
 
 has query_file => (
     is       => 'ro',
@@ -100,9 +104,11 @@ has matches => (
     isa => 'HashRef',
 );
 
-#
-#Run exonerate against input fasta file, return output as string
-#
+=head2 run_exonerate
+
+Run exonerate against input fasta file, return output as string
+
+=cut
 sub run_exonerate {
     my $self = shift;
 
@@ -134,9 +140,11 @@ sub run_exonerate {
     return;
 }
 
-#
-#Parse exonerate output and return number of valid hits per sequence
-#
+=head2 parse_exonerate_output
+
+Parse exonerate output and return number of valid hits per sequence
+
+=cut
 sub parse_exonerate_output {
     my $self = shift;
     my %matches;
