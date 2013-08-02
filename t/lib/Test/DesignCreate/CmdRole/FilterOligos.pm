@@ -37,6 +37,28 @@ sub valid_filter_oligos_cmd : Test(4) {
     ok !$result->error, 'no command errors';
 }
 
+sub all_oligos : Test(6) {
+    my $test = shift;
+    ok my $o = $test->_get_test_object, 'can grab test object';
+
+    ok my $u5_file = $o->oligo_finder_output_dir->file( 'U5.yaml' )
+        ,'can grab U5.yaml file';
+
+    ok $u5_file->remove, 'can remove U5.yaml file';
+
+    throws_ok{
+        $o->all_oligos
+    } qr/Cannot find file U5\.yaml/
+        ,'throws error if missing expected oligo file';
+
+    ok $u5_file->touch, 'can create a empty U5.yaml file';
+
+    throws_ok{
+        $o->all_oligos
+    } qr/No oligo data in/
+        ,'throws error if oligo file is empty';
+}
+
 sub check_oligo_length : Test(4) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
@@ -90,9 +112,55 @@ sub check_oligo_coordinates : Test(5) {
     ok !$o->check_oligo_coordinates( $oligo_data ), 'check_oligo_coordinates check fails, end';
 }
 
-sub validate_oligo : Test(5) {
+sub check_oligo_specificity : Test(7) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
+    my $oligo_id = 'U5-1';
+
+    lives_ok{
+        $o->run_exonerate
+    } 'setup test object';
+
+    ok $o->check_oligo_specificity( $oligo_id, { exact_matches => 1, hits => 1 } )
+        , 'returns true for one exact match, one hit';
+
+    ok !$o->check_oligo_specificity( $oligo_id, {} ), 'return false if no match_info';
+    ok !$o->check_oligo_specificity( $oligo_id, { exact_matches => 2, hits => 2 } )
+        , 'returns false for two exact matchs, two hits';
+    ok !$o->check_oligo_specificity( $oligo_id, { exact_matches => 0, hits => 0 } )
+        , 'returns false for zero exact match, zero hit';
+    ok !$o->check_oligo_specificity( $oligo_id, { exact_matches => 1, hits => 2 } )
+        , 'returns false for one exact match, two hits';
+
+}
+
+sub validate_oligos : Test(7) {
+    my $test = shift;
+    ok my $o = $test->_get_test_object, 'can grab test object';
+    lives_ok{
+        $o->run_exonerate
+    } 'setup test object';
+
+    ok $o->validate_oligos(), 'validate_oligos check passes';
+
+    ok my $new_o = $test->_get_test_object, 'can grab another test object';
+    lives_ok{
+        $new_o->run_exonerate
+    } 'setup test object';
+
+    ok $new_o->all_oligos->{U5} = [], 'delete U5 oligo data';
+    throws_ok{
+        $new_o->validate_oligos
+    } qr/No valid U5 oligos/, 'throws error when missing required valid oligos';
+
+}
+
+sub validate_oligo : Test(6) {
+    my $test = shift;
+    ok my $o = $test->_get_test_object, 'can grab test object';
+    lives_ok{
+        $o->run_exonerate
+    } 'setup test object';
 
     ok my $oligos_data = LoadFile( $o->oligo_finder_output_dir->file( 'U5.yaml' )->stringify )
         , 'can load oligo yaml data file';
@@ -104,48 +172,10 @@ sub validate_oligo : Test(5) {
     ok !$o->validate_oligo( $oligo_data, 'U5' ), 'validate_oligo check fails';
 }
 
-sub validate_oligos_of_type : Test(5) {
-    my $test = shift;
-    ok my $o = $test->_get_test_object, 'can grab test object';
-
-    ok my $oligo_file = $o->oligo_finder_output_dir->file( 'U5.yaml' ), 'can get U5.yaml oligo file';
-    ok $o->validate_oligos_of_type( $oligo_file, 'U5' ), 'validate_oligo check passes';
-
-    my $empty_file = $o->oligo_finder_output_dir->file( 'test.yaml' );
-    $empty_file->touch;
-    ok !$o->validate_oligos_of_type( $empty_file, 'U5' ), 'validate_oligo check fails, empty oligo file';
-
-    ok !$o->validate_oligos_of_type( $oligo_file, 'U3' )
-        ,'validate_oligo check fails, no valid oligos of type U3';
-}
-
-sub validate_oligos : Test(5) {
-    my $test = shift;
-    ok my $o = $test->_get_test_object, 'can grab test object';
-
-    ok $o->validate_oligos(), 'validate_oligos check passes';
-
-    ok $o->oligo_finder_output_dir->file( 'U5.yaml' )->remove, 'can remove U5.yaml file';
-
-    throws_ok{
-        $o->validate_oligos()
-    } qr/Cannot find file/, 'throws error when no U5.yaml file';
-
-    $o->oligo_finder_output_dir->file( 'U5.yaml' )->touch;
-
-    throws_ok{
-        $o->validate_oligos()
-    } qr/No valid U5 oligos/, 'throws error when empty U5.yaml file';
-
-}
-
-sub target_flanking_region_coordinates : Test(10){
+sub target_flanking_region_coordinates : Test(8){
     my $test = shift;
 
     ok my $o = $test->_get_test_object, 'can grab test object';
-    lives_ok{
-        $o->validate_oligos;
-    } 'setup test object';
 
     ok my( $plus_start, $plus_end ) = $o->target_flanking_region_coordinates
         , 'can call target_flanking_region_coordinates';
@@ -159,10 +189,6 @@ sub target_flanking_region_coordinates : Test(10){
 
     ok $o = $test->_get_test_object( -1 ), 'can grab another test object';
 
-    lives_ok{
-        $o->validate_oligos;
-    } 'setup test object';
-
     ok my( $minus_start, $minus_end ) = $o->target_flanking_region_coordinates
         , 'can call target_flanking_region_coordinates';
 
@@ -170,12 +196,9 @@ sub target_flanking_region_coordinates : Test(10){
     is $minus_end, $end , 'end is correct';
 }
 
-sub define_exonerate_target_file : Test(4){
+sub define_exonerate_target_file : Test(3){
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
-    lives_ok{
-        $o->validate_oligos;
-    } 'setup test object';
 
     lives_ok{
         $o->define_exonerate_target_file
@@ -185,12 +208,9 @@ sub define_exonerate_target_file : Test(4){
     ok $o->exonerate_oligo_dir->contains( $target_file ), 'file has been created';
 }
 
-sub define_exonerate_query_file : Test(4){
+sub define_exonerate_query_file : Test(3){
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
-    lives_ok{
-        $o->validate_oligos;
-    } 'setup test object';
 
     lives_ok{
         $o->define_exonerate_query_file
@@ -200,12 +220,9 @@ sub define_exonerate_query_file : Test(4){
     ok $o->exonerate_oligo_dir->contains( $query_file ), 'file has been created';
 }
 
-sub run_exonerate : Test(7){
+sub run_exonerate : Test(6){
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
-    lives_ok{
-        $o->validate_oligos;
-    } 'setup test object';
 
     lives_ok{
         $o->run_exonerate
@@ -221,7 +238,6 @@ sub run_exonerate : Test(7){
         $test_target_file->spew( [ ( ">test\n", 'ATGTGTATA' ) ] );
         $o->exonerate_target_file( $test_target_file->absolute );
     } 'Setup test target file';
-    $o->validate_oligos;
     $o->define_exonerate_query_file;
 
     throws_ok{
@@ -229,61 +245,12 @@ sub run_exonerate : Test(7){
     } qr/No output from exonerate/, 'throws error when no matches found';
 }
 
-sub check_oligo_specificity : Test(6) {
-    my $test = shift;
-    ok my $o = $test->_get_test_object, 'can grab test object';
-    my $oligo_id = 'U5-1';
-
-    ok $o->check_oligo_specificity( $oligo_id, { exact_matches => 1, hits => 1 } )
-        , 'returns true for one exact match, one hit';
-
-    ok !$o->check_oligo_specificity( $oligo_id, {} ), 'return false if no match_info';
-    ok !$o->check_oligo_specificity( $oligo_id, { exact_matches => 2, hits => 2 } )
-        , 'returns false for two exact matchs, two hits';
-    ok !$o->check_oligo_specificity( $oligo_id, { exact_matches => 0, hits => 0 } )
-        , 'returns false for zero exact match, zero hit';
-    ok !$o->check_oligo_specificity( $oligo_id, { exact_matches => 1, hits => 2 } )
-        , 'returns false for one exact match, two hits';
-
-}
-
-sub filter_out_non_specific_oligos : Test(3){
-    my $test = shift;
-    ok my $o = $test->_get_test_object, 'can grab test object';
-    lives_ok{
-        $o->validate_oligos;
-        $o->run_exonerate;
-    } 'setup test object';
-
-    lives_ok{
-        $o->filter_out_non_specific_oligos( )
-    } 'can filter_out_non_specific_oligos';
-}
-
-sub have_required_validated_oligos : Test(5){
-    my $test = shift;
-    ok my $o = $test->_get_test_object, 'can grab test object';
-    lives_ok{
-        $o->validate_oligos;
-        $o->run_exonerate;
-        $o->filter_out_non_specific_oligos;
-    } 'setup test object';
-
-    ok $o->have_required_validated_oligos, 'have_required_validated_oligos returns true';
-
-    ok delete $o->validated_oligos->{U5}, 'delete U5 validated oligos';
-    throws_ok{
-        $o->have_required_validated_oligos
-    } qr/No valid U5 oligos/, 'throws error when missing required valid oligos';
-}
-
 sub output_validated_oligos : Test(7){
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
     lives_ok{
-        $o->validate_oligos;
         $o->run_exonerate;
-        $o->filter_out_non_specific_oligos;
+        $o->validate_oligos;
     } 'setup test object';
 
     lives_ok{
