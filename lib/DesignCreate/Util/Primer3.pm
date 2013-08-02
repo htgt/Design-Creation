@@ -102,13 +102,13 @@ sub run_primer3 {
     $self->log->debug( 'Running Primer3' );
 
     if ( ! blessed( $outfile ) || ! $outfile->isa( 'Path::Class::File' ) ) {
-        DesignCreate::Exception->throw( 'Outfile variable  must be Path::Class::File object' );
+        DesignCreate::Exception->throw( '$outfile variable must be Path::Class::File object' );
     }
     if ( ! blessed( $seq ) || ! $seq->isa( 'Bio::SeqI' ) ) {
-        DesignCreate::Exception->throw( 'Sequence variable must be Bio::SeqI object' );
+        DesignCreate::Exception->throw( '$seq variable must be Bio::SeqI object' );
     }
     if ( $target && reftype $target ne 'HASH' ) {
-        DesignCreate::Exception->throw( 'Target variable must be a hashref or undef' );
+        DesignCreate::Exception->throw( '$target variable must be a hashref or undef' );
     }
 
     my $primer3 = Bio::Tools::Run::Primer3Redux->new(
@@ -128,10 +128,16 @@ sub run_primer3 {
 
     my $results = $primer3->pick_pcr_primers( $seq );
     # we are only sending in one sequence so we will only have one result
-    my $result = $results->next_result;
-    unless ( $result ) {
-        DesignCreate::Exception->throw( "No results returned from primer3" );
-    }
+    my $result =  $results->next_result;
+
+    if ( $result->warnings ) {
+        $self->log->warn( "Primer3 warning: $_" ) for $result->warnings;
+    };
+
+    if ( $result->errors ) {
+        $self->log->error( "Primer3 error: $_" ) for $result->errors;
+        return;
+    };
 
     return $result;
 }
