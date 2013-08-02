@@ -2,21 +2,21 @@ CODE STRUCTURE
 ==============
 
 ### DesignCreate::Cmd
-* Setup file for MooseX::App::Command commands,
-* Specifies to look in lib/DesignCreate/Action/ folder
+* Setup file for MooseX::App::Command commands
+* Specifies to look in _lib/DesignCreate/Action/_ folder
 
 ### DesignCreate::Action
-* Consumes *DesignCreate::Role::Action* role
-* Parent class to all the DesignCreate::Action::[All] modules
+* Consumes **DesignCreate::Role::Action** role
+* Parent class to all the DesignCreate::Action::\* modules
 * Extends MooseX::App::Cmd::Command
 * sets up some common attributes
 * sets up logging ( via Log4Perl )
 * modifies command line command names
 
-### DesignCreate::Action::[All]
+### DesignCreate::Action::\*
 * Each file here represents a command that can be invoked through the command line
 * Mostly just setup code, the bulk of the functional code is stored in the matching module in the CmdRole directory
-* See [COMMAND ROLES] section for reasoning behind this choice.
+* See [COMMAND ROLES](#command-roles) section for reasoning behind this choice.
 
 ### Overall Commands
 * These do not have a counterpart module in the CmdRole directory but consume multiple DesignCreate::CmdRole roles
@@ -31,6 +31,7 @@ CODE STRUCTURE
 ### Individual Commands
 * These are the individial command modules along with their corresponding CmdRole
 * These CmdRole modules can also consume multiple other roles
+* The arrows below represent the roles that are consumed by modules to the left
 
 ```
  DesignCreate::Action::ConsolidateDesignData     -> DesignCreate::CmdRole::ConsolidateDesignData
