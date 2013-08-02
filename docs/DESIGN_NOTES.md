@@ -19,6 +19,7 @@ CODE STRUCTURE
 
 ### Overall Commands
 * These do not have a counterpart module in the CmdRole directory but consume multiple DesignCreate::CmdRole roles
+
 ```
  DesignCreate::Action::ConditionalDesign
  DesignCreate::Action::GibsonDesign
@@ -29,6 +30,7 @@ CODE STRUCTURE
 ### Individual Commands
 * These are the individial command modules along with their corresponding CmdRole
 * These CmdRole modules can also consume multiple other roles
+
 ```
  DesignCreate::Action::ConsolidateDesignData     -> DesignCreate::CmdRole::ConsolidateDesignData
  DesignCreate::Action::FetchOligoRegionsSequence -> DesignCreate::CmdRole::FetchOligoRegionsSequence
@@ -62,6 +64,7 @@ CODE STRUCTURE
 
 ### Exception Handling
 * These modules handle throwing expections, subclasses are for specific types of errors
+
 ```
     DesignCreate::Exception
     DesignCreate::Exception::MissingFile
@@ -70,6 +73,7 @@ CODE STRUCTURE
 
 ### Helper Modules
 * Code used by various modules in the code base.
+
 ```
     DesignCreate::Types
     DesignCreate::Util::Exonerate
