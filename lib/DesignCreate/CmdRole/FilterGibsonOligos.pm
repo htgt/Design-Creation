@@ -23,6 +23,7 @@ use namespace::autoclean;
 
 with qw(
 DesignCreate::Role::EnsEMBL
+DesignCreate::Role::FilterOligos
 );
 
 const my @DESIGN_PARAMETERS => qw(
@@ -36,32 +37,6 @@ has exon_check_flank_length => (
     documentation => "Number of flanking bases surrounding middle oligos to check for exons",
     cmd_flag      => 'exon-check-flank-length',
     default       => 100,
-);
-
-has all_oligos => (
-    is      => 'rw',
-    isa     => 'HashRef',
-    traits  => [ 'NoGetopt' ],
-    default => sub { {  } },
-);
-
-has invalid_oligos => (
-    is      => 'rw',
-    isa     => 'HashRef',
-    traits  => [ 'NoGetopt', 'Hash' ],
-    default => sub { {  } },
-    handles => {
-        add_invalid_oligo   => 'set',
-        oligo_is_invalid    => 'exists',
-        have_invalid_oligos => 'count',
-    }
-);
-
-has validated_oligos => (
-    is      => 'rw',
-    isa     => 'HashRef',
-    traits  => [ 'NoGetopt' ],
-    default => sub { {  } },
 );
 
 has validated_oligo_pairs => (
@@ -80,80 +55,28 @@ sub filter_oligos {
 
     $self->add_design_parameters( \@DESIGN_PARAMETERS );
 
+    # the following 2 commands are consumed from DesignCreate::Role::FilterOligos
     $self->validate_oligos;
-    $self->have_required_validated_oligos;
-    #$self->run_exonerate;
-    #$self->filter_out_non_specific_oligos;
     $self->output_validated_oligos;
+
     $self->validate_oligo_pairs;
     $self->output_valid_oligo_pairs;
 
     return;
 }
 
-#Validate oligo coordinates, sequence and length
-sub validate_oligos {
-    my $self = shift;
+=head2 _validate_oligo
 
-    for my $oligo_type ( $self->expected_oligos ) {
-        my $oligo_file = $self->get_file( "$oligo_type.yaml", $self->oligo_finder_output_dir );
+Run checks against individual oligo to make sure it is valid.
+If it passes all checks return 1, otherwise return undef.
 
-        DesignCreate::Exception->throw("No valid $oligo_type oligos")
-            unless $self->validate_oligos_of_type( $oligo_file, $oligo_type );
-
-        $self->log->info("We have $oligo_type oligos that pass initial checks");
-    }
-
-    return 1;
-}
-
-sub validate_oligos_of_type {
-    my ( $self, $oligo_file, $oligo_type ) = @_;
-    $self->log->debug( "Validating $oligo_type oligos" );
-
-    my $oligos = LoadFile( $oligo_file );
-    unless ( $oligos ) {
-        $self->log->error( "No oligo data in $oligo_file for $oligo_type oligo" );
-        return;
-    }
-
-    # for now push straight into validated_oligos hash, bypass all_oligos
-    # we will change this is we need to exonerate oligos
-    for my $oligo_data ( @{ $oligos } ) {
-        if ( $self->validate_oligo( $oligo_data, $oligo_type ) ) {
-            push @{ $self->validated_oligos->{$oligo_type} }, $oligo_data
-        }
-        else {
-            $self->add_invalid_oligo( $oligo_data->{id} => 1 );
-        }
-    }
-
-    unless ( exists $self->validated_oligos->{$oligo_type} ) {
-        $self->log->error("No valid $oligo_type oligos");
-        return;
-    }
-
-    return 1;
-}
-
-sub validate_oligo {
-    my ( $self, $oligo_data, $oligo_type ) = @_;
+=cut
+sub _validate_oligo {
+    my ( $self, $oligo_data, $oligo_type, $oligo_slice ) = @_;
     $self->log->debug( "$oligo_type oligo, id: " . $oligo_data->{id} );
 
-    if ( !defined $oligo_data->{oligo} || $oligo_data->{oligo} ne $oligo_type )   {
-        $self->log->error("Oligo name mismatch, expecting $oligo_type, got: "
-            . $oligo_data->{oligo} . 'for: ' . $oligo_data->{id} );
-        return;
-    }
-
-    my $oligo_slice = $self->get_slice(
-        $oligo_data->{oligo_start},
-        $oligo_data->{oligo_end},
-        $self->design_param( 'chr_name' ),
-    );
-
     $self->check_oligo_sequence( $oligo_data, $oligo_slice ) or return;
-    $self->check_oligo_length( $oligo_data ) or return;
+    $self->check_oligo_length( $oligo_data )                 or return;
     if ( $oligo_type =~ /5R|EF|ER|3F/ ) {
         $self->check_oligo_not_near_exon( $oligo_data, $oligo_slice ) or return;
     }
@@ -214,29 +137,6 @@ sub check_oligo_not_near_exon {
         'Oligo ' . $oligo_data->{id} . " overlaps or is too close to exon(s): $exon_ids" );
 
     return 0;
-}
-
-# go through output and filter out oligos that are not specific enough
-sub have_required_validated_oligos {
-    my $self = shift;
-
-    for my $oligo_type ( $self->expected_oligos ) {
-        DesignCreate::Exception->throw( "No valid $oligo_type oligos, halting filter process" )
-            unless exists $self->validated_oligos->{$oligo_type};
-    }
-
-    return 1;
-}
-
-sub output_validated_oligos {
-    my $self = shift;
-
-    for my $oligo_type ( keys %{ $self->validated_oligos } ) {
-        my $filename = $self->validated_oligo_dir->stringify . '/' . $oligo_type . '.yaml';
-        DumpFile( $filename, $self->validated_oligos->{$oligo_type} );
-    }
-
-    return;
 }
 
 sub validate_oligo_pairs {

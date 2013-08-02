@@ -112,51 +112,19 @@ sub validate_oligo : Test(5) {
     ok !$o->validate_oligo( $oligo_data, '5R' ), 'validate_oligo check fails';
 }
 
-sub validate_oligos_of_type : Test(4) {
-    my $test = shift;
-    ok my $o = $test->_get_test_object, 'can grab test object';
-
-    ok my $oligo_file = $o->oligo_finder_output_dir->file( '5F.yaml' ), 'can get 5F.yaml oligo file';
-    ok $o->validate_oligos_of_type( $oligo_file, '5F' ), 'validate_oligo check passes';
-
-    my $empty_file = $o->oligo_finder_output_dir->file( 'test.yaml' );
-    $empty_file->touch;
-    ok !$o->validate_oligos_of_type( $empty_file, '5F' ), 'validate_oligo check fails, empty oligo file';
-}
-
 sub validate_oligos : Test(5) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
     ok $o->validate_oligos(), 'validate_oligos check passes';
 
-    ok $o->oligo_finder_output_dir->file( '5F.yaml' )->remove, 'can remove 5F.yaml file';
+    ok my $new_o = $test->_get_test_object, 'can grab another test object';
 
+    ok $new_o->all_oligos->{'5F'} = [], 'delete 5F oligo data';
     throws_ok{
-        $o->validate_oligos()
-    } qr/Cannot find file/, 'throws error when no 5F.yaml file';
+        $new_o->validate_oligos
+    } qr/No valid 5F oligos/, 'throws error when missing required valid oligos';
 
-    $o->oligo_finder_output_dir->file( '5F.yaml' )->touch;
-
-    throws_ok{
-        $o->validate_oligos()
-    } qr/No valid 5F oligos/, 'throws error when empty 5F.yaml file';
-
-}
-
-sub have_required_validated_oligos : Test(5){
-    my $test = shift;
-    ok my $o = $test->_get_test_object, 'can grab test object';
-    lives_ok{
-        $o->validate_oligos;
-    } 'setup test object';
-
-    ok $o->have_required_validated_oligos, 'have_required_validated_oligos returns true';
-
-    ok delete $o->validated_oligos->{ER}, 'delete ER validated oligos';
-    throws_ok{
-        $o->have_required_validated_oligos
-    } qr/No valid ER oligos/, 'throws error when missing required valid oligos';
 }
 
 sub output_validated_oligos : Test(9){

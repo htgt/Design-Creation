@@ -18,6 +18,7 @@ use warnings FATAL => 'all';
 use Moose;
 use Const::Fast;
 use Try::Tiny;
+use Fcntl; # O_ constants
 use namespace::autoclean;
 
 extends qw( DesignCreate::Action );

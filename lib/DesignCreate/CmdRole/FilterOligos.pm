@@ -16,7 +16,6 @@ use Moose::Role;
 use DesignCreate::Types qw( PositiveInt );
 use DesignCreate::Util::Exonerate;
 use DesignCreate::Exception;
-use YAML::Any qw( LoadFile DumpFile );
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
 use Const::Fast;
 use Fcntl; # O_ constants
@@ -90,6 +89,7 @@ sub filter_oligos {
 
     $self->add_design_parameters( \@DESIGN_PARAMETERS );
     $self->run_exonerate;
+    # the following commands are consumed from DesignCreate::Role::FilterOligos
     $self->validate_oligos;
     $self->output_validated_oligos;
 
