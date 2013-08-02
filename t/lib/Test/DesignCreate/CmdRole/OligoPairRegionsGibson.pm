@@ -17,27 +17,27 @@ BEGIN {
     __PACKAGE__->mk_classdata( 'test_role' => 'DesignCreate::CmdRole::OligoPairRegionsGibson' );
 }
 
-#sub valid_run_cmd : Test(3) {
-    #my $test = shift;
+sub valid_run_cmd : Test(3) {
+    my $test = shift;
 
-    ##create temp dir in standard location for temp files
-    #my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 );
+    #create temp dir in standard location for temp files
+    my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 );
 
-    ##note: small chance with new ensembl build that we will need
-    ##      to update the exon id
-    #my @argv_contents = (
-        #'oligo-pair-regions-gibson',
-        #'--dir'           ,$dir->stringify,
-        #'--target-gene'   ,'test_gene',
-        #'--species'       ,'Human',
-        #'--target-exon'   ,'ENSE00002184393'
-    #);
+    #note: small chance with new ensembl build that we will need
+    #      to update the exon id
+    my @argv_contents = (
+        'oligo-pair-regions-gibson',
+        '--dir'           ,$dir->stringify,
+        '--target-gene'   ,'test_gene',
+        '--species'       ,'Human',
+        '--target-exon'   ,'ENSE00002184393'
+    );
 
-    #ok my $result = test_app($test->cmd_class => \@argv_contents), 'can run command';
+    ok my $result = test_app($test->cmd_class => \@argv_contents), 'can run command';
 
-    #is $result->stderr, '', 'no errors';
-    #ok !$result->error, 'no command errors';
-#}
+    is $result->stderr, '', 'no errors';
+    ok !$result->error, 'no command errors';
+}
 
 sub exon : Test(2) {
     my $test = shift;
@@ -155,7 +155,7 @@ sub three_prime_region_start_and_end : Test(7) {
         , 'three_prime_region_end value correct +ve strand';
 }
 
-sub check_oligo_region_sizes : Test(no_plan) {
+sub check_oligo_region_sizes : Test(3) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
@@ -178,7 +178,7 @@ sub check_oligo_region_sizes : Test(no_plan) {
         , 'throws error if a oligo region is too small';
 }
 
-sub get_oligo_pair_region_coordinates : Test(no_plan) {
+sub get_oligo_pair_region_coordinates : Test(5) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
