@@ -6,19 +6,6 @@ FUNCTIONALITY
 * Create a constants file to store all these values
 
 ### Design Parameters
-* Store parameters for given design in a yaml file
-* use it to look up design info, like strand, chr, species, assembly, etc etc
-* store parameters here, like target region coordinates, offsets etc etc
-* for each command add values to this file as needed.
-    * oligo-target-region will add design targeting parameters
-    * find-oligos will add aos parameters
-    * filter-oligos will add any filter criteria parameters
-    * etc
-* Add attribute for this design parameters file in Action.pm
-* Also add method to add to, and read data from the file
-* Probably store data in a seperate attribute - Hash
-* Currently one role has a bunch of attributes and sequence getting code
-    * 
 * IDEA: Store target region start and end info for oligos in LIMS2
     * just adding 2 more fields
     * will be able to deduce original critical / deleted regions
@@ -36,9 +23,11 @@ FUNCTIONALITY
     * only really use it with one log file
     * seems to suppress the --help option
 
-### Split Sequence Gathering from Attributes
-* Currently one role has a bunch of attributes and sequence getting code
-* Split into multiple roles, must do after Design Parameters Work 
+# Consume EnsEMBL role in main Action.pm module
+* Makes these attributes / subroutines available everywhere
+
+# Cut down complexity of the OligoCoordinate roles
+* too many roles at the moment
 
 Location Specified Designs
 --------------------------
