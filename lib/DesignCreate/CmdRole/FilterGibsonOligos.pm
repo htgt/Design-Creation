@@ -84,34 +84,6 @@ sub _validate_oligo {
     return 1;
 }
 
-sub check_oligo_sequence {
-    my ( $self, $oligo_data, $oligo_slice ) = @_;
-
-    if ( $oligo_slice->seq ne uc( $oligo_data->{oligo_seq} ) ) {
-        $self->log->error( 'Oligo seq does not match coordinate sequence: ' . $oligo_data->{id} );
-        $self->log->trace( 'Oligo seq  : ' . $oligo_data->{oligo_seq} );
-        $self->log->trace( "Ensembl seq: " . $oligo_slice->seq );
-        return 0;
-    }
-
-    $self->log->debug('Sequence for coordinates matches oligo sequence: ' . $oligo_data->{id} );
-    return 1;
-}
-
-sub check_oligo_length {
-    my ( $self, $oligo_data ) = @_;
-
-    my $oligo_length = length($oligo_data->{oligo_seq});
-    if ( $oligo_length != $oligo_data->{oligo_length} ) {
-        $self->log->error("Oligo length is $oligo_length, should be "
-                           . $oligo_data->{oligo_length} . ' for: ' . $oligo_data->{id} );
-        return 0;
-    }
-
-    $self->log->debug('Oligo length correct for: ' . $oligo_data->{id} );
-    return 1;
-}
-
 =head2 check_oligo_not_near_exon
 
 Check that the oligo is not within a certain number of bases of a exon

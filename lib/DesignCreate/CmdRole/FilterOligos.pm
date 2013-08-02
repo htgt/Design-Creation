@@ -106,8 +106,8 @@ sub _validate_oligo {
     my ( $self, $oligo_data, $oligo_type, $oligo_slice ) = @_;
 
     $self->check_oligo_coordinates( $oligo_data ) or return;
-    $self->check_oligo_sequence( $oligo_data )    or return;
-    $self->check_oligo_length( $oligo_data )      or return;
+    $self->check_oligo_sequence( $oligo_data, $oligo_slice ) or return;
+    $self->check_oligo_length( $oligo_data ) or return;
     $self->check_oligo_specificity(
         $oligo_data->{id},
         $self->exonerate_matches->{ $oligo_data->{id} }
@@ -130,41 +130,6 @@ sub check_oligo_coordinates {
     }
 
     $self->log->debug('Coordinates look correct');
-    return 1;
-}
-
-sub check_oligo_sequence {
-    my ( $self, $oligo_data ) = @_;
-
-    my $ensembl_slice = $self->get_slice(
-        $oligo_data->{oligo_start},
-        $oligo_data->{oligo_end},
-        $self->design_param( 'chr_name' ),
-    );
-
-
-    if ( $ensembl_slice->seq ne uc( $oligo_data->{oligo_seq} ) ) {
-        $self->log->error( 'Oligo seq does not match coordinate sequence: ' . $oligo_data->{id} );
-        $self->log->trace( 'Oligo seq  : ' . $oligo_data->{oligo_seq} );
-        $self->log->trace( "Ensembl seq: " . $ensembl_slice->seq );
-        return 0;
-    }
-
-    $self->log->debug('Sequence for coordinates matches oligo sequence: ' . $oligo_data->{id} );
-    return 1;
-}
-
-sub check_oligo_length {
-    my ( $self, $oligo_data ) = @_;
-
-    my $oligo_length = length($oligo_data->{oligo_seq});
-    if ( $oligo_length != $oligo_data->{oligo_length} ) {
-        $self->log->error("Oligo length is $oligo_length, should be "
-                           . $oligo_data->{oligo_length} . ' for: ' . $oligo_data->{id} );
-        return 0;
-    }
-
-    $self->log->debug('Oligo length correct for: ' . $oligo_data->{id} );
     return 1;
 }
 

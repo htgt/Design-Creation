@@ -6,23 +6,16 @@ DesignCreate::Role::FilterOligos
 
 =head1 DESCRIPTION
 
+Common attributes and subroutines used by the filter oligo commands.
 
 =cut
 
 use Moose::Role;
-use DesignCreate::Util::Exonerate;
 use DesignCreate::Exception;
 use YAML::Any qw( LoadFile DumpFile );
-use DesignCreate::Types qw( PositiveInt );
-use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
-use Const::Fast;
-use Fcntl; # O_ constants
-use Bio::SeqIO;
-use Try::Tiny;
-use List::MoreUtils qw( any );
 use namespace::autoclean;
 
-#requires '_validate_oligo';
+requires '_validate_oligo';
 
 has all_oligos => (
     is         => 'ro',
@@ -69,7 +62,7 @@ has validated_oligos => (
 
 =head2 validate_oligos
 
-Loop through all the candidate oligos for the oligo types we expect for 
+Loop through all the candidate oligos for the oligo types we expect for
 given the design we have.
 
 Run checks against the oligos, if they pass place them in a validated oligo hash.
@@ -144,6 +137,46 @@ sub output_validated_oligos {
     }
 
     return;
+}
+
+=head2 check_oligo_sequence
+
+Check the oligo sequence we got from the oligo finder software matches up
+to the sequence we grab from EnsEMBL using the oligo coordinates we have
+worked out.
+
+=cut
+sub check_oligo_sequence {
+    my ( $self, $oligo_data, $oligo_slice ) = @_;
+
+    if ( $oligo_slice->seq ne uc( $oligo_data->{oligo_seq} ) ) {
+        $self->log->error( 'Oligo seq does not match coordinate sequence: ' . $oligo_data->{id} );
+        $self->log->trace( 'Oligo seq  : ' . $oligo_data->{oligo_seq} );
+        $self->log->trace( "Ensembl seq: " . $oligo_slice->seq );
+        return 0;
+    }
+
+    $self->log->debug('Sequence for coordinates matches oligo sequence: ' . $oligo_data->{id} );
+    return 1;
+}
+
+=head2 check_oligo_length
+
+Check the length of the oligo sequence is the same value we expect.
+
+=cut
+sub check_oligo_length {
+    my ( $self, $oligo_data ) = @_;
+
+    my $oligo_length = length($oligo_data->{oligo_seq});
+    if ( $oligo_length != $oligo_data->{oligo_length} ) {
+        $self->log->error("Oligo length is $oligo_length, should be "
+                           . $oligo_data->{oligo_length} . ' for: ' . $oligo_data->{id} );
+        return 0;
+    }
+
+    $self->log->debug('Oligo length correct for: ' . $oligo_data->{id} );
+    return 1;
 }
 
 1;
