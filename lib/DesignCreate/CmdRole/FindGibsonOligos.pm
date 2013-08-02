@@ -226,13 +226,8 @@ sub run_primer3 {
         my $result = $p3->run_primer3( $log_file->absolute, $region_bio_seq,
             { SEQUENCE_TARGET => $target_string } );
 
-        if ( $result->warnings ) {
-            $self->log->warn( "Primer3 warning: $_" ) for $result->warnings;
-        };
-        if ( $result->errors ) {
-            $self->log->error( "Primer3 error: $_" ) for $result->errors;
-            DesignCreate::Exception->throw( "Errors running primer3 on $region region" );
-        };
+        DesignCreate::Exception->throw( "Errors running primer3 on $region region" )
+            unless $result;
 
         if ( $result->num_primer_pairs ) {
             $self->log->info( "$region primer region primer pairs: " . $result->num_primer_pairs );
@@ -290,24 +285,7 @@ sub parse_primer {
     DesignCreate::Exception->throw( "primer3 failed to validate sequence for primer: $primer_id" )
         unless $primer->validate_seq;
 
-    my $region_coords = $self->get_region_coords( $region );
-    $oligo_data{target_region_start} = $region_coords->{start};
-    $oligo_data{target_region_end}   = $region_coords->{end};
-
-    # primer3 takes in sequence 5' to 3' so we need to work out the sequence in the
-    # +ve strand plus its coordinates
-    if ( $self->design_param( 'chr_strand' ) == 1 ) {
-        $oligo_data{oligo_start} = $region_coords->{start} + $primer->start - 1;
-        $oligo_data{oligo_end}   = $region_coords->{start} + $primer->end - 1;
-        $oligo_data{offset}      = $primer->start;
-        $oligo_data{oligo_seq}   = $direction eq 'forward' ? $primer->seq->seq : $primer->seq->revcom->seq;
-    }
-    else {
-        $oligo_data{oligo_start} = $region_coords->{end} - $primer->end + 1;
-        $oligo_data{oligo_end}   = $region_coords->{end} - $primer->start + 1;
-        $oligo_data{offset}      = ( $region_coords->{end} - $region_coords->{start} + 1 ) - $primer->end;
-        $oligo_data{oligo_seq}   = $direction eq 'forward' ? $primer->seq->revcom->seq : $primer->seq->seq;
-    }
+    $self->calculate_oligo_coords_and_sequence( $primer, $region, \%oligo_data, $direction );
 
     $oligo_data{oligo_length}    = $primer->length;
     $oligo_data{melting_temp}    = $primer->melting_temp;
@@ -320,6 +298,38 @@ sub parse_primer {
     push @{ $self->primer3_oligos->{ $oligo_type } }, \%oligo_data;
 
     return $oligo_data{id};
+}
+
+=head2 calculate_oligo_coords_and_sequence
+
+Primer3 takes in sequence 5' to 3' so we need to work out the sequence in the
++ve strand plus its coordinates
+
+=cut
+sub calculate_oligo_coords_and_sequence{
+    my ( $self, $primer, $region, $oligo_data, $direction ) = @_;
+
+    my $region_coords = $self->get_region_coords( $region );
+    $oligo_data->{target_region_start} = $region_coords->{start};
+    $oligo_data->{target_region_end}   = $region_coords->{end};
+
+    if ( $self->design_param('chr_strand') == 1 ) {
+        $oligo_data->{oligo_start} = $region_coords->{start} + $primer->start - 1;
+        $oligo_data->{oligo_end}   = $region_coords->{start} + $primer->end - 1;
+        $oligo_data->{offset}      = $primer->start;
+        $oligo_data->{oligo_seq}
+            = $direction eq 'forward' ? $primer->seq->seq : $primer->seq->revcom->seq;
+    }
+    else {
+        $oligo_data->{oligo_start} = $region_coords->{end} - $primer->end + 1;
+        $oligo_data->{oligo_end}   = $region_coords->{end} - $primer->start + 1;
+        $oligo_data->{offset}
+            = ( $region_coords->{end} - $region_coords->{start} + 1 ) - $primer->end;
+        $oligo_data->{oligo_seq}
+            = $direction eq 'forward' ? $primer->seq->revcom->seq : $primer->seq->seq;
+    }
+
+    return;
 }
 
 =head2 create_oligo_files
@@ -356,6 +366,8 @@ Build sequence target string that tells primer3 what region the primers must sur
 sub build_primer3_sequence_target_string {
     my ( $self, $region ) = @_;
 
+    DesignCreate::Exception->throw( "Details for $region region do not exist" )
+        unless exists $PRIMER_DETAILS{$region};
     my $forward_primer_size = $self->design_param( 'region_length_' . $PRIMER_DETAILS{$region}{forward} );
     my $reverse_primer_size = $self->design_param( 'region_length_' . $PRIMER_DETAILS{$region}{reverse} );
     my $slice_name = $PRIMER_DETAILS{$region}{slice};
@@ -373,11 +385,11 @@ sub _build_region_slice {
     my ( $self, $region_name  ) = @_;
 
     my $coords = $self->get_region_coords( $region_name );
-    my $start  = $coords->{start};
-    my $end    = $coords->{end};
+    DesignCreate::Exception->throw( "Unable to find coordinates for $region_name region" )
+        unless $coords;
 
     my $slice = $self->get_repeat_masked_slice(
-        $start, $end, $self->design_param( 'chr_name' ),
+        $coords->{start}, $coords->{end}, $self->design_param( 'chr_name' ),
         $self->no_repeat_mask_classes ? undef : $self->repeat_mask_class
     );
 
