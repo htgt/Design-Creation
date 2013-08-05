@@ -14,7 +14,11 @@ gibson design.
 use Moose::Role;
 use DesignCreate::Util::Primer3;
 use DesignCreate::Exception;
-use DesignCreate::Constants qw( $DEFAULT_OLIGO_COORD_FILE_NAME $DEFAULT_PRIMER3_CONFIG_FILE );
+use DesignCreate::Constants qw(
+    $DEFAULT_OLIGO_COORD_FILE_NAME
+    $DEFAULT_PRIMER3_CONFIG_FILE
+    %GIBSON_PRIMER_REGIONS
+);
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
 use DesignCreate::Types qw( YesNo );
 use YAML::Any qw( DumpFile LoadFile );
@@ -25,24 +29,6 @@ use namespace::autoclean;
 const my @FIND_GIBSON_OLIGOS_PARAMETERS => qw(
 mask_by_lower_case
 repeat_mask_class
-);
-
-const my %PRIMER_DETAILS => (
-    exon => {
-        forward => 'EF',
-        reverse => 'ER',
-        slice  => 'exon_region_slice'
-    },
-    five_prime => {
-        forward => '5F',
-        reverse => '5R',
-        slice  => 'five_prime_region_slice'
-    },
-    three_prime => {
-        forward => '3F',
-        reverse => '3R',
-        slice  => 'three_prime_region_slice'
-    },
 );
 
 has primer3_config_file => (
@@ -208,12 +194,12 @@ sub run_primer3 {
         primer_lowercase_masking => $self->mask_by_lower_case eq 'yes' ? 1 : 0,
     );
 
-    for my $region ( keys %PRIMER_DETAILS ) {
+    for my $region ( keys %GIBSON_PRIMER_REGIONS ) {
         $self->log->debug("Finding primers for $region primer region");
         my $log_file = $self->oligo_finder_output_dir->file( 'primer3_output_' . $region . '.log' );
 
         my $target_string  = $self->build_primer3_sequence_target_string($region);
-        my $slice_name     = $PRIMER_DETAILS{$region}{slice};
+        my $slice_name     = $GIBSON_PRIMER_REGIONS{$region}{slice};
         my $region_slice   = $self->$slice_name;
         my $region_bio_seq = Bio::Seq->new( -display_id => $region, -seq => $region_slice->seq );
 
@@ -244,7 +230,7 @@ It outputs information about each primer pair.
 sub parse_primer3_results {
     my ( $self ) = @_;
 
-    for my $region ( keys %PRIMER_DETAILS ) {
+    for my $region ( keys %GIBSON_PRIMER_REGIONS ) {
 
         my $result = $self->get_primer3_result( $region );
         while ( my $pair = $result->next_primer_pair ) {
@@ -253,8 +239,8 @@ sub parse_primer3_results {
 
             # store primer pair information seperately
             push @{ $self->oligo_pairs->{ $region } }, {
-                $PRIMER_DETAILS{$region}{forward} => $forward_id,
-                $PRIMER_DETAILS{$region}{reverse} => $reverse_id,
+                $GIBSON_PRIMER_REGIONS{$region}{forward} => $forward_id,
+                $GIBSON_PRIMER_REGIONS{$region}{reverse} => $reverse_id,
             };
         }
     }
@@ -272,7 +258,7 @@ Also add other calulated data about primer.
 sub parse_primer {
     my ( $self, $primer, $region, $direction ) = @_;
     my %oligo_data;
-    my $oligo_type  = $PRIMER_DETAILS{$region}{$direction};
+    my $oligo_type  = $GIBSON_PRIMER_REGIONS{$region}{$direction};
     my $primer_id   = $oligo_type . '-' . $primer->rank;
     $oligo_data{id} = $primer_id;
 
@@ -361,10 +347,10 @@ sub build_primer3_sequence_target_string {
     my ( $self, $region ) = @_;
 
     DesignCreate::Exception->throw( "Details for $region region do not exist" )
-        unless exists $PRIMER_DETAILS{$region};
-    my $forward_primer_size = $self->design_param( 'region_length_' . $PRIMER_DETAILS{$region}{forward} );
-    my $reverse_primer_size = $self->design_param( 'region_length_' . $PRIMER_DETAILS{$region}{reverse} );
-    my $slice_name = $PRIMER_DETAILS{$region}{slice};
+        unless exists $GIBSON_PRIMER_REGIONS{$region};
+    my $forward_primer_size = $self->design_param( 'region_length_' . $GIBSON_PRIMER_REGIONS{$region}{forward} );
+    my $reverse_primer_size = $self->design_param( 'region_length_' . $GIBSON_PRIMER_REGIONS{$region}{reverse} );
+    my $slice_name = $GIBSON_PRIMER_REGIONS{$region}{slice};
 
     my $target_length = $self->$slice_name->length - $forward_primer_size - $reverse_primer_size;
     return $forward_primer_size . ',' . $target_length;
