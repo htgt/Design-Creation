@@ -26,8 +26,7 @@ use Try::Tiny;
 use namespace::autoclean;
 
 requires 'oligo_finder_output_dir';
-# TODO
-# also required query_file and target_file attribute but errors are thrown when this is added
+# TODO also required query_file and target_file attribute but errors are thrown when this is added
 
 has aos_location => (
     is            => 'ro',

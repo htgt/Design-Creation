@@ -20,9 +20,9 @@ sub get_oligo_region_offset : Tests(4) {
     ok my $o = $test->_get_test_object, 'can grab test object';
 
     ok my $offset = $o->get_oligo_region_offset('G5'), 'can get_oligo_region_offset';
-    is $offset, $o->G5_region_offset, 'is expected offset value';
+    is $offset, $o->region_offset_G5, 'is expected offset value';
     throws_ok { $o->get_oligo_region_offset('M3') }
-        qr/Attribute M3_region_offset does not exist/, 'throws error on unexpected oligo name';
+        qr/Attribute region_offset_M3 does not exist/, 'throws error on unexpected oligo name';
 
 }
 
@@ -31,11 +31,11 @@ sub get_oligo_region_length : Tests(4) {
     ok my $o = $test->_get_test_object, 'can grab test object';
 
     ok my $length = $o->get_oligo_region_length('G5'), 'can get_oligo_region_length';
-    is $length, $o->G5_region_length, 'have correct oligo region length value';
+    is $length, $o->region_length_G5, 'have correct oligo region length value';
 
     throws_ok {
         $o->get_oligo_region_length('M3')
-    } qr/Attribute M3_region_length does not exist/
+    } qr/Attribute region_length_M3 does not exist/
         , 'throws error on unexpected oligo name';
 
 }

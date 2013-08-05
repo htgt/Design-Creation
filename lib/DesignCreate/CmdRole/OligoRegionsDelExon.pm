@@ -27,18 +27,18 @@ target_genes
 target_exon
 target_start
 target_end
-U5_region_length
-U5_region_offset
-D3_region_length
-D3_region_offset
+region_length_U5
+region_offset_U5
+region_length_D3
+region_offset_D3
 chr_name
 chr_strand
 species
 assembly
-G5_region_length
-G5_region_offset
-G3_region_length
-G3_region_offset
+region_length_G5
+region_offset_G5
+region_length_G3
+region_offset_G3
 design_method
 );
 

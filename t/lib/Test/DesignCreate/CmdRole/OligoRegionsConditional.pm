@@ -112,8 +112,8 @@ sub coordinates_for_oligo : Tests(14) {
 
     ok my( $g5_start, $g5_end ) = $o->coordinates_for_oligo( 'G5' )
         , 'can call coordinates_for_oligo';
-    my $g5_real_start = ( $o->U_block_start - ( $o->G5_region_offset + $o->G5_region_length ) );
-    my $g5_real_end = ( $o->U_block_start - ( $o->G3_region_offset + 1 ) );
+    my $g5_real_start = ( $o->U_block_start - ( $o->region_offset_G5 + $o->region_length_G5 ) );
+    my $g5_real_end = ( $o->U_block_start - ( $o->region_offset_G3 + 1 ) );
     is $g5_start, $g5_real_start, 'correct start value';
     is $g5_end, $g5_real_end, 'correct end value';
 
@@ -131,9 +131,9 @@ sub coordinates_for_oligo : Tests(14) {
     ok my( $g3_start, $g3_end ) = $o->coordinates_for_oligo( 'G3' )
         , 'can call coordinates_for_oligo';
 
-    is $g3_start, $o->D_block_start - ( $o->G3_region_offset + $o->G3_region_length )
+    is $g3_start, $o->D_block_start - ( $o->region_offset_G3 + $o->region_length_G3 )
         , 'correct G3 start value';
-    is $g3_end, $o->D_block_start - ( $o->G3_region_offset + 1 ), 'correct G3 end value';
+    is $g3_end, $o->D_block_start - ( $o->region_offset_G3 + 1 ), 'correct G3 end value';
 }
 
 sub get_oligo_region_gap_oligo : Test(15) {
@@ -145,15 +145,15 @@ sub get_oligo_region_gap_oligo : Test(15) {
 
     ok my( $g3_start, $g3_end ) = $o->get_oligo_region_gap_oligo( 'G3' )
         , 'can call get_oligo_region_gap_oligo for G3';
-    my $g3_real_start = ( $o->D_block_end + ( $o->G3_region_offset + 1 ) );
-    my $g3_real_end = ( $o->D_block_end + ( $o->G3_region_offset + $o->G3_region_length ) );
+    my $g3_real_start = ( $o->D_block_end + ( $o->region_offset_G3 + 1 ) );
+    my $g3_real_end = ( $o->D_block_end + ( $o->region_offset_G3 + $o->region_length_G3 ) );
     is $g3_start, $g3_real_start, 'correct start value';
     is $g3_end, $g3_real_end, 'correct end value';
 
     ok my( $g5_start, $g5_end ) = $o->get_oligo_region_gap_oligo( 'G5' )
         , 'can call get_oligo_region_gap_oligo for G5';
-    my $g5_real_start = ( $o->U_block_start - ( $o->G5_region_offset + $o->G5_region_length ) );
-    my $g5_real_end = ( $o->U_block_start - ( $o->G3_region_offset + 1 ) );
+    my $g5_real_start = ( $o->U_block_start - ( $o->region_offset_G5 + $o->region_length_G5 ) );
+    my $g5_real_end = ( $o->U_block_start - ( $o->region_offset_G3 + 1 ) );
     is $g5_start, $g5_real_start, 'correct start value';
     is $g5_end, $g5_real_end, 'correct end value';
 
@@ -165,15 +165,15 @@ sub get_oligo_region_gap_oligo : Test(15) {
     ok my( $g5_start_minus, $g5_end_minus ) = $o->coordinates_for_oligo( 'G5' )
         , 'can call get_oligo_region_gap_oligo for G5';
 
-    is $g5_start_minus, $o->U_block_end + ( $o->G5_region_offset + 1 ), 'correct G5 start value';
-    is $g5_end_minus, $o->U_block_end + ( $o->G5_region_offset + $o->G5_region_length ), 'correct G5 end value';
+    is $g5_start_minus, $o->U_block_end + ( $o->region_offset_G5 + 1 ), 'correct G5 start value';
+    is $g5_end_minus, $o->U_block_end + ( $o->region_offset_G5 + $o->region_length_G5 ), 'correct G5 end value';
 
     ok my( $g3_start_minus, $g3_end_minus ) = $o->coordinates_for_oligo( 'G3' )
         , 'can call get_oligo_region_gap_oligo for G3';
 
-    is $g3_start_minus, $o->D_block_start - ( $o->G3_region_offset + $o->G3_region_length )
+    is $g3_start_minus, $o->D_block_start - ( $o->region_offset_G3 + $o->region_length_G3 )
         , 'correct G3 start value';
-    is $g3_end_minus, $o->D_block_start - ( $o->G3_region_offset + 1 ), 'correct G3 end value';
+    is $g3_end_minus, $o->D_block_start - ( $o->region_offset_G3 + 1 ), 'correct G3 end value';
 
     my $metaclass = $test->get_test_object_metaclass();
     $o = $metaclass->new_object(
@@ -182,7 +182,7 @@ sub get_oligo_region_gap_oligo : Test(15) {
         D_block_start => 101176328,     D_block_end      => 101176428,
         species       => 'Mouse',
         chr_name      => 11,            chr_strand       => 1,
-        design_method => 'conditional', G5_region_length => 1,
+        design_method => 'conditional', region_length_G5 => 1,
         target_genes => [ 'test_gene' ],
     );
 

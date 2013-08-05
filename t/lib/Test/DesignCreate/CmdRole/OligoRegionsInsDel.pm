@@ -49,15 +49,15 @@ sub coordinates_for_oligo : Tests(16) {
     ok my( $u5_start, $u5_end ) = $o->coordinates_for_oligo( 'U5' )
         , 'can call coordinates_for_oligo';
 
-    my $u5_real_start = ( $o->target_start - ( $o->U5_region_offset + $o->U5_region_length ) );
-    my $u5_real_end = ( $o->target_start - ( $o->U5_region_offset + 1 ) );
+    my $u5_real_start = ( $o->target_start - ( $o->region_offset_U5 + $o->region_length_U5 ) );
+    my $u5_real_end = ( $o->target_start - ( $o->region_offset_U5 + 1 ) );
     is $u5_start, $u5_real_start, 'correct start value';
     is $u5_end, $u5_real_end, 'correct end value';
 
     ok my( $g3_start, $g3_end ) = $o->coordinates_for_oligo( 'G3' )
         , 'can call coordinates_for_oligo';
-    my $g3_real_start = ( $o->target_end + ( $o->G3_region_offset + 1 ) );
-    my $g3_real_end = ( $o->target_end + ( $o->G3_region_offset + $o->G3_region_length ) );
+    my $g3_real_start = ( $o->target_end + ( $o->region_offset_G3 + 1 ) );
+    my $g3_real_end = ( $o->target_end + ( $o->region_offset_G3 + $o->region_length_G3 ) );
     is $g3_start, $g3_real_start, 'correct start value';
     is $g3_end, $g3_real_end, 'correct end value';
 
@@ -84,7 +84,7 @@ sub coordinates_for_oligo : Tests(16) {
         {
             target_start      => 101176328,
             target_end        => 101176428,
-            U5_region_length  => 1,
+            region_length_U5  => 1,
         }
     ), 'we got another test object';
 
@@ -157,7 +157,7 @@ sub _get_test_object {
     my $strand = $params->{chr_strand} || 1;
     my $start = $params->{target_start} || 101176328;
     my $end = $params->{target_end} || 101176428;
-    my $u5_length = $params->{U5_region_length} || 200;
+    my $u5_length = $params->{region_length_U5} || 200;
 
     my $metaclass = $test->get_test_object_metaclass();
     return $metaclass->new_object(
@@ -167,7 +167,7 @@ sub _get_test_object {
         target_end       => $end,
         chr_name         => $chr_name,
         chr_strand       => $strand,
-        U5_region_length => $u5_length,
+        region_length_U5 => $u5_length,
         design_method    => 'deletion',
         target_genes     => [ 'test_gene' ],
     );

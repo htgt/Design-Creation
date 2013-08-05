@@ -16,40 +16,40 @@ use DesignCreate::Exception;
 use DesignCreate::Types qw( PositiveInt NaturalNumber );
 use namespace::autoclean;
 
-has U5_region_length => (
+has region_length_U5 => (
     is            => 'ro',
     isa           => PositiveInt,
     traits        => [ 'Getopt' ],
     default       => 200,
     documentation => 'Length of U5 oligo candidate region',
-    cmd_flag      => 'u5-region-length'
+    cmd_flag      => 'region-length-u5'
 );
 
-has U5_region_offset => (
+has region_offset_U5 => (
     is            => 'ro',
     isa           => NaturalNumber,
     traits        => [ 'Getopt' ],
     default       => 0,
     documentation => 'Offset from target region of U5 oligo candidate region',
-    cmd_flag      => 'u5-region-offset'
+    cmd_flag      => 'region-offset-u5'
 );
 
-has D3_region_length => (
+has region_length_D3 => (
     is            => 'ro',
     isa           => PositiveInt,
     traits        => [ 'Getopt' ],
     default       => 200,
     documentation => 'Length of D3 oligo candidate region',
-    cmd_flag      => 'd3-region-length'
+    cmd_flag      => 'region-length-d3'
 );
 
-has D3_region_offset => (
+has region_offset_D3 => (
     is            => 'ro',
     isa           => NaturalNumber,
     traits        => [ 'Getopt' ],
     default       => 0,
     documentation => 'Offset from target region of D3 oligo candidate region',
-    cmd_flag      => 'd3-region-offset'
+    cmd_flag      => 'region-offset-d3'
 );
 
 ## no critic(Subroutines::ProhibitUnusedPrivateSubroutine)

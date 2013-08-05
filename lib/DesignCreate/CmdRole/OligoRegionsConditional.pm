@@ -38,10 +38,10 @@ chr_name
 chr_strand
 species
 assembly
-G5_region_length
-G5_region_offset
-G3_region_length
-G3_region_offset
+region_length_G5
+region_offset_G5
+region_length_G3
+region_offset_G3
 design_method
 target_genes
 );

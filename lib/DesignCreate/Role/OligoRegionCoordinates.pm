@@ -67,7 +67,7 @@ sub create_oligo_region_coordinate_file {
 sub get_oligo_region_offset {
     my ( $self, $oligo ) = @_;
 
-    my $attribute_name = $oligo . '_region_offset';
+    my $attribute_name = 'region_offset_' . $oligo;
     DesignCreate::Exception::NonExistantAttribute->throw(
         attribute_name => $attribute_name,
         class          => $self->meta->name
@@ -79,7 +79,7 @@ sub get_oligo_region_offset {
 sub get_oligo_region_length {
     my ( $self, $oligo ) = @_;
 
-    my $attribute_name = $oligo . '_region_length';
+    my $attribute_name = 'region_length_' . $oligo;
     DesignCreate::Exception::NonExistantAttribute->throw(
         attribute_name => $attribute_name,
         class          => $self->meta->name
