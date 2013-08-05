@@ -18,7 +18,6 @@ use Try::Tiny;
 use namespace::autoclean;
 
 with qw(
-DesignCreate::Role::EnsEMBL
 DesignCreate::Role::OligoRegionCoordinates
 );
 

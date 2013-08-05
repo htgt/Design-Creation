@@ -20,7 +20,6 @@ with qw(
 DesignCreate::Role::OligoRegionCoordinates
 DesignCreate::Role::GapOligoCoordinates
 DesignCreate::Role::OligoRegionCoordinatesInsDel
-DesignCreate::Role::EnsEMBL
 );
 
 const my @DESIGN_PARAMETERS => qw(

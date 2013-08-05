@@ -18,6 +18,13 @@ use DesignCreate::Exception;
 use DesignCreate::Exception::MissingFile;
 use DesignCreate::Exception::NonExistantAttribute;
 use DesignCreate::Types qw( DesignMethod ArrayRefOfOligos );
+use DesignCreate::Constants qw( 
+    $DEFAULT_VALIDATED_OLIGO_DIR_NAME
+    $DEFAULT_OLIGO_FINDER_OUTPUT_DIR_NAME
+    $DEFAULT_OLIGO_TARGET_REGIONS_DIR_NAME
+    $DEFAULT_DESIGN_DATA_FILE_NAME
+    $DEFAULT_ALT_DESIGN_DATA_FILE_NAME
+);
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsDir AbsFile/;
 use YAML::Any qw( LoadFile DumpFile );
 use Const::Fast;
@@ -92,12 +99,6 @@ sub _build_oligos {
 #
 # Directories common to multiple commands
 #
-
-const my $DEFAULT_VALIDATED_OLIGO_DIR_NAME      => 'validated_oligos';
-const my $DEFAULT_OLIGO_FINDER_OUTPUT_DIR_NAME  => 'oligo_finder_output';
-const my $DEFAULT_OLIGO_TARGET_REGIONS_DIR_NAME => 'oligo_target_regions';
-const my $DEFAULT_DESIGN_DATA_FILE_NAME         => 'design_data.yaml';
-const my $DEFAULT_ALT_DESIGN_DATA_FILE_NAME     => 'alt_designs.yaml';
 
 has validated_oligo_dir_name => (
     is      => 'ro',

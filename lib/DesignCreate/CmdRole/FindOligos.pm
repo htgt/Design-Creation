@@ -13,6 +13,7 @@ This is a wrapper around RunAOS which does the real work.
 
 use Moose::Role;
 use DesignCreate::Exception;
+use DesignCreate::Constants qw( %DEFAULT_CHROMOSOME_DIR );
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
 use Bio::SeqIO;
 use Bio::Seq;
@@ -29,15 +30,6 @@ DesignCreate::Role::AOS
 requires qw(
 oligo_target_regions_dir
 oligo_finder_output_dir
-);
-
-const my %DEFAULT_CHROMOSOME_DIR => (
-    Mouse => {
-        GRCm38 => '/lustre/scratch110/blastdb/Users/team87/Mouse/GRCm38',
-    },
-    Human =>{
-        GRCh37 => '/lustre/scratch110/blastdb/Users/team87/Human/GRCh37',
-    },
 );
 
 const my @DESIGN_PARAMETERS => qw(

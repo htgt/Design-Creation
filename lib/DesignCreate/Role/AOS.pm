@@ -15,6 +15,7 @@ target_file
 use Moose::Role;
 use DesignCreate::Exception;
 use DesignCreate::Types qw( PositiveInt YesNo AOSSearchMethod );
+use DesignCreate::Constants qw( $DEFAULT_AOS_LOCATION $DEFAULT_AOS_WORK_DIR_NAME );
 use Const::Fast;
 use IPC::System::Simple qw( system );
 use IPC::Run qw( run );
@@ -27,11 +28,6 @@ use namespace::autoclean;
 requires 'oligo_finder_output_dir';
 # TODO
 # also required query_file and target_file attribute but errors are thrown when this is added
-
-#TODO install AOS in sensible place and change this
-const my $DEFAULT_AOS_LOCATION => $ENV{AOS_LOCATION}
-    || '/nfs/users/nfs_s/sp12/workspace/ArrayOligoSelector';
-const my $DEFAULT_AOS_WORK_DIR_NAME   => 'aos_work';
 
 has aos_location => (
     is            => 'ro',

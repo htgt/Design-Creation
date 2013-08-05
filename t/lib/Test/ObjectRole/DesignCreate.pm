@@ -8,6 +8,7 @@ with qw(
 MooseX::Log::Log4perl
 MooseX::Getopt
 DesignCreate::Role::Action
+DesignCreate::Role::EnsEMBL
 );
 
 #

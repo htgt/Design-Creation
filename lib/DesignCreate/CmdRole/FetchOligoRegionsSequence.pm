@@ -13,6 +13,7 @@ for each of the oligo regions.
 
 use Moose::Role;
 use DesignCreate::Exception;
+use DesignCreate::Constants qw( $DEFAULT_OLIGO_COORD_FILE_NAME );
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
 use Bio::SeqIO;
 use Bio::Seq;
@@ -21,15 +22,9 @@ use Fcntl; # O_ constants
 use YAML::Any qw( LoadFile );
 use namespace::autoclean;
 
-with qw(
-DesignCreate::Role::EnsEMBL
-);
-
 const my @DESIGN_PARAMETERS => qw(
 repeat_mask_class
 );
-
-const my $DEFAULT_OLIGO_COORD_FILE_NAME => 'oligo_region_coords.yaml';
 
 has oligo_region_coordinate_file => (
     is            => 'ro',

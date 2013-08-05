@@ -31,6 +31,7 @@ const my %CHROMOSOMES => (
     y => 1,
 );
 
+#TODO add gibson oligos here? sp12 Fri 02 Aug 2013 15:00:50 BST
 const my %OLIGOS => (
     map{ $_ => 1 } qw( G5 U5 U3 D5 D3 G3 ),
 );

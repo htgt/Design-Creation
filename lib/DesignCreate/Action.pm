@@ -20,6 +20,7 @@ extends qw( MooseX::App::Cmd::Command );
 with qw(
 MooseX::Log::Log4perl
 DesignCreate::Role::Action
+DesignCreate::Role::EnsEMBL
 );
 
 has trace => (

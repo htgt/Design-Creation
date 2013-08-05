@@ -22,7 +22,6 @@ use List::MoreUtils qw( any );
 use namespace::autoclean;
 
 with qw(
-DesignCreate::Role::EnsEMBL
 DesignCreate::Role::FilterOligos
 );
 

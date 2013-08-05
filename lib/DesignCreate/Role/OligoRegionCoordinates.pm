@@ -14,15 +14,9 @@ use Moose::Role;
 use DesignCreate::Exception;
 use DesignCreate::Exception::NonExistantAttribute;
 use DesignCreate::Types qw( Species );
-use Const::Fast;
+use DesignCreate::Constants qw( $DEFAULT_OLIGO_COORD_FILE_NAME %CURRENT_ASSEMBLY );
 use YAML::Any qw( DumpFile );
 use namespace::autoclean;
-
-const my $DEFAULT_OLIGO_COORD_FILE_NAME => 'oligo_region_coords.yaml';
-const my %CURRENT_ASSEMBLY => (
-    Mouse => 'GRCm38',
-    Human => 'GRCh37',
-);
 
 has target_genes => (
     is            => 'ro',

@@ -16,6 +16,7 @@ use Moose::Role;
 use DesignCreate::Types qw( PositiveInt );
 use DesignCreate::Util::Exonerate;
 use DesignCreate::Exception;
+use DesignCreate::Constants qw( $DEFAULT_EXONERATE_OLIGO_DIR_NAME );
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
 use Const::Fast;
 use Fcntl; # O_ constants
@@ -24,11 +25,8 @@ use Try::Tiny;
 use namespace::autoclean;
 
 with qw(
-DesignCreate::Role::EnsEMBL
 DesignCreate::Role::FilterOligos
 );
-
-const my $DEFAULT_EXONERATE_OLIGO_DIR_NAME => 'exonerate_oligos';
 
 const my @DESIGN_PARAMETERS => qw(
 flank_length

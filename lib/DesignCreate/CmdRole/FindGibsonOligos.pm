@@ -14,6 +14,7 @@ gibson design.
 use Moose::Role;
 use DesignCreate::Util::Primer3;
 use DesignCreate::Exception;
+use DesignCreate::Constants qw( $DEFAULT_OLIGO_COORD_FILE_NAME $DEFAULT_PRIMER3_CONFIG_FILE );
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
 use DesignCreate::Types qw( YesNo );
 use YAML::Any qw( DumpFile LoadFile );
@@ -21,17 +22,10 @@ use Bio::Seq;
 use Const::Fast;
 use namespace::autoclean;
 
-with qw( DesignCreate::Role::EnsEMBL );
-
 const my @FIND_GIBSON_OLIGOS_PARAMETERS => qw(
 mask_by_lower_case
 repeat_mask_class
 );
-
-const my $DEFAULT_OLIGO_COORD_FILE_NAME => 'oligo_region_coords.yaml';
-#TODO move this to somewhere sensible sp12 Fri 26 Jul 2013 08:30:53 BST
-const my $DEFAULT_PRIMER3_CONFIG_FILE =>
-    '/nfs/users/nfs_s/sp12/workspace/Design-Creation/tmp/primer3/primer3_config.yaml';
 
 const my %PRIMER_DETAILS => (
     exon => {
