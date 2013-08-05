@@ -7,6 +7,7 @@ CODE STRUCTURE
 
 ### DesignCreate::Action
 * Consumes **DesignCreate::Role::Action** role
+* Consumes **DesignCreate::Role::EnsEMBL** role
 * Parent class to all the DesignCreate::Action::\* modules
 * Extends MooseX::App::Cmd::Command
 * sets up some common attributes
@@ -81,6 +82,7 @@ CODE STRUCTURE
     DesignCreate::Util::Exonerate
     DesignCreate::Util::PickBlockOligoPair
     DesignCreate::Util::Primer3
+    DesignCreate::Constants
 ```
 
 
