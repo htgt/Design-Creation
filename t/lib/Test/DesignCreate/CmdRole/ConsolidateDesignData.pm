@@ -38,6 +38,23 @@ sub valid_consolidate_design_data_cmd : Test(4) {
     ok !$result->error, 'no command errors';
 }
 
+sub oligo_classes : Test(8) {
+    my $test = shift;
+    ok my $o = $test->_get_test_object, 'can grab test object';
+
+    is_deeply $o->oligo_classes, [ 'G' ], 'oligo classes for deletion design correct';
+
+    ok $o->clear_oligo_classes, 'can clear oligo_classes attribute value';
+    ok $o->set_param( 'design_method' => 'gibson' ), 'can set design_method to gibson';
+    is_deeply $o->oligo_classes, [ qw( exon five_prime three_prime ) ]
+        , 'oligo classes for gibson design correct';
+
+    ok $o->clear_oligo_classes, 'can clear oligo_classes attribute value';
+    ok $o->set_param( 'design_method' => 'conditional' ), 'can set design_method to conditional';
+    is_deeply $o->oligo_classes, [ qw( G U D ) ]
+        , 'oligo classes for conditional design correct';
+}
+
 sub all_oligo_pairs : Test(12) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';

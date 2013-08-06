@@ -20,7 +20,6 @@ use Try::Tiny;
 use Fcntl; # O_ constants
 use Data::Dump qw( pp );
 
-#TODO this almost exactly mimics the InsDelDesign Action, need to factor things out
 extends qw( DesignCreate::Action );
 with qw(
 DesignCreate::CmdRole::OligoPairRegionsGibson

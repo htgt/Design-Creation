@@ -19,6 +19,7 @@ Oligos
 use Moose::Role;
 use DesignCreate::Exception;
 use DesignCreate::Exception::NonExistantAttribute;
+use DesignCreate::Constants qw( %GIBSON_PRIMER_REGIONS );
 use YAML::Any qw( LoadFile DumpFile );
 use List::Util qw( first );
 use DateTime;
@@ -53,6 +54,29 @@ sub _build_software_version {
     return $DesignCreate::Role::Action::VERSION || 'dev_' . $t->dmy;
 }
 
+has oligo_classes => (
+    is         => 'ro',
+    isa        => 'ArrayRef',
+    lazy_build => 1,
+);
+
+sub _build_oligo_classes {
+    my $self = shift;
+    my $design_method = $self->design_param( 'design_method' );
+
+    if ( $design_method eq 'conditional' ) {
+        return [ qw( G U D ) ];
+    }
+    elsif ( $design_method eq 'gibson' ) {
+        return [ sort keys %GIBSON_PRIMER_REGIONS ];
+    }
+    else {
+        return [ 'G' ];
+    }
+
+    return;
+}
+
 has all_oligo_pairs => (
     is         => 'ro',
     isa        => 'HashRef',
@@ -67,13 +91,8 @@ has all_oligo_pairs => (
 sub _build_all_oligo_pairs {
     my $self = shift;
     my %oligo_pairs;
-    my $design_method = $self->design_param( 'design_method' );
-    #TODO this information should be global somewhere sp12 Wed 24 Jul 2013 08:56:54 BST
-    my @oligo_class = $design_method eq 'conditional' ? qw( G U D )
-                    : $design_method eq 'gibson' ? qw( exon five_prime three_prime )
-                    : qw( G );
 
-    for my $class ( @oligo_class ) {
+    for my $class ( @{ $self->oligo_classes } ) {
         my $oligo_pair_file = $self->get_file( $class . '_oligo_pairs.yaml', $self->validated_oligo_dir );
         my $oligos = LoadFile( $oligo_pair_file );
         if ( !$oligos || !@{ $oligos } ) {
