@@ -20,8 +20,6 @@ use Try::Tiny;
 use Fcntl; # O_ constants
 use Data::Dump qw( pp );
 
-
-#TODO this almost exactly mimics the InsDelDesign Action, need to factor things out
 extends qw( DesignCreate::Action );
 with qw(
 DesignCreate::CmdRole::OligoRegionsDelExon
@@ -65,7 +63,7 @@ sub execute {
     Log::Log4perl::NDC->push( @{ $self->target_genes }[0] );
     Log::Log4perl::NDC->push( $self->target_exon );
 
-    $self->log->info( 'Starting new design create run: ' . join(',', @{ $self->target_genes } ) );
+    $self->log->info( 'Starting new del-exon design create run: ' . join(',', @{ $self->target_genes } ) );
     $self->log->debug( 'Design run args: ' . pp($opts) );
 
     try {

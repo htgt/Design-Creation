@@ -20,7 +20,6 @@ use Try::Tiny;
 use Fcntl; # O_ constants
 use Data::Dump qw( pp );
 
-
 extends qw( DesignCreate::Action );
 with qw(
 DesignCreate::CmdRole::OligoRegionsInsDel
@@ -63,7 +62,7 @@ sub execute {
     my ( $self, $opts, $args ) = @_;
     Log::Log4perl::NDC->push( @{ $self->target_genes }[0] );
 
-    $self->log->info( 'Starting new design create run: ' . join(',', @{ $self->target_genes } ) );
+    $self->log->info( 'Starting new ins-del design create run: ' . join(',', @{ $self->target_genes } ) );
     $self->log->debug( 'Design run args: ' . pp($opts) );
 
     try {
