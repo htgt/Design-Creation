@@ -1,5 +1,16 @@
 package DesignCreate::Util::Primer3;
 
+=head1 NAME
+
+DesignCreate::Util::Primer3 -Wrapper around Primer3
+
+=head1 DESCRIPTION
+
+Wrapper around Primer3 primer finding application.
+Actually it uses Bio::Tools::Primer3Redux, which itself calls Primer3
+
+=cut
+
 use Moose;
 use DesignCreate::Exception;
 use Bio::Tools::Primer3Redux;

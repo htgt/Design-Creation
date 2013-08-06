@@ -6,7 +6,7 @@ DesignCreate::Action::OligoRegionsInsDel - Create seq files for oligo region, in
 
 =head1 DESCRIPTION
 
-For given target coordinates and oligo region parameters produce target region sequence file
+For given target coordinates and oligo region parameters produce target region coordinates file
 for each oligo we must find for deletion or insertion designs.
 
 =cut

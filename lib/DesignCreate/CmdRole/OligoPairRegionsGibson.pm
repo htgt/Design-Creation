@@ -6,6 +6,11 @@ DesignCreate::Action::OligoPairRegionsGibson - Coordinates for oligo regions in 
 
 =head1 DESCRIPTION
 
+For given exon id and a oligo region parameters produce target region coordinates file
+for each oligo pair we must find for gibson designs.
+
+These attributes and code is specific to gibson designs, code generic to all
+design types is found in DesignCreate::Role::OligoRegionCoodinates.
 
 =cut
 

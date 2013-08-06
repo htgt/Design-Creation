@@ -6,7 +6,10 @@ DesignCreate::CmdRole::OligoRegionsDelExon - Get coordinate for a Deletion desig
 
 =head1 DESCRIPTION
 
-TODO
+For a given EnsEMBL exon produce a oligo region coordiantes file for each oligo we want.
+
+These attributes and code is specific to exon deletion designs, code generic to all
+design types is found in DesignCreate::Role::OligoRegionCoordinates.
 
 =cut
 

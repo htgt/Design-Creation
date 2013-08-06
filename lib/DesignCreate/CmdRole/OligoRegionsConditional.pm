@@ -6,11 +6,11 @@ DesignCreate::CmdRole::OligoRegionsConditional -Create seq files for oligo regio
 
 =head1 DESCRIPTION
 
-For given target coordinates and a oligo region parameters produce target region sequence file
-for each oligo we must find for block specified  conditional designs.
+For given target coordinates and a oligo region parameters produce target region coordinates file
+for each oligo we must find for block specified conditional designs.
 
 These attributes and code is specific to block specified conditional designs, code generic to all
-design types is found in DesignCreate::Role::OligoTargetRegions.
+design types is found in DesignCreate::Role::OligoRegionCoordinates.
 
 =cut
 

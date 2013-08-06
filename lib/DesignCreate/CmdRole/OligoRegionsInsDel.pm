@@ -6,11 +6,11 @@ DesignCreate::CmdRole::OligoRegionsInsDel -Create seq files for oligo region, in
 
 =head1 DESCRIPTION
 
-For given target coordinates and a oligo region parameters produce target region sequence file
+For given target coordinates and a oligo region parameters produce target region coordinates file
 for each oligo we must find for deletion or insertion designs.
 
 These attributes and code is specific to Insertion / Deletion designs, code generic to all
-design types is found in DesignCreate::Role::OligoTargetRegions.
+design types is found in DesignCreate::Role::OligoRegionCoodinates.
 
 =cut
 

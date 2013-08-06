@@ -6,6 +6,9 @@ DesignCreate::Action::OligoRegionsDelExon - Get coordinate for a Deletion design
 
 =head1 DESCRIPTION
 
+For given target exon and oligo region parameters production target region coordinates file
+for each oligo we need for a deletion design.
+
 =cut
 
 use strict;

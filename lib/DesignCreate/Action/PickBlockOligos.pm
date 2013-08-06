@@ -6,7 +6,7 @@ DesignCreate::Action::PickBlockOligos - Pick the best U and D block oligo pairs
 
 =head1 DESCRIPTION
 
-Pick the best pair of block oligos ( U5 & U3, D5 and D3).
+Pick the best pair of block oligos ( U5 & U3, D5 & D3 ).
 Must have a minumum gap between the oligo pairs.
 We prefer closer pairs of oligos.
 

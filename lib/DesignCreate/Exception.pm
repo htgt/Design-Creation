@@ -1,8 +1,5 @@
 package DesignCreate::Exception;
 
-use strict;
-use warnings FATAL => 'all';
-
 use Moose;
 use MooseX::ClassAttribute;
 use namespace::autoclean;

@@ -1,8 +1,5 @@
 package DesignCreate::Exception::MissingFile;
 
-use strict;
-use warnings FATAL => 'all';
-
 use Moose;
 use namespace::autoclean;
 
