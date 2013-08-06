@@ -85,6 +85,29 @@ CODE STRUCTURE
     DesignCreate::Constants
 ```
 
+TESTS
+=====
+
+* Use Test::Class as framework for tests
+* Uses Class::Data::Inheritable to set up class variables
+* We can't test against the command modules themselves because they use MooseX::App::Cmd and these modules can only be created from the command line
+* To unit test this code we need to create a object and make it consume the DesignCreate::CmdRole role we want to test against
+* We Use dynamically created Moose::Meta::Class's to test against
+    * This is done so we don't need to create multiple boilerplate test classes that only differ by what role they consume
+
+### Test::DesignCreate::Class
+* Base Test::Class object, all test modules are children of this class.
+* Has a get_test_object_metaclass method that creates metaclasses for test objects we test against.
+    * The base class for the test objects is Test::ObjectRole::DesignCreate ( see below )
+    * The test object consumes the role that is currently being tested ( defined by class data: test_role )
+    * A metaclass is created, from this the new functions can be called to create test object
+    * Also can optionally consume extra roles if required
+
+### Test::ObjectRole::DesignCreate
+* Superclass for all test objects
+* Like a cut down version of DesignCreate::Action
+* Does not consume MooseX::App::Cmd, skips attributes directly linked to it as well
+
 
 COMMAND ROLES
 =============
