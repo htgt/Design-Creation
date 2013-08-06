@@ -49,8 +49,6 @@ has target_file => (
     cmd_flag      => 'target-file'
 );
 
-#TODO may want to override the aos dirs
-
 1;
 
 __END__
