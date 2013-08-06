@@ -55,7 +55,7 @@ sub run_aos_scripts : Test(6) {
         ok $aos_work_dir->contains( $file ), "File $filename has been created";
     }
 
-    my $dir = tempdir( TMPDIR => 1, CLEANUP => 0 )->absolute;
+    my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute;
     my $metaclass = $test->get_test_object_metaclass();
     $o = $metaclass->new_object(
         dir           => $dir,
