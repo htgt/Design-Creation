@@ -49,8 +49,6 @@ has design_method => (
     default => 'deletion'
 );
 
-# TODO user still specifies target-gene
-# should be find this ourselves, or maybe do some checks?
 has target_exon => (
     is            => 'ro',
     isa           => 'Str',
