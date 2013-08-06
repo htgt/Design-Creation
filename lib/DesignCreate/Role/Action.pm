@@ -18,7 +18,7 @@ use DesignCreate::Exception;
 use DesignCreate::Exception::MissingFile;
 use DesignCreate::Exception::NonExistantAttribute;
 use DesignCreate::Types qw( DesignMethod ArrayRefOfOligos );
-use DesignCreate::Constants qw( 
+use DesignCreate::Constants qw(
     $DEFAULT_VALIDATED_OLIGO_DIR_NAME
     $DEFAULT_OLIGO_FINDER_OUTPUT_DIR_NAME
     $DEFAULT_OLIGO_TARGET_REGIONS_DIR_NAME
