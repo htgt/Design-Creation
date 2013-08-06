@@ -169,7 +169,6 @@ sub consolidate_design_data {
     return;
 }
 
-#TODO work out phase for design
 sub get_design_phase {
     my $self = shift;
 
