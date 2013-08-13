@@ -136,6 +136,27 @@ has phase => (
     traits => [ 'NoGetopt' ],
 );
 
+has design_genes => (
+    is         => 'ro',
+    isa        => 'ArrayRef',
+    traits     => [ 'NoGetopt' ],
+    lazy_build => 1,
+);
+
+sub _build_design_genes {
+    my $self = shift;
+    my @design_genes;
+
+    my @gene_ids = @{ $self->design_param( 'target_genes' ) };
+
+    for my $gene_id ( @gene_ids ) {
+        my $gene_type = $self->calculate_gene_type( $gene_id );
+        push @design_genes, { gene_id => $gene_id, gene_type_id => $gene_type };
+    }
+
+    return \@design_genes;
+}
+
 has primary_design_oligos => (
     is     => 'rw',
     isa    => 'ArrayRef',
@@ -307,7 +328,7 @@ sub build_design_data {
     my %design_data = (
         type       => $self->design_param( 'design_method' ),
         species    => $self->design_param( 'species' ),
-        gene_ids   => [ @{ $self->design_param( 'target_genes' ) } ],
+        gene_ids   => $self->design_genes,
         created_by => $self->created_by,
         oligos     => $oligos,
     );
@@ -315,6 +336,25 @@ sub build_design_data {
     $design_data{phase} = $self->phase if $self->phase;
 
     return \%design_data;
+}
+
+=head2 calculate_gene_type
+
+Work out type of gene identifier.
+
+=cut
+sub calculate_gene_type {
+    my ( $self, $gene_id ) = @_;
+
+    my $gene_type = $gene_id =~ /^MGI/  ? 'MGI'
+                  : $gene_id =~ /^HGNC/ ? 'HGCN'
+                  : $gene_id =~ /^LBL/  ? 'enhancer-region'
+                  : $gene_id =~ /^CGI/  ? 'CPG-island'
+                  : $gene_id =~ /^mmu/  ? 'miRBase'
+                  :                       'marker-symbol'
+                  ;
+
+    return $gene_type;
 }
 
 1;

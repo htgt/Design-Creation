@@ -258,7 +258,8 @@ sub create_primary_design_file : Test(10) {
 
     my $design_data = LoadFile( $design_data_file );
     is $design_data->{type}, 'deletion', 'correct design type';
-    is_deeply $design_data->{gene_ids}, [ 'LBL-1' ], 'correct gene ids';
+    is_deeply $design_data->{gene_ids},
+        [ { gene_id => 'LBL-1', gene_type_id => 'enhancer-region' } ], 'correct gene ids';
 
     ok my $c_o = $test->_get_test_object, 'can grab test object';
     ok $c_o->set_param( 'design_method', 'conditional' ), 'can set design method to conditional';
@@ -320,7 +321,8 @@ sub build_design_data : Test(8) {
 
     is $design_data->{type}, 'deletion', 'correct design type';
     is $design_data->{species}, 'Mouse', 'correct species';
-    is_deeply $design_data->{gene_ids}, [ 'LBL-1' ], 'correct gene ids';
+    is_deeply $design_data->{gene_ids},
+        [ { gene_id => 'LBL-1', gene_type_id => 'enhancer-region' } ], 'correct gene ids';
     is $design_data->{created_by}, 'test', 'correct created_by';
     ok !exists $design_data->{phase}, 'phase value not set';
 }
