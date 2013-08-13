@@ -113,11 +113,6 @@ sub check_oligo_not_near_exon {
 sub validate_oligo_pairs {
     my $self = shift;
 
-    #TODO if not invalid oligos sp12 Wed 24 Jul 2013 08:26:44 BST
-    # if there are not invalid oligos then all the pairs of valid
-    # we can just copy the files over from one folder to another
-    #return unless $self->have_invalid_oligos;
-
     for my $oligo_pair_region ( qw( exon five_prime three_prime ) ) {
         my $oligo_pair_file
             = $self->get_file( $oligo_pair_region . '_oligo_pairs.yaml', $self->oligo_finder_output_dir );
