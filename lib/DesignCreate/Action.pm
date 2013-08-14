@@ -50,6 +50,11 @@ has verbose => (
 sub BUILD {
     my $self = shift;
 
+    # Add command name as a design parameter
+    $self->set_param( 'command-name', $self->command_names );
+    # Add current EnsEMBL DB version used
+    $self->set_param( 'ensembl-version', $self->ensembl_util->db_adaptor->dbc->dbname );
+
     my $log_level
         = $self->trace   ? $TRACE
         : $self->debug   ? $DEBUG
