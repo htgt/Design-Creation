@@ -15,7 +15,7 @@ meet our requirments.
 use Moose::Role;
 use DesignCreate::Exception;
 use YAML::Any qw( LoadFile DumpFile );
-use DesignCreate::Types qw( PositiveInt );
+use DesignCreate::Types qw( NaturalNumber );
 use Const::Fast;
 use Fcntl; # O_ constants
 use List::MoreUtils qw( any );
@@ -31,9 +31,10 @@ exon_check_flank_length
 
 has exon_check_flank_length => (
     is            => 'ro',
-    isa           => PositiveInt,
+    isa           => NaturalNumber,
     traits        => [ 'Getopt' ],
-    documentation => "Number of flanking bases surrounding middle oligos to check for exons",
+    documentation => 'Number of flanking bases surrounding middle oligos to check for exons,'
+                     . ' set to 0 to turn off check',
     cmd_flag      => 'exon-check-flank-length',
     default       => 100,
 );
@@ -94,6 +95,8 @@ created.
 =cut
 sub check_oligo_not_near_exon {
     my ( $self, $oligo_data, $oligo_slice  ) = @_;
+
+    return 1 if $self->exon_check_flank_length == 0;
 
     my $expanded_slice
         = $oligo_slice->expand( $self->exon_check_flank_length, $self->exon_check_flank_length );
