@@ -21,6 +21,7 @@ use DesignCreate::Exception;
 use DesignCreate::Exception::NonExistantAttribute;
 use DesignCreate::Constants qw( %GIBSON_PRIMER_REGIONS );
 use YAML::Any qw( LoadFile DumpFile );
+use JSON;
 use List::Util qw( first );
 use DateTime;
 use Const::Fast;
@@ -326,11 +327,12 @@ sub build_design_data {
     my ( $self, $oligos ) = @_;
 
     my %design_data = (
-        type       => $self->design_param( 'design_method' ),
-        species    => $self->design_param( 'species' ),
-        gene_ids   => $self->design_genes,
-        created_by => $self->created_by,
-        oligos     => $oligos,
+        type              => $self->design_param( 'design_method' ),
+        species           => $self->design_param( 'species' ),
+        gene_ids          => $self->design_genes,
+        created_by        => $self->created_by,
+        oligos            => $oligos,
+        design_parameters => encode_json( $self->design_parameters ),
     );
 
     $design_data{phase} = $self->phase if $self->phase;
