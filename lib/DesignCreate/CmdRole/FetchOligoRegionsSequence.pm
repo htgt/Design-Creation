@@ -78,6 +78,8 @@ sub _build_oligo_region_data {
 sub create_oligo_region_sequence_files {
     my $self = shift;
     $self->add_design_parameters( \@DESIGN_PARAMETERS );
+    # Add current EnsEMBL DB version used
+    $self->set_param( 'ensembl-version', $self->ensembl_util->db_adaptor->dbc->dbname );
 
     for my $oligo ( $self->expected_oligos ) {
         $self->log->info( "Getting sequence for $oligo oligo region" );

@@ -174,6 +174,8 @@ sub find_oligos {
     my ( $self, $opts, $args ) = @_;
 
     $self->add_design_parameters( \@FIND_GIBSON_OLIGOS_PARAMETERS );
+    # Add current EnsEMBL DB version used
+    $self->set_param( 'ensembl-version', $self->ensembl_util->db_adaptor->dbc->dbname );
     $self->run_primer3;
     $self->parse_primer3_results;
     $self->create_oligo_files;
