@@ -7,6 +7,6 @@ use lib "$FindBin::Bin/lib";
 use Log::Log4perl qw( :levels );
 use Test::DesignCreate::CmdRole::ConsolidateDesignData;
 
-Log::Log4perl->easy_init( $WARN );
+Log::Log4perl->easy_init( $OFF );
 
 Test::Class->runtests;
