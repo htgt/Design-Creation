@@ -325,7 +325,8 @@ sub get_oligo_block_right_half_coords {
 
 sub get_oligo_block_attribute {
     my ( $self, $oligo_class, $attribute_type ) = @_;
-    my $attribute_name = $oligo_class . '_block_' . $attribute_type;
+    my $attribute_name = $oligo_class . '_block_';
+    $attribute_name .= $attribute_type if $attribute_type;
 
     DesignCreate::Exception::NonExistantAttribute->throw(
         attribute_name => $attribute_name,
