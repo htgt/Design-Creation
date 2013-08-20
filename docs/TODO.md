@@ -1,30 +1,12 @@
 FUNCTIONALITY
 =============
 
-### Constants
-* Specified same constant in different places
-* Create a constants file to store all these values
-
-### Design Parameters
-* IDEA: Store target region start and end info for oligos in LIMS2
-    * just adding 2 more fields
-    * will be able to deduce original critical / deleted regions
-    * BUT - can we lift over these coordinates to another assembly??
-
-### Design Meta Information
-* Store design meta information in LIMS2
-* Storing the design parameters would be nice.
-* Store the version of the software used to create the design
-
 ### Need Config files for certain parameters:
 * Need some sort of profile for different design types
 * Oligo Target Region Definitions mainly
 * Can use MooseX::SimpleConfig but:
     * only really use it with one log file
     * seems to suppress the --help option
-
-### Consume EnsEMBL role in main Action.pm module
-* Makes these attributes / subroutines available everywhere
 
 ### Cut down complexity of the OligoCoordinate roles
 * too many roles at the moment
