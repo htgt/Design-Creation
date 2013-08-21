@@ -12,17 +12,20 @@ use IO::File;
 use Pod::Usage;
 use DDP colored => 1;
 use Const::Fast;
+use YAML::Any qw( LoadFile );
 
 my $log_level = $WARN;
 GetOptions(
-    'help'          => sub { pod2usage( -verbose => 1 ) },
-    'man'           => sub { pod2usage( -verbose => 2 ) },
-    'debug'         => sub { $log_level = $DEBUG },
-    'verbose'       => sub { $log_level = $INFO },
-    'trace'         => sub { $log_level = $TRACE },
-    'genes-file=s'  => \my $genes_file,
-    'gene=s'        => \my $single_gene,
-    'species=s'     => \my $species,
+    'help'                 => sub { pod2usage( -verbose    => 1 ) },
+    'man'                  => sub { pod2usage( -verbose    => 2 ) },
+    'debug'                => sub { $log_level = $DEBUG },
+    'verbose'              => sub { $log_level = $INFO },
+    'trace'                => sub { $log_level = $TRACE },
+    'genes-file=s'         => \my $genes_file,
+    'gene=s'               => \my $single_gene,
+    'species=s'            => \my $species,
+    'base-design-params=s' => \my $base_params_file,
+    'gibson'               => \my $gibson,
 ) or pod2usage(2);
 
 Log::Log4perl->easy_init( { level => $log_level, layout => '%p %x %m%n' } );
@@ -30,28 +33,17 @@ LOGDIE( 'Specify file with gene names' ) unless $genes_file;
 LOGDIE( 'Must specify species' ) unless $species;
 
 const my $DEFAULT_ASSEMBLY => $species eq 'Human' ? 'GRCh37' :  $species eq 'Mouse' ? 'GRCm38' : undef;
-const my $DEFAULT_BUILD => 70;
+const my $DEFAULT_BUILD => 72;
 
 WARN( "ASSEMBLY: $DEFAULT_ASSEMBLY, BUILD: $DEFAULT_BUILD" );
 
-const my %BASE_DESIGN_PARAMETERS => (
-    'd3-region-length'   => 100,
-    'd3-region-offset'   => 10,
-    'u5-region-length'   => 100,
-    'u5-region-offset'   => 30,
-    'g3-region-length'   => 500,
-    'g3-region-offset'   => 1000,
-    'g5-region-length'   => 500,
-    'g5-region-offset'   => 1000,
-    'design-method'      => 'deletion',
-    'species'            => $species,
-    'mask-by-lower-case' => 'yes'
-);
+my $base_params;
+$base_params = LoadFile( $base_params_file ) if $base_params_file;
 
 const my @DESIGN_COLUMN_HEADERS => (
 'target-gene',
 'target-exon',
-keys %BASE_DESIGN_PARAMETERS
+keys %{ $base_params }
 );
 
 const my @TARGET_COLUMN_HEADERS => (
@@ -77,12 +69,16 @@ my $db = $ensembl_util->db_adaptor;
 my $db_details = $db->to_hash;
 WARN("Ensembl DB: " . $db_details->{DBNAME});
 
-my $design_output = IO::File->new( 'design_parameters.csv' , 'w' );
-my $target_output = IO::File->new( 'target_parameters.csv' , 'w' );
-my $design_output_csv = Text::CSV->new( { eol => "\n" } );
-my $target_output_csv = Text::CSV->new( { eol => "\n" } );
-$design_output_csv->print( $design_output, \@DESIGN_COLUMN_HEADERS );
+my ( $target_output, $target_output_csv, $design_output, $design_output_csv );
+$target_output = IO::File->new( 'target_parameters.csv' , 'w' );
+$target_output_csv = Text::CSV->new( { eol => "\n" } );
 $target_output_csv->print( $target_output, \@TARGET_COLUMN_HEADERS );
+
+if ( $base_params_file ) {
+    $design_output = IO::File->new( 'design_parameters.csv' , 'w' );
+    $design_output_csv = Text::CSV->new( { eol => "\n" } );
+    $design_output_csv->print( $design_output, \@DESIGN_COLUMN_HEADERS );
+}
 
 ## no critic(InputOutput::RequireBriefOpen)
 {
@@ -127,7 +123,7 @@ sub process_target {
     my $count = 0;
     for my $exon ( @exons ) {
         last if $count > 4;
-        print_design_parameters( $exon, $gene, $data );
+        print_design_targets( $exon, $gene, $data );
         $count++;
     }
 
@@ -164,14 +160,22 @@ sub get_ensembl_id {
     return;
 }
 
-sub print_design_parameters {
+=head2 print_design_targets
+
+We need 2 output csv files, one listing the design targets and another
+with the paremeters to feed into the Design Creation process.
+
+=cut
+sub print_design_targets {
     my ( $exon, $gene, $data ) = @_;
 
-    my %design_params = %BASE_DESIGN_PARAMETERS;
-    $design_params{'target-gene'} = $data->{gene_id};
-    $design_params{'target-exon'} = $exon->stable_id;
+    if ( $base_params_file ) {
+        my %design_params = %{ $base_params };
+        $design_params{'target-gene'} = $data->{gene_id};
+        $design_params{'target-exon'} = $exon->stable_id;
 
-    $design_output_csv->print( $design_output, [ @design_params{ @DESIGN_COLUMN_HEADERS } ] );
+        $design_output_csv->print( $design_output, [ @design_params{ @DESIGN_COLUMN_HEADERS } ] );
+    }
 
     my %target_params = (
         species  => $species,
@@ -201,6 +205,11 @@ sub print_design_parameters {
     return;
 }
 
+=head2 get_exon_rank
+
+Get rank of exon on canonical transcript
+
+=cut
 sub get_exon_rank {
     my ( $exon, $canonical_transcript ) = @_;
 
@@ -228,6 +237,8 @@ sub get_all_critical_exons {
 
     return get_predefined_exons( $data->{exon_ids}, $gene, $data ) if $data->{exon_ids};
 
+    ### TODO check coding length of exon - say 50 bases so we can put a crispr in it
+
     my %valid_exons;
     my %transcript_exons;
     my @coding_transcript_names;
@@ -254,6 +265,9 @@ sub get_all_critical_exons {
             if exists $critical_exons_ids->{ $exon_id };
     }
 
+    # for gibson designs we dont want other exons flanking critical exon
+    # if we don't have enough targets after this check what do to?
+
     my $num_critical_exons = @critical_exons;
     INFO( "Has $num_critical_exons critical exons" );
 
@@ -273,6 +287,12 @@ sub get_all_critical_exons {
     return \@ordered_critical_exons;
 }
 
+=head2 get_predefined_exons
+
+If exons targets have been pre-defined in the input use these
+instead of trying to calculate the target exons.
+
+=cut
 sub get_predefined_exons {
     my ( $exon_ids, $gene, $data ) = @_;
     my @exons;
@@ -292,7 +312,14 @@ sub get_predefined_exons {
     return \@exons;
 }
 
-# exons that are less than 300 bases and will induce a phase shift
+=head2 find_valid_exons
+
+Exons that are less than 300 bases and will induce a phase shift
+
+Create hash of valid exons, keyed on stable id
+Create hash of exons for each transcript, keyed on transcript stable id
+
+=cut
 sub find_valid_exons {
     my ( $transcript, $valid_exons, $transcript_exons ) = @_;
     my @critical_exons;
@@ -329,7 +356,11 @@ sub find_valid_exons {
     return;
 }
 
-# find exons that belong to all coding transcripts
+=head2 find_critical_exons
+
+Find exons that belong to all coding transcripts
+
+=cut
 sub find_critical_exons {
     my ( $transcript_exons, $coding_transcript_names ) = @_;
     my %critical_exons;
