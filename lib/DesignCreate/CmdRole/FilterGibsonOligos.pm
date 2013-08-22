@@ -102,6 +102,8 @@ sub check_oligo_not_near_exon {
         = $oligo_slice->expand( $self->exon_check_flank_length, $self->exon_check_flank_length );
 
     my $exons = $expanded_slice->get_all_Exons;
+    #TODO must avoid counting critical exon here sp12 Tue 20 Aug 2013 08:36:39 BST
+    #TODO only care about coding exons? sp12 Wed 21 Aug 2013 15:06:31 BST
 
     # if no exons in slice we pass the check
     return 1 unless @{ $exons };
