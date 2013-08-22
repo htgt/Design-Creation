@@ -237,8 +237,6 @@ sub get_all_critical_exons {
 
     return get_predefined_exons( $data->{exon_ids}, $gene, $data ) if $data->{exon_ids};
 
-    ### TODO check coding length of exon - say 50 bases so we can put a crispr in it
-
     my %valid_exons;
     my %transcript_exons;
     my @coding_transcript_names;
@@ -260,13 +258,14 @@ sub get_all_critical_exons {
 
     my $critical_exons_ids = find_critical_exons( \%transcript_exons, \@coding_transcript_names );
     my @critical_exons;
-    for my $exon_id ( keys %valid_exons ) {
+    while ( my ( $exon_id, $exon ) = each %valid_exons ) {
+        if ( $gibson ) {
+            next if flanking_exons_too_close( $exon, \%transcript_exons );
+        }
+
         push @critical_exons, $valid_exons{ $exon_id }
             if exists $critical_exons_ids->{ $exon_id };
     }
-
-    # for gibson designs we dont want other exons flanking critical exon
-    # if we don't have enough targets after this check what do to?
 
     my $num_critical_exons = @critical_exons;
     INFO( "Has $num_critical_exons critical exons" );
@@ -343,6 +342,10 @@ sub find_valid_exons {
             next;
         }
 
+        if ( $gibson ) {
+            next if too_few_exon_coding_bases( $exon, $transcript );
+        }
+
         TRACE( 'Exon ' . $exon->stable_id . ' is VALID' );
         push @critical_exons, $exon;
     }
@@ -354,6 +357,60 @@ sub find_valid_exons {
     }
 
     return;
+}
+
+=head2 flanking_exons_too_close
+
+For gibson designs we don't want other exons within around
+400 bases of the critical exon
+
+=cut
+sub flanking_exons_too_close {
+    my ( $critical_exon, $transcript_exons ) = @_;
+    my $critical_exon_id = $critical_exon->stable_id;
+    my $critical_exon_start = $critical_exon->seq_region_start;
+    my $critical_exon_end = $critical_exon->seq_region_end;
+
+    my $exon_slice = $critical_exon->feature_Slice;
+    my $expanded_slice = $exon_slice->expand( 400, 400 );
+
+    my $exons = $expanded_slice->get_all_Exons;
+
+    my @flanking_exons;
+    for my $exon ( @{ $exons } ) {
+        next if $exon->stable_id eq $critical_exon_id;
+        next if $exon->seq_region_start == $critical_exon_start;
+        next if $exon->seq_region_end == $critical_exon_end;
+        next if !exists $transcript_exons->{ $exon->stable_id };
+
+        push @flanking_exons, $exon;
+    }
+
+    if ( @flanking_exons ) {
+        WARN( "Exon $critical_exon_id has another exon within 400 bases: " . join(' ', map{ $_->stable_id } @flanking_exons ) );
+        return 1;
+    }
+
+    return;
+}
+
+=head2 too_few_exon_coding_bases
+
+return true if exon does not have at least 30 coding bases
+
+=cut
+sub too_few_exon_coding_bases {
+    my ( $exon, $transcript ) = @_;
+
+    my $length = $exon->cdna_coding_end( $transcript ) - $exon->cdna_coding_start( $transcript ) + 1;
+
+    if ( $length < 30 ) {
+        DEBUG( 'Exon ' . $exon->stable_id . " only has $length coding bases " );
+        return 1;
+    }
+    else {
+        return;
+    }
 }
 
 =head2 find_critical_exons
