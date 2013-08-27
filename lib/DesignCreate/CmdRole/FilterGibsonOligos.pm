@@ -71,6 +71,7 @@ Run checks against individual oligo to make sure it is valid.
 If it passes all checks return 1, otherwise return undef.
 
 =cut
+## no critic(Subroutines::ProhibitUnusedPrivateSubroutine)
 sub _validate_oligo {
     my ( $self, $oligo_data, $oligo_type, $oligo_slice ) = @_;
     $self->log->debug( "$oligo_type oligo, id: " . $oligo_data->{id} );
@@ -83,6 +84,7 @@ sub _validate_oligo {
 
     return 1;
 }
+## use critic
 
 =head2 check_oligo_not_near_exon
 
@@ -146,6 +148,8 @@ sub output_valid_oligo_pairs {
         my $filename = $self->validated_oligo_dir->stringify . '/' . $oligo_pair_region . '_oligo_pairs.yaml';
         DumpFile( $filename, $self->get_valid_pairs( $oligo_pair_region ) );
     }
+
+    return;
 }
 
 1;

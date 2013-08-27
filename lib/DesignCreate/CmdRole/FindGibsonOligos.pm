@@ -98,7 +98,7 @@ has exon_region_slice => (
 );
 
 sub _build_exon_region_slice {
-    shift->_build_region_slice( 'exon' );
+    return shift->_build_region_slice( 'exon' );
 }
 
 has five_prime_region_slice => (
@@ -109,7 +109,7 @@ has five_prime_region_slice => (
 );
 
 sub _build_five_prime_region_slice {
-    shift->_build_region_slice( 'five_prime' );
+    return shift->_build_region_slice( 'five_prime' );
 }
 
 has three_prime_region_slice => (
@@ -120,7 +120,7 @@ has three_prime_region_slice => (
 );
 
 sub _build_three_prime_region_slice {
-    shift->_build_region_slice( 'three_prime' );
+    return shift->_build_region_slice( 'three_prime' );
 }
 
 has mask_by_lower_case => (

@@ -149,7 +149,7 @@ has region_length_ER => (
 );
 
 sub _build_region_length_ER {
-    int( shift->region_length_ER_3F / 2 );
+    return int( shift->region_length_ER_3F / 2 );
 }
 
 has region_length_3F => (
@@ -160,7 +160,7 @@ has region_length_3F => (
 );
 
 sub _build_region_length_3F {
-    int( shift->region_length_ER_3F / 2 );
+    return int( shift->region_length_ER_3F / 2 );
 }
 
 has region_length_5R => (
@@ -171,7 +171,7 @@ has region_length_5R => (
 );
 
 sub _build_region_length_5R {
-    int( shift->region_length_5R_EF / 2 );
+    return int( shift->region_length_5R_EF / 2 );
 }
 
 has region_length_EF => (
@@ -182,7 +182,7 @@ has region_length_EF => (
 );
 
 sub _build_region_length_EF {
-    int( shift->region_length_5R_EF / 2 );
+    return int( shift->region_length_5R_EF / 2 );
 }
 
 has exon => (
@@ -216,7 +216,7 @@ has target_start => (
  );
 
 sub _build_target_start {
-    shift->exon->seq_region_start;
+    return shift->exon->seq_region_start;
 }
 
 has target_end => (
@@ -227,7 +227,7 @@ has target_end => (
 );
 
 sub _build_target_end {
-    shift->exon->seq_region_end;
+    return shift->exon->seq_region_end;
 }
 
 has chr_name => (
@@ -238,7 +238,7 @@ has chr_name => (
 );
 
 sub _build_chr_name {
-    shift->exon->seq_region_name;
+    return shift->exon->seq_region_name;
 }
 
 has chr_strand => (
@@ -249,7 +249,7 @@ has chr_strand => (
 );
 
 sub _build_chr_strand {
-    shift->exon->strand;
+    return shift->exon->strand;
 }
 
 has exon_region_start => (

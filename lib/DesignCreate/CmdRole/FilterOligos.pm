@@ -100,6 +100,7 @@ Run checks against individual oligo to make sure it is valid.
 If it passes all checks return 1, otherwise return undef.
 
 =cut
+## no critic(Subroutines::ProhibitUnusedPrivateSubroutine)
 sub _validate_oligo {
     my ( $self, $oligo_data, $oligo_type, $oligo_slice ) = @_;
 
@@ -113,6 +114,7 @@ sub _validate_oligo {
 
     return 1;
 }
+## use critic
 
 sub check_oligo_coordinates {
     my ( $self, $oligo_data ) = @_;

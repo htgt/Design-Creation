@@ -64,7 +64,7 @@ sub parse_oligo_data {
     my %oligo_data;
 
     for my $oligo ( @{ $oligos } ) {
-       $oligo_data{ $oligo->{type} } = $oligo->{seq}; 
+       $oligo_data{ $oligo->{type} } = $oligo->{seq};
     }
 
     return \%oligo_data;
@@ -100,4 +100,4 @@ None reported... yet.
 
 =head1 TODO
 
-=cut 
+=cut

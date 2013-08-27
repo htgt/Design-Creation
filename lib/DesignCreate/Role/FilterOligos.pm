@@ -119,7 +119,7 @@ sub validate_oligo {
         $self->design_param( 'chr_name' ),
     );
 
-    $self->_validate_oligo( $oligo_data, $oligo_type, $oligo_slice );
+    return $self->_validate_oligo( $oligo_data, $oligo_type, $oligo_slice );
 }
 
 =head2 output_validated_oligos
