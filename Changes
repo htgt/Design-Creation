@@ -1,5 +1,14 @@
 {{$NEXT}}
 
+0.010     2013-08-27 11:05:19 Europe/London
+
+    Gibson design creation
+    Design target scripts
+    Code refactor
+    Store design parameters in LIMS2
+    Multiple bugfixes and todo's done
+    Updated POD docs
+
 0.009     2013-05-23 07:11:28 Europe/London
 
     Set EnsEMBL registry to try to reconnect when connection lost.
