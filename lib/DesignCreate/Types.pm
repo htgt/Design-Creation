@@ -1,7 +1,7 @@
 package DesignCreate::Types;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Types::VERSION = '0.009';
+    $DesignCreate::Types::VERSION = '0.010';
 }
 ## use critic
 
@@ -37,6 +37,7 @@ const my %CHROMOSOMES => (
     y => 1,
 );
 
+#TODO add gibson oligos here? sp12 Fri 02 Aug 2013 15:00:50 BST
 const my %OLIGOS => (
     map{ $_ => 1 } qw( G5 U5 U3 D5 D3 G3 ),
 );
@@ -50,6 +51,7 @@ const my %DESIGN_METHODS => (
     deletion    => 1,
     insertion   => 1,
     conditional => 1,
+    gibson      => 1,
 );
 
 const my %AOS_SEARCH_METHODS => (

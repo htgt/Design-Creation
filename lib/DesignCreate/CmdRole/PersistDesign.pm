@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::PersistDesign;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::PersistDesign::VERSION = '0.009';
+    $DesignCreate::CmdRole::PersistDesign::VERSION = '0.010';
 }
 ## use critic
 
@@ -17,6 +17,7 @@ Persist the design data held in a yaml file to LIMS2.
 =cut
 
 use Moose::Role;
+use DesignCreate::Exception;
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
 use LIMS2::REST::Client;
 use Try::Tiny;
@@ -131,7 +132,7 @@ sub _persist_design {
         $self->log->info('Design persisted: ' . $design->{id} );
     }
     catch {
-        $self->log->error('Unable to persist design to LIMS2: ' . $_ );
+        DesignCreate::Exception->throw( 'Unable to persist design to LIMS2: ' . $_ );
     };
     return;
 }

@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::OligoRegionsDelExon;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::OligoRegionsDelExon::VERSION = '0.009';
+    $DesignCreate::CmdRole::OligoRegionsDelExon::VERSION = '0.010';
 }
 ## use critic
 
@@ -12,7 +12,10 @@ DesignCreate::CmdRole::OligoRegionsDelExon - Get coordinate for a Deletion desig
 
 =head1 DESCRIPTION
 
-TODO
+For a given EnsEMBL exon produce a oligo region coordiantes file for each oligo we want.
+
+These attributes and code is specific to exon deletion designs, code generic to all
+design types is found in DesignCreate::Role::OligoRegionCoordinates.
 
 =cut
 
@@ -24,8 +27,8 @@ use namespace::autoclean;
 
 with qw(
 DesignCreate::Role::OligoRegionCoordinates
+DesignCreate::Role::GapOligoCoordinates
 DesignCreate::Role::OligoRegionCoordinatesInsDel
-DesignCreate::Role::EnsEMBL
 );
 
 const my @DESIGN_PARAMETERS => qw(
@@ -33,18 +36,18 @@ target_genes
 target_exon
 target_start
 target_end
-U5_region_length
-U5_region_offset
-D3_region_length
-D3_region_offset
+region_length_U5
+region_offset_U5
+region_length_D3
+region_offset_D3
 chr_name
 chr_strand
 species
 assembly
-G5_region_length
-G5_region_offset
-G3_region_length
-G3_region_offset
+region_length_G5
+region_offset_G5
+region_length_G3
+region_offset_G3
 design_method
 );
 
@@ -55,8 +58,6 @@ has design_method => (
     default => 'deletion'
 );
 
-# TODO user still specifies target-gene
-# should be find this ourselves, or maybe do some checks?
 has target_exon => (
     is            => 'ro',
     isa           => 'Str',

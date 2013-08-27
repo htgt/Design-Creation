@@ -1,7 +1,7 @@
 package DesignCreate::Role::OligoRegionCoordinates;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Role::OligoRegionCoordinates::VERSION = '0.009';
+    $DesignCreate::Role::OligoRegionCoordinates::VERSION = '0.010';
 }
 ## use critic
 
@@ -19,17 +19,10 @@ Common code for oligo target ( candidate ) region coordinate finding commands.
 use Moose::Role;
 use DesignCreate::Exception;
 use DesignCreate::Exception::NonExistantAttribute;
-use DesignCreate::Types qw( PositiveInt NaturalNumber Species );
-use Fcntl; # O_ constants
-use Const::Fast;
+use DesignCreate::Types qw( Species );
+use DesignCreate::Constants qw( $DEFAULT_OLIGO_COORD_FILE_NAME %CURRENT_ASSEMBLY );
 use YAML::Any qw( DumpFile );
 use namespace::autoclean;
-
-const my $DEFAULT_OLIGO_COORD_FILE_NAME => 'oligo_region_coords.yaml';
-const my %CURRENT_ASSEMBLY => (
-    Mouse => 'GRCm38',
-    Human => 'GRCh37',
-);
 
 has target_genes => (
     is            => 'ro',
@@ -51,8 +44,8 @@ has species => (
     is            => 'ro',
     isa           => Species,
     traits        => [ 'Getopt' ],
-    documentation => 'The species of the design target ( default Mouse )',
-    default       => 'Mouse',
+    documentation => 'The species of the design target ( Mouse or Human )',
+    required      => 1,
 );
 
 has assembly => (
@@ -68,48 +61,6 @@ sub _build_assembly {
     return $CURRENT_ASSEMBLY{ $self->species };
 }
 
-#
-# Gap oligo region parameters, common to all design types
-# TODO: Think about moving these to seperate role, because there maybe more
-#       than one way we will want to specify the G oligo regions
-#
-
-has G5_region_length => (
-    is            => 'ro',
-    isa           => PositiveInt,
-    traits        => [ 'Getopt' ],
-    default       => 1000,
-    documentation => 'Length of G5 oligo candidate region',
-    cmd_flag      => 'g5-region-length'
-);
-
-has G5_region_offset => (
-    is            => 'ro',
-    isa           => PositiveInt,
-    traits        => [ 'Getopt' ],
-    default       => 4000,
-    documentation => 'Offset from target region of G5 oligo candidate region',
-    cmd_flag      => 'g5-region-offset'
-);
-
-has G3_region_length => (
-    is            => 'ro',
-    isa           => PositiveInt,
-    traits        => [ 'Getopt' ],
-    default       => 1000,
-    documentation => 'Length of G3 oligo candidate region',
-    cmd_flag      => 'g3-region-length'
-);
-
-has G3_region_offset => (
-    is            => 'ro',
-    isa           => PositiveInt,
-    traits        => [ 'Getopt' ],
-    default       => 4000,
-    documentation => 'Offset from target region of G3 oligo candidate region',
-    cmd_flag      => 'g3-region-offset'
-);
-
 sub create_oligo_region_coordinate_file {
     my $self = shift;
 
@@ -122,7 +73,7 @@ sub create_oligo_region_coordinate_file {
 sub get_oligo_region_offset {
     my ( $self, $oligo ) = @_;
 
-    my $attribute_name = $oligo . '_region_offset';
+    my $attribute_name = 'region_offset_' . $oligo;
     DesignCreate::Exception::NonExistantAttribute->throw(
         attribute_name => $attribute_name,
         class          => $self->meta->name
@@ -134,7 +85,7 @@ sub get_oligo_region_offset {
 sub get_oligo_region_length {
     my ( $self, $oligo ) = @_;
 
-    my $attribute_name = $oligo . '_region_length';
+    my $attribute_name = 'region_length_' . $oligo;
     DesignCreate::Exception::NonExistantAttribute->throw(
         attribute_name => $attribute_name,
         class          => $self->meta->name

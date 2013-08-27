@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::PickBlockOligos;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::PickBlockOligos::VERSION = '0.009';
+    $DesignCreate::CmdRole::PickBlockOligos::VERSION = '0.010';
 }
 ## use critic
 
@@ -22,13 +22,12 @@ use Moose::Role;
 use DesignCreate::Exception;
 use DesignCreate::Exception::NonExistantAttribute;
 use DesignCreate::Types qw( PositiveInt );
+use DesignCreate::Constants qw( $DEFAULT_BLOCK_OLIGO_LOG_DIR_NAME );
 use YAML::Any qw( DumpFile );
 use DesignCreate::Util::PickBlockOligoPair;
 use Const::Fast;
 use Fcntl; # O_ constants
 use namespace::autoclean;
-
-const my $DEFAULT_BLOCK_OLIGO_LOG_DIR_NAME => 'block_oligo_logs';
 
 const my @DESIGN_PARAMETERS => qw(
 min_U_oligo_gap

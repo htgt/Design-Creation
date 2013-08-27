@@ -33,7 +33,8 @@ sub valid_run_cmd : Test(3) {
         '--chromosome'    ,11,
         '--strand'        ,1,
         '--design-method' ,'conditional',
-        '--target-gene'  ,'test_gene',
+        '--target-gene'   ,'test_gene',
+        '--species'       ,'Mouse',
     );
 
     ok my $result = test_app($test->cmd_class => \@argv_contents), 'can run command';
@@ -51,6 +52,7 @@ sub check_oligo_block_coordinates : Test(4) {
             dir           => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
             U_block_start => 101177528, U_block_end => 101177428,
             D_block_start => 101176328, D_block_end => 101176528,
+            species       => 'Mouse',
             chr_name      => 11,        chr_strand  => 1,
             design_method => 'conditional', target_genes => [ 'test_gene' ],
         )->check_oligo_block_coordinates;
@@ -62,6 +64,7 @@ sub check_oligo_block_coordinates : Test(4) {
             dir           => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
             U_block_start => 101177328, U_block_end => 101177428,
             D_block_start => 101176328, D_block_end => 101176528,
+            species       => 'Mouse',
             chr_name      => 11,        chr_strand  => 1,
             design_method => 'conditional', target_genes => [ 'test_gene' ],
         )->check_oligo_block_coordinates;
@@ -73,6 +76,7 @@ sub check_oligo_block_coordinates : Test(4) {
             dir           => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
             U_block_start => 101178328, U_block_end => 101178528,
             D_block_start => 101176328, D_block_end => 101176528,
+            species       => 'Mouse',
             chr_name      => 11,        chr_strand  => 1,
             design_method => 'conditional', target_genes => [ 'test_gene' ],
         )->check_oligo_block_coordinates;
@@ -84,6 +88,7 @@ sub check_oligo_block_coordinates : Test(4) {
             dir           => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
             U_block_start => 101176328, U_block_end => 101176528,
             D_block_start => 101178328, D_block_end => 101178528,
+            species       => 'Mouse',
             chr_name      => 11,        chr_strand  => -1,
             design_method => 'conditional', target_genes => [ 'test_gene' ],
         )->check_oligo_block_coordinates;
@@ -107,8 +112,8 @@ sub coordinates_for_oligo : Tests(14) {
 
     ok my( $g5_start, $g5_end ) = $o->coordinates_for_oligo( 'G5' )
         , 'can call coordinates_for_oligo';
-    my $g5_real_start = ( $o->U_block_start - ( $o->G5_region_offset + $o->G5_region_length ) );
-    my $g5_real_end = ( $o->U_block_start - ( $o->G3_region_offset + 1 ) );
+    my $g5_real_start = ( $o->U_block_start - ( $o->region_offset_G5 + $o->region_length_G5 ) );
+    my $g5_real_end = ( $o->U_block_start - ( $o->region_offset_G3 + 1 ) );
     is $g5_start, $g5_real_start, 'correct start value';
     is $g5_end, $g5_real_end, 'correct end value';
 
@@ -126,9 +131,9 @@ sub coordinates_for_oligo : Tests(14) {
     ok my( $g3_start, $g3_end ) = $o->coordinates_for_oligo( 'G3' )
         , 'can call coordinates_for_oligo';
 
-    is $g3_start, $o->D_block_start - ( $o->G3_region_offset + $o->G3_region_length )
+    is $g3_start, $o->D_block_start - ( $o->region_offset_G3 + $o->region_length_G3 )
         , 'correct G3 start value';
-    is $g3_end, $o->D_block_start - ( $o->G3_region_offset + 1 ), 'correct G3 end value';
+    is $g3_end, $o->D_block_start - ( $o->region_offset_G3 + 1 ), 'correct G3 end value';
 }
 
 sub get_oligo_region_gap_oligo : Test(15) {
@@ -140,15 +145,15 @@ sub get_oligo_region_gap_oligo : Test(15) {
 
     ok my( $g3_start, $g3_end ) = $o->get_oligo_region_gap_oligo( 'G3' )
         , 'can call get_oligo_region_gap_oligo for G3';
-    my $g3_real_start = ( $o->D_block_end + ( $o->G3_region_offset + 1 ) );
-    my $g3_real_end = ( $o->D_block_end + ( $o->G3_region_offset + $o->G3_region_length ) );
+    my $g3_real_start = ( $o->D_block_end + ( $o->region_offset_G3 + 1 ) );
+    my $g3_real_end = ( $o->D_block_end + ( $o->region_offset_G3 + $o->region_length_G3 ) );
     is $g3_start, $g3_real_start, 'correct start value';
     is $g3_end, $g3_real_end, 'correct end value';
 
     ok my( $g5_start, $g5_end ) = $o->get_oligo_region_gap_oligo( 'G5' )
         , 'can call get_oligo_region_gap_oligo for G5';
-    my $g5_real_start = ( $o->U_block_start - ( $o->G5_region_offset + $o->G5_region_length ) );
-    my $g5_real_end = ( $o->U_block_start - ( $o->G3_region_offset + 1 ) );
+    my $g5_real_start = ( $o->U_block_start - ( $o->region_offset_G5 + $o->region_length_G5 ) );
+    my $g5_real_end = ( $o->U_block_start - ( $o->region_offset_G3 + 1 ) );
     is $g5_start, $g5_real_start, 'correct start value';
     is $g5_end, $g5_real_end, 'correct end value';
 
@@ -160,23 +165,24 @@ sub get_oligo_region_gap_oligo : Test(15) {
     ok my( $g5_start_minus, $g5_end_minus ) = $o->coordinates_for_oligo( 'G5' )
         , 'can call get_oligo_region_gap_oligo for G5';
 
-    is $g5_start_minus, $o->U_block_end + ( $o->G5_region_offset + 1 ), 'correct G5 start value';
-    is $g5_end_minus, $o->U_block_end + ( $o->G5_region_offset + $o->G5_region_length ), 'correct G5 end value';
+    is $g5_start_minus, $o->U_block_end + ( $o->region_offset_G5 + 1 ), 'correct G5 start value';
+    is $g5_end_minus, $o->U_block_end + ( $o->region_offset_G5 + $o->region_length_G5 ), 'correct G5 end value';
 
     ok my( $g3_start_minus, $g3_end_minus ) = $o->coordinates_for_oligo( 'G3' )
         , 'can call get_oligo_region_gap_oligo for G3';
 
-    is $g3_start_minus, $o->D_block_start - ( $o->G3_region_offset + $o->G3_region_length )
+    is $g3_start_minus, $o->D_block_start - ( $o->region_offset_G3 + $o->region_length_G3 )
         , 'correct G3 start value';
-    is $g3_end_minus, $o->D_block_start - ( $o->G3_region_offset + 1 ), 'correct G3 end value';
+    is $g3_end_minus, $o->D_block_start - ( $o->region_offset_G3 + 1 ), 'correct G3 end value';
 
     my $metaclass = $test->get_test_object_metaclass();
     $o = $metaclass->new_object(
         dir           => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
         U_block_start => 101177328,     U_block_end      => 101177428,
         D_block_start => 101176328,     D_block_end      => 101176428,
+        species       => 'Mouse',
         chr_name      => 11,            chr_strand       => 1,
-        design_method => 'conditional', G5_region_length => 1,
+        design_method => 'conditional', region_length_G5 => 1,
         target_genes => [ 'test_gene' ],
     );
 
@@ -229,6 +235,7 @@ sub get_oligo_region_u_or_d_oligo : Test(16) {
         dir           => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
         U_block_start => 101177328,     U_block_end      => 101177329,
         D_block_start => 101176328,     D_block_end      => 101176428,
+        species       => 'Mouse',
         chr_name      => 11,            chr_strand       => 1,
         design_method => 'conditional', G5_region_length => 1,
         target_genes => [ 'test_gene' ],
@@ -362,6 +369,7 @@ sub _get_test_object {
     my $metaclass = $test->get_test_object_metaclass();
     return $metaclass->new_object(
         dir             => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
+        species         => 'Mouse',
         U_block_start   => $strand == 1 ? 101176328 : 101177328,
         U_block_end     => $strand == 1 ? 101176528 : 101177428,
         U_block_overlap => $u_overlap,

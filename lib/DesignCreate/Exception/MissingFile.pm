@@ -1,13 +1,10 @@
 package DesignCreate::Exception::MissingFile;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Exception::MissingFile::VERSION = '0.009';
+    $DesignCreate::Exception::MissingFile::VERSION = '0.010';
 }
 ## use critic
 
-
-use strict;
-use warnings FATAL => 'all';
 
 use Moose;
 use namespace::autoclean;

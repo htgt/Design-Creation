@@ -1,7 +1,7 @@
 package DesignCreate::Action::OligoRegionsDelExon;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::OligoRegionsDelExon::VERSION = '0.009';
+    $DesignCreate::Action::OligoRegionsDelExon::VERSION = '0.010';
 }
 ## use critic
 
@@ -11,6 +11,9 @@ package DesignCreate::Action::OligoRegionsDelExon;
 DesignCreate::Action::OligoRegionsDelExon - Get coordinate for a Deletion design on a exon id
 
 =head1 DESCRIPTION
+
+For given target exon and oligo region parameters production target region coordinates file
+for each oligo we need for a deletion design.
 
 =cut
 

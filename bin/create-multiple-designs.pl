@@ -91,6 +91,7 @@ sub get_params {
     my @params;
     while ( my( $cmd, $arg ) = each %{ $data } ) {
         next unless $arg;
+        next if $cmd eq 'comment';
         # if multiple args we need to split it
         my @args = split /\|/, $arg;
         for my $single_arg ( @args ) {
@@ -100,6 +101,8 @@ sub get_params {
     }
 
     my $target_gene = _trim( $data->{'target-gene'} );
+    # can not have : symbols in dir name
+    $target_gene =~ s/://g;
 
     my $dir_name;
     # deal with same gene being targeted in multiple designs
@@ -139,12 +142,14 @@ create-multiple-designs.pl - Create multiple designs
       --debug           Print debug messages
       --file            File with design details.
       --persist         Persist newly created designs to LIMS2
+      --alt-designs     Create alternate designs
       --dir             Directory where design-create output goes
       --conditional     Specify conditional design, default deletion
       --del-exon        Specify deletion designs where we target a given exon
       --gene            Only create this gene(s), picked from input file
       --param           Specify additional param(s) not in file
 
+    'param=s'     => \my %extra_params,
 =head1 DESCRIPTION
 
 Takes design information for multiple designs from file and tries to create these designs.

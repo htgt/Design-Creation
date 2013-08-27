@@ -8,6 +8,7 @@ with qw(
 MooseX::Log::Log4perl
 MooseX::Getopt
 DesignCreate::Role::Action
+DesignCreate::Role::EnsEMBL
 );
 
 #
@@ -26,11 +27,11 @@ around '_build_validated_oligo_dir' => sub {
     return $sub_dir;
 };
 
-around '_build_aos_output_dir' => sub {
+around '_build_oligo_finder_output_dir' => sub {
     my $orig = shift;
     my $self = shift;
 
-    my $sub_dir = $self->dir->subdir( 'aos_output' )->absolute;
+    my $sub_dir = $self->dir->subdir( 'oligo_finder_output' )->absolute;
     $sub_dir->mkpath();
 
     return $sub_dir;

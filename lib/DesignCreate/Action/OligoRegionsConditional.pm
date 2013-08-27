@@ -1,7 +1,7 @@
 package DesignCreate::Action::OligoRegionsConditional;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::OligoRegionsConditional::VERSION = '0.009';
+    $DesignCreate::Action::OligoRegionsConditional::VERSION = '0.010';
 }
 ## use critic
 
@@ -12,7 +12,7 @@ DesignCreate::Action::OligoRegionsConditional - Create seq files for oligo regio
 
 =head1 DESCRIPTION
 
-For given target coordinates and oligo region parameters produce target region sequence file
+For given target coordinates and oligo region parameters produce target region coordinates file
 for each oligo we must find for conditional designs.
 
 =cut

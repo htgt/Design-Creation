@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::OligoRegionsConditional;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::OligoRegionsConditional::VERSION = '0.009';
+    $DesignCreate::CmdRole::OligoRegionsConditional::VERSION = '0.010';
 }
 ## use critic
 
@@ -12,11 +12,11 @@ DesignCreate::CmdRole::OligoRegionsConditional -Create seq files for oligo regio
 
 =head1 DESCRIPTION
 
-For given target coordinates and a oligo region parameters produce target region sequence file
-for each oligo we must find for block specified  conditional designs.
+For given target coordinates and a oligo region parameters produce target region coordinates file
+for each oligo we must find for block specified conditional designs.
 
 These attributes and code is specific to block specified conditional designs, code generic to all
-design types is found in DesignCreate::Role::OligoTargetRegions.
+design types is found in DesignCreate::Role::OligoRegionCoordinates.
 
 =cut
 
@@ -29,6 +29,7 @@ use namespace::autoclean;
 
 with qw(
 DesignCreate::Role::OligoRegionCoordinates
+DesignCreate::Role::GapOligoCoordinates
 );
 
 const my $MIN_BLOCK_LENGTH => 102;
@@ -43,10 +44,10 @@ chr_name
 chr_strand
 species
 assembly
-G5_region_length
-G5_region_offset
-G3_region_length
-G3_region_offset
+region_length_G5
+region_offset_G5
+region_length_G3
+region_offset_G3
 design_method
 target_genes
 );
@@ -330,7 +331,8 @@ sub get_oligo_block_right_half_coords {
 
 sub get_oligo_block_attribute {
     my ( $self, $oligo_class, $attribute_type ) = @_;
-    my $attribute_name = $oligo_class . '_block_' . $attribute_type;
+    my $attribute_name = $oligo_class . '_block_';
+    $attribute_name .= $attribute_type if $attribute_type;
 
     DesignCreate::Exception::NonExistantAttribute->throw(
         attribute_name => $attribute_name,

@@ -1,7 +1,7 @@
 package DesignCreate::Action::InsDelDesign;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::InsDelDesign::VERSION = '0.009';
+    $DesignCreate::Action::InsDelDesign::VERSION = '0.010';
 }
 ## use critic
 
@@ -25,7 +25,6 @@ use Const::Fast;
 use Try::Tiny;
 use Fcntl; # O_ constants
 use Data::Dump qw( pp );
-
 
 extends qw( DesignCreate::Action );
 with qw(
@@ -54,7 +53,7 @@ target_file
 exonerate_target_file
 design_data_file
 validated_oligo_dir
-aos_output_dir
+oligo_finder_output_dir
 oligo_target_regions_dir
 aos_location
 base_chromosome_dir
@@ -69,7 +68,7 @@ sub execute {
     my ( $self, $opts, $args ) = @_;
     Log::Log4perl::NDC->push( @{ $self->target_genes }[0] );
 
-    $self->log->info( 'Starting new design create run: ' . join(',', @{ $self->target_genes } ) );
+    $self->log->info( 'Starting new ins-del design create run: ' . join(',', @{ $self->target_genes } ) );
     $self->log->debug( 'Design run args: ' . pp($opts) );
 
     try {

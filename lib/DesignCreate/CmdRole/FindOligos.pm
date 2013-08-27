@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::FindOligos;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::FindOligos::VERSION = '0.009';
+    $DesignCreate::CmdRole::FindOligos::VERSION = '0.010';
 }
 ## use critic
 
@@ -19,6 +19,7 @@ This is a wrapper around RunAOS which does the real work.
 
 use Moose::Role;
 use DesignCreate::Exception;
+use DesignCreate::Constants qw( %DEFAULT_CHROMOSOME_DIR );
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
 use Bio::SeqIO;
 use Bio::Seq;
@@ -34,16 +35,7 @@ DesignCreate::Role::AOS
 
 requires qw(
 oligo_target_regions_dir
-aos_output_dir
-);
-
-const my %DEFAULT_CHROMOSOME_DIR => (
-    Mouse => {
-        GRCm38 => '/lustre/scratch110/blastdb/Users/team87/Mouse/GRCm38',
-    },
-    Human =>{
-        GRCh37 => '/lustre/scratch110/blastdb/Users/team87/Human/GRCh37',
-    },
+oligo_finder_output_dir
 );
 
 const my @DESIGN_PARAMETERS => qw(
@@ -189,7 +181,7 @@ sub check_aos_output {
     for my $oligo ( $self->expected_oligos ) {
         try{
             #this will throw a error if file does not exist
-            $self->get_file( "$oligo.yaml", $self->aos_output_dir );
+            $self->get_file( "$oligo.yaml", $self->oligo_finder_output_dir );
         }
         catch {
             push @missing_oligos, $oligo;

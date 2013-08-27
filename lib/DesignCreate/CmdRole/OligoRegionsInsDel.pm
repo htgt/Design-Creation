@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::OligoRegionsInsDel;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::OligoRegionsInsDel::VERSION = '0.009';
+    $DesignCreate::CmdRole::OligoRegionsInsDel::VERSION = '0.010';
 }
 ## use critic
 
@@ -12,11 +12,11 @@ DesignCreate::CmdRole::OligoRegionsInsDel -Create seq files for oligo region, in
 
 =head1 DESCRIPTION
 
-For given target coordinates and a oligo region parameters produce target region sequence file
+For given target coordinates and a oligo region parameters produce target region coordinates file
 for each oligo we must find for deletion or insertion designs.
 
 These attributes and code is specific to Insertion / Deletion designs, code generic to all
-design types is found in DesignCreate::Role::OligoTargetRegions.
+design types is found in DesignCreate::Role::OligoRegionCoodinates.
 
 =cut
 
@@ -28,23 +28,24 @@ use namespace::autoclean;
 with qw(
 DesignCreate::Role::OligoRegionCoordinates
 DesignCreate::Role::OligoRegionCoordinatesInsDel
+DesignCreate::Role::GapOligoCoordinates
 );
 
 const my @DESIGN_PARAMETERS => qw(
 target_start
 target_end
-U5_region_length
-U5_region_offset
-D3_region_length
-D3_region_offset
+region_length_U5
+region_offset_U5
+region_length_D3
+region_offset_D3
 chr_name
 chr_strand
 species
 assembly
-G5_region_length
-G5_region_offset
-G3_region_length
-G3_region_offset
+region_length_G5
+region_offset_G5
+region_length_G3
+region_offset_G3
 design_method
 target_genes
 );
@@ -93,10 +94,6 @@ has target_end => (
     required      => 1,
     cmd_flag      => 'target-end'
 );
-
-#
-# Gap Oligo Parameter attributes in DesignCreate::Role::OligoRegionCoordinates
-#
 
 sub get_oligo_region_coordinates {
     my $self = shift;

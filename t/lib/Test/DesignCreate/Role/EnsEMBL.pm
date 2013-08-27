@@ -18,15 +18,17 @@ sub get_sequence : Test(4) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
-    my $seq = $o->_get_sequence( 1, 10, 11 );
+    my $seq = $o->get_slice( 1, 10, 11 );
     isa_ok $seq, 'Bio::EnsEMBL::Slice';
     is $seq->seq, 'NNNNNNNNNN', 'sequence is correct';
 
     throws_ok{
-        $o->_get_sequence( 10, 1, 11 );
+        $o->get_slice( 10, 1, 11 );
     } qr/Start must be less than end/
         , 'throws error if start after end';
 }
+
+#TODO add test for repeat masked sequence sp12 Wed 24 Jul 2013 12:55:17 BST
 
 sub ensembl_util : Test(7) {
     my $test = shift;

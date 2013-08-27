@@ -1,0 +1,28 @@
+---
+assembly: GRCh37
+chr_name: '11'
+chr_strand: '-1'
+created_by: system
+design_method: gibson
+exon_check_flank_length: 100
+mask_by_lower_case: yes
+region_length_3F: 100
+region_length_3R: 500
+region_length_5F: 500
+region_length_5R: 100
+region_length_5R_EF: 200
+region_length_EF: 100
+region_length_ER: 100
+region_length_ER_3F: 200
+region_offset_3R: 1300
+region_offset_5F: 1400
+region_offset_5R_EF: 200
+region_offset_ER_3F: 50
+repeat_mask_class: []
+software_version: dev_30-07-2013
+species: Human
+target_end: 118966177
+target_exon: ENSE00002184393
+target_genes:
+- H2AFX
+target_start: 118964564

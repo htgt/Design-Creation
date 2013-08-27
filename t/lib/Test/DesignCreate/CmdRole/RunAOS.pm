@@ -55,7 +55,7 @@ sub run_aos_scripts : Test(6) {
         ok $aos_work_dir->contains( $file ), "File $filename has been created";
     }
 
-    my $dir = tempdir( TMPDIR => 1, CLEANUP => 0 )->absolute;
+    my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute;
     my $metaclass = $test->get_test_object_metaclass();
     $o = $metaclass->new_object(
         dir           => $dir,
@@ -108,8 +108,8 @@ sub create_oligo_files : Test(6) {
         $o->create_oligo_files;
     } 'Can create_oligo_files';
 
-    my $file = $o->aos_output_dir->file( 'U5.yaml' );
-    ok $o->aos_output_dir->contains( $file ), "File U5.yaml has been created";
+    my $file = $o->oligo_finder_output_dir->file( 'U5.yaml' );
+    ok $o->oligo_finder_output_dir->contains( $file ), "File U5.yaml has been created";
 
     #no oligos
     ok $o = $test->_get_test_object, 'can grab test object';

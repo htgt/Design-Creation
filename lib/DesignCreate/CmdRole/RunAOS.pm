@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::RunAOS;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::RunAOS::VERSION = '0.009';
+    $DesignCreate::CmdRole::RunAOS::VERSION = '0.010';
 }
 ## use critic
 
@@ -54,8 +54,6 @@ has target_file => (
     documentation => 'The fasta file containing the target sequence',
     cmd_flag      => 'target-file'
 );
-
-#TODO may want to override the aos dirs
 
 1;
 

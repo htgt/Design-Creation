@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::FetchOligoRegionsSequence;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::FetchOligoRegionsSequence::VERSION = '0.009';
+    $DesignCreate::CmdRole::FetchOligoRegionsSequence::VERSION = '0.010';
 }
 ## use critic
 
@@ -19,6 +19,7 @@ for each of the oligo regions.
 
 use Moose::Role;
 use DesignCreate::Exception;
+use DesignCreate::Constants qw( $DEFAULT_OLIGO_COORD_FILE_NAME );
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
 use Bio::SeqIO;
 use Bio::Seq;
@@ -27,15 +28,9 @@ use Fcntl; # O_ constants
 use YAML::Any qw( LoadFile );
 use namespace::autoclean;
 
-with qw(
-DesignCreate::Role::EnsEMBL
-);
-
 const my @DESIGN_PARAMETERS => qw(
 repeat_mask_class
 );
-
-const my $DEFAULT_OLIGO_COORD_FILE_NAME => 'oligo_region_coords.yaml';
 
 has oligo_region_coordinate_file => (
     is            => 'ro',
@@ -89,6 +84,8 @@ sub _build_oligo_region_data {
 sub create_oligo_region_sequence_files {
     my $self = shift;
     $self->add_design_parameters( \@DESIGN_PARAMETERS );
+    # Add current EnsEMBL DB version used
+    $self->set_param( 'ensembl-version', $self->ensembl_util->db_adaptor->dbc->dbname );
 
     for my $oligo ( $self->expected_oligos ) {
         $self->log->info( "Getting sequence for $oligo oligo region" );

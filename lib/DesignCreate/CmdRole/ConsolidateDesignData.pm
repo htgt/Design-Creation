@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::ConsolidateDesignData;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::ConsolidateDesignData::VERSION = '0.009';
+    $DesignCreate::CmdRole::ConsolidateDesignData::VERSION = '0.010';
 }
 ## use critic
 
@@ -25,7 +25,9 @@ Oligos
 use Moose::Role;
 use DesignCreate::Exception;
 use DesignCreate::Exception::NonExistantAttribute;
+use DesignCreate::Constants qw( %GIBSON_PRIMER_REGIONS );
 use YAML::Any qw( LoadFile DumpFile );
+use JSON;
 use List::Util qw( first );
 use DateTime;
 use Const::Fast;
@@ -59,6 +61,29 @@ sub _build_software_version {
     return $DesignCreate::Role::Action::VERSION || 'dev_' . $t->dmy;
 }
 
+has oligo_classes => (
+    is         => 'ro',
+    isa        => 'ArrayRef',
+    lazy_build => 1,
+);
+
+sub _build_oligo_classes {
+    my $self = shift;
+    my $design_method = $self->design_param( 'design_method' );
+
+    if ( $design_method eq 'conditional' ) {
+        return [ qw( G U D ) ];
+    }
+    elsif ( $design_method eq 'gibson' ) {
+        return [ sort keys %GIBSON_PRIMER_REGIONS ];
+    }
+    else {
+        return [ 'G' ];
+    }
+
+    return;
+}
+
 has all_oligo_pairs => (
     is         => 'ro',
     isa        => 'HashRef',
@@ -73,9 +98,8 @@ has all_oligo_pairs => (
 sub _build_all_oligo_pairs {
     my $self = shift;
     my %oligo_pairs;
-    my @oligo_class = $self->design_param( 'design_method' ) eq 'conditional' ? qw( G U D ) : qw( G );
 
-    for my $class ( @oligo_class ) {
+    for my $class ( @{ $self->oligo_classes } ) {
         my $oligo_pair_file = $self->get_file( $class . '_oligo_pairs.yaml', $self->validated_oligo_dir );
         my $oligos = LoadFile( $oligo_pair_file );
         if ( !$oligos || !@{ $oligos } ) {
@@ -119,6 +143,27 @@ has phase => (
     traits => [ 'NoGetopt' ],
 );
 
+has design_genes => (
+    is         => 'ro',
+    isa        => 'ArrayRef',
+    traits     => [ 'NoGetopt' ],
+    lazy_build => 1,
+);
+
+sub _build_design_genes {
+    my $self = shift;
+    my @design_genes;
+
+    my @gene_ids = @{ $self->design_param( 'target_genes' ) };
+
+    for my $gene_id ( @gene_ids ) {
+        my $gene_type = $self->calculate_gene_type( $gene_id );
+        push @design_genes, { gene_id => $gene_id, gene_type_id => $gene_type };
+    }
+
+    return \@design_genes;
+}
+
 has primary_design_oligos => (
     is     => 'rw',
     isa    => 'ArrayRef',
@@ -152,7 +197,6 @@ sub consolidate_design_data {
     return;
 }
 
-#TODO work out phase for design
 sub get_design_phase {
     my $self = shift;
 
@@ -289,16 +333,36 @@ sub build_design_data {
     my ( $self, $oligos ) = @_;
 
     my %design_data = (
-        type       => $self->design_param( 'design_method' ),
-        species    => $self->design_param( 'species' ),
-        gene_ids   => [ @{ $self->design_param( 'target_genes' ) } ],
-        created_by => $self->created_by,
-        oligos     => $oligos,
+        type              => $self->design_param( 'design_method' ),
+        species           => $self->design_param( 'species' ),
+        gene_ids          => $self->design_genes,
+        created_by        => $self->created_by,
+        oligos            => $oligos,
+        design_parameters => encode_json( $self->design_parameters ),
     );
 
     $design_data{phase} = $self->phase if $self->phase;
 
     return \%design_data;
+}
+
+=head2 calculate_gene_type
+
+Work out type of gene identifier.
+
+=cut
+sub calculate_gene_type {
+    my ( $self, $gene_id ) = @_;
+
+    my $gene_type = $gene_id =~ /^MGI/  ? 'MGI'
+                  : $gene_id =~ /^HGNC/ ? 'HGCN'
+                  : $gene_id =~ /^LBL/  ? 'enhancer-region'
+                  : $gene_id =~ /^CGI/  ? 'CPG-island'
+                  : $gene_id =~ /^mmu/  ? 'miRBase'
+                  :                       'marker-symbol'
+                  ;
+
+    return $gene_type;
 }
 
 1;

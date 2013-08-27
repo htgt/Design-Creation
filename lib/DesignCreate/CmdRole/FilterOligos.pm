@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::FilterOligos;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::FilterOligos::VERSION = '0.009';
+    $DesignCreate::CmdRole::FilterOligos::VERSION = '0.010';
 }
 ## use critic
 
@@ -22,7 +22,7 @@ use Moose::Role;
 use DesignCreate::Types qw( PositiveInt );
 use DesignCreate::Util::Exonerate;
 use DesignCreate::Exception;
-use YAML::Any qw( LoadFile DumpFile );
+use DesignCreate::Constants qw( $DEFAULT_EXONERATE_OLIGO_DIR_NAME );
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
 use Const::Fast;
 use Fcntl; # O_ constants
@@ -31,10 +31,8 @@ use Try::Tiny;
 use namespace::autoclean;
 
 with qw(
-DesignCreate::Role::EnsEMBL
+DesignCreate::Role::FilterOligos
 );
-
-const my $DEFAULT_EXONERATE_OLIGO_DIR_NAME => 'exonerate_oligos';
 
 const my @DESIGN_PARAMETERS => qw(
 flank_length
@@ -83,21 +81,7 @@ sub _build_exonerate_oligo_dir {
     return $exonerate_oligo_dir;
 }
 
-has all_oligos => (
-    is      => 'rw',
-    isa     => 'HashRef',
-    traits  => [ 'NoGetopt' ],
-    default => sub { {  } },
-);
-
 has exonerate_matches => (
-    is      => 'rw',
-    isa     => 'HashRef',
-    traits  => [ 'NoGetopt' ],
-    default => sub { {  } },
-);
-
-has validated_oligos => (
     is      => 'rw',
     isa     => 'HashRef',
     traits  => [ 'NoGetopt' ],
@@ -108,70 +92,35 @@ sub filter_oligos {
     my ( $self, $opts, $args ) = @_;
 
     $self->add_design_parameters( \@DESIGN_PARAMETERS );
-    $self->validate_oligos;
     $self->run_exonerate;
-    $self->filter_out_non_specific_oligos;
-    $self->have_required_validated_oligos;
+    # the following commands are consumed from DesignCreate::Role::FilterOligos
+    $self->validate_oligos;
     $self->output_validated_oligos;
 
     return;
 }
 
-#Validate oligo coordinates, sequence and length
-sub validate_oligos {
-    my $self = shift;
+=head2 _validate_oligo
 
-    for my $oligo_type ( $self->expected_oligos ) {
-        my $oligo_file = $self->get_file( "$oligo_type.yaml", $self->aos_output_dir );
+Run checks against individual oligo to make sure it is valid.
+If it passes all checks return 1, otherwise return undef.
 
-        DesignCreate::Exception->throw("No valid $oligo_type oligos")
-            unless $self->validate_oligos_of_type( $oligo_file, $oligo_type );
-
-        $self->log->info("We have $oligo_type oligos that pass initial checks");
-    }
-
-    return 1;
-}
-
-sub validate_oligos_of_type {
-    my ( $self, $oligo_file, $oligo_type ) = @_;
-    $self->log->debug( "Validating $oligo_type oligos" );
-
-    my $oligos = LoadFile( $oligo_file );
-    unless ( $oligos ) {
-        $self->log->error( "No oligo data in $oligo_file for $oligo_type oligo" );
-        return;
-    }
-
-    for my $oligo_data ( @{ $oligos } ) {
-        push @{ $self->all_oligos->{$oligo_type} }, $oligo_data
-            if $self->validate_oligo( $oligo_data, $oligo_type );
-    }
-
-    unless ( exists $self->all_oligos->{$oligo_type} ) {
-        $self->log->error("No valid $oligo_type oligos");
-        return;
-    }
-
-    return 1;
-}
-
-sub validate_oligo {
-    my ( $self, $oligo_data, $oligo_type ) = @_;
-    $self->log->debug( "$oligo_type oligo, offset: " . $oligo_data->{offset} );
-
-    if ( !defined $oligo_data->{oligo} || $oligo_data->{oligo} ne $oligo_type )   {
-        $self->log->error("Oligo name mismatch, expecting $oligo_type, got: "
-            . $oligo_data->{oligo} . 'for: ' . $oligo_data->{id} );
-        return;
-    }
+=cut
+## no critic(Subroutines::ProhibitUnusedPrivateSubroutine)
+sub _validate_oligo {
+    my ( $self, $oligo_data, $oligo_type, $oligo_slice ) = @_;
 
     $self->check_oligo_coordinates( $oligo_data ) or return;
-    $self->check_oligo_sequence( $oligo_data ) or return;
+    $self->check_oligo_sequence( $oligo_data, $oligo_slice ) or return;
     $self->check_oligo_length( $oligo_data ) or return;
+    $self->check_oligo_specificity(
+        $oligo_data->{id},
+        $self->exonerate_matches->{ $oligo_data->{id} }
+    ) or return;
 
     return 1;
 }
+## use critic
 
 sub check_oligo_coordinates {
     my ( $self, $oligo_data ) = @_;
@@ -190,37 +139,43 @@ sub check_oligo_coordinates {
     return 1;
 }
 
-sub check_oligo_sequence {
-    my ( $self, $oligo_data ) = @_;
+=head2 check_oligo_specificity
 
-    my $ensembl_seq = $self->get_sequence(
-        $oligo_data->{oligo_start},
-        $oligo_data->{oligo_end},
-        $self->design_param( 'chr_name' ),
-    );
+Send in exonerate match information for a given oligo.
+Return 1 if it passes checks, undef otherwise.
 
-    if ( $ensembl_seq ne uc( $oligo_data->{oligo_seq} ) ) {
-        $self->log->error( 'Oligo seq does not match coordinate sequence: ' . $oligo_data->{id} );
-        return 0;
+=cut
+sub check_oligo_specificity {
+    my ( $self, $oligo_id, $match_info ) = @_;
+    # if we have no match info then fail oligo
+    return unless $match_info;
+
+    if ( !$match_info->{exact_matches} ) {
+        $self->log->error( 'Oligo ' . $oligo_id
+            . ' does not have any exact matches, somethings wrong' );
+        return;
+    }
+    elsif ( $match_info->{exact_matches} > 1 ) {
+        $self->log->info( 'Oligo ' . $oligo_id
+            . ' is invalid, has multiple exact matches: ' . $match_info->{exact_matches} );
+        return;
+    }
+    # a hit is above 80% similarity
+    elsif ( $match_info->{hits} > 1 ) {
+        $self->log->info( 'Oligo ' . $oligo_id
+            . ' is invalid, has multiple hits: ' . $match_info->{hits} );
+        return;
     }
 
-    $self->log->debug('Sequence for coordinates matches oligo sequence: ' . $oligo_data->{id} );
     return 1;
 }
 
-sub check_oligo_length {
-    my ( $self, $oligo_data ) = @_;
+=head2 run_exonerate
 
-    my $oligo_length = length($oligo_data->{oligo_seq});
-    if ( $oligo_length != $oligo_data->{oligo_length} ) {
-        $self->log->error("Oligo length is $oligo_length, should be " . $oligo_data->{oligo_length} . ' for: ' . $oligo_data->{id} );
-        return 0;
-    }
+Run exonerate against all our oligo candidates.
+Build up a hash of exonerate hits keyed against the oligo ids.
 
-    $self->log->debug('Oligo length correct for: ' . $oligo_data->{id} );
-    return 1;
-}
-
+=cut
 sub run_exonerate {
     my $self = shift;
     $self->define_exonerate_query_file;
@@ -312,67 +267,6 @@ sub target_flanking_region_coordinates {
     my $flanking_region_end = $end + $self->flank_length;
 
     return( $flanking_region_start, $flanking_region_end, $self->design_param( 'chr_name' ) );
-}
-
-sub filter_out_non_specific_oligos {
-    my ( $self ) = @_;
-
-    for my $oligo_type ( $self->expected_oligos ) {
-        for my $oligo ( @{ $self->all_oligos->{$oligo_type} } ) {
-            next unless my $match_info = $self->exonerate_matches->{ $oligo->{id} };
-            next unless $self->check_oligo_specificity( $oligo->{id}, $match_info );
-
-            push @{ $self->validated_oligos->{$oligo_type} }, $oligo;
-        }
-    }
-
-    return;
-}
-
-sub check_oligo_specificity {
-    my ( $self, $oligo_id, $match_info ) = @_;
-
-    if ( !$match_info->{exact_matches} ) {
-        $self->log->error( 'Oligo ' . $oligo_id
-            . ' does not have any exact matches, somethings wrong ' );
-        return;
-    }
-    elsif ( $match_info->{exact_matches} > 1 ) {
-        $self->log->info( 'Oligo ' . $oligo_id
-            . ' is invalid, has multiple exact matches: ' . $match_info->{exact_matches} );
-        return;
-    }
-    # a hit is above 80% similarity
-    elsif ( $match_info->{hits} > 1 ) {
-        $self->log->info( 'Oligo ' . $oligo_id
-            . ' is invalid, has multiple hits: ' . $match_info->{hits} );
-        return;
-    }
-
-    return 1;
-}
-
-# go through output and filter out oligos that are not specific enough
-sub have_required_validated_oligos {
-    my $self = shift;
-
-    for my $oligo_type ( $self->expected_oligos ) {
-        DesignCreate::Exception->throw( "No valid $oligo_type oligos, halting filter process" )
-            unless exists $self->validated_oligos->{$oligo_type};
-    }
-
-    return 1;
-}
-
-sub output_validated_oligos {
-    my $self = shift;
-
-    for my $oligo_type ( keys %{ $self->validated_oligos } ) {
-        my $filename = $self->validated_oligo_dir->stringify . '/' . $oligo_type . '.yaml';
-        DumpFile( $filename, $self->validated_oligos->{$oligo_type} );
-    }
-
-    return;
 }
 
 1;

@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::PickGapOligos;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::PickGapOligos::VERSION = '0.009';
+    $DesignCreate::CmdRole::PickGapOligos::VERSION = '0.010';
 }
 ## use critic
 
@@ -20,14 +20,13 @@ and pick the ones with no matching sections of sequence.
 
 use Moose::Role;
 use DesignCreate::Exception;
+use DesignCreate::Constants qw( $DEFAULT_GAP_OLIGO_LOG_DIR_NAME );
 use YAML::Any qw( LoadFile DumpFile );
 use DesignCreate::Types qw( PositiveInt );
 use List::MoreUtils qw( all );
 use Data::Dump qw( pp );
 use Const::Fast;
 use namespace::autoclean;
-
-const my $DEFAULT_GAP_OLIGO_LOG_DIR_NAME => 'gap_oligo_logs';
 
 const my @DESIGN_PARAMETERS => qw(
 tile_size

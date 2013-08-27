@@ -14,12 +14,14 @@ BEGIN {
 }
 
 sub get_test_object_metaclass {
-    my ( $test ) = @_;
+    my ( $test, $extra_roles ) = @_;
+
+    $extra_roles ||= [];
 
     my $metaclass = Moose::Meta::Class->create(
         'Test::ObjectRole::DesignCreate::Test' => (
             superclasses => [ 'Test::ObjectRole::DesignCreate' ],
-            roles        => [ $test->test_role ],
+            roles        => [ $test->test_role, @{ $extra_roles } ],
         )
     );
 

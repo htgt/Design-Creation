@@ -1,13 +1,10 @@
 package DesignCreate::Cmd;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Cmd::VERSION = '0.009';
+    $DesignCreate::Cmd::VERSION = '0.010';
 }
 ## use critic
 
-
-use strict;
-use warnings FATAL => 'all';
 
 use Moose;
 use namespace::autoclean;

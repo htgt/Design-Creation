@@ -1,7 +1,7 @@
 package DesignCreate::Action::OligoRegionsInsDel;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::OligoRegionsInsDel::VERSION = '0.009';
+    $DesignCreate::Action::OligoRegionsInsDel::VERSION = '0.010';
 }
 ## use critic
 
@@ -12,7 +12,7 @@ DesignCreate::Action::OligoRegionsInsDel - Create seq files for oligo region, in
 
 =head1 DESCRIPTION
 
-For given target coordinates and oligo region parameters produce target region sequence file
+For given target coordinates and oligo region parameters produce target region coordinates file
 for each oligo we must find for deletion or insertion designs.
 
 =cut

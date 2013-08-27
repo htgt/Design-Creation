@@ -38,6 +38,23 @@ sub valid_consolidate_design_data_cmd : Test(4) {
     ok !$result->error, 'no command errors';
 }
 
+sub oligo_classes : Test(8) {
+    my $test = shift;
+    ok my $o = $test->_get_test_object, 'can grab test object';
+
+    is_deeply $o->oligo_classes, [ 'G' ], 'oligo classes for deletion design correct';
+
+    ok $o->clear_oligo_classes, 'can clear oligo_classes attribute value';
+    ok $o->set_param( 'design_method' => 'gibson' ), 'can set design_method to gibson';
+    is_deeply $o->oligo_classes, [ qw( exon five_prime three_prime ) ]
+        , 'oligo classes for gibson design correct';
+
+    ok $o->clear_oligo_classes, 'can clear oligo_classes attribute value';
+    ok $o->set_param( 'design_method' => 'conditional' ), 'can set design_method to conditional';
+    is_deeply $o->oligo_classes, [ qw( G U D ) ]
+        , 'oligo classes for conditional design correct';
+}
+
 sub all_oligo_pairs : Test(12) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
@@ -241,7 +258,8 @@ sub create_primary_design_file : Test(10) {
 
     my $design_data = LoadFile( $design_data_file );
     is $design_data->{type}, 'deletion', 'correct design type';
-    is_deeply $design_data->{gene_ids}, [ 'LBL-1' ], 'correct gene ids';
+    is_deeply $design_data->{gene_ids},
+        [ { gene_id => 'LBL-1', gene_type_id => 'enhancer-region' } ], 'correct gene ids';
 
     ok my $c_o = $test->_get_test_object, 'can grab test object';
     ok $c_o->set_param( 'design_method', 'conditional' ), 'can set design method to conditional';
@@ -303,7 +321,8 @@ sub build_design_data : Test(8) {
 
     is $design_data->{type}, 'deletion', 'correct design type';
     is $design_data->{species}, 'Mouse', 'correct species';
-    is_deeply $design_data->{gene_ids}, [ 'LBL-1' ], 'correct gene ids';
+    is_deeply $design_data->{gene_ids},
+        [ { gene_id => 'LBL-1', gene_type_id => 'enhancer-region' } ], 'correct gene ids';
     is $design_data->{created_by}, 'test', 'correct created_by';
     ok !exists $design_data->{phase}, 'phase value not set';
 }

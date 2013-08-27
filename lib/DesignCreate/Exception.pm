@@ -1,13 +1,10 @@
 package DesignCreate::Exception;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Exception::VERSION = '0.009';
+    $DesignCreate::Exception::VERSION = '0.010';
 }
 ## use critic
 
-
-use strict;
-use warnings FATAL => 'all';
 
 use Moose;
 use MooseX::ClassAttribute;

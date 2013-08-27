@@ -1,7 +1,7 @@
 package DesignCreate::Action;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::VERSION = '0.009';
+    $DesignCreate::Action::VERSION = '0.010';
 }
 ## use critic
 
@@ -26,6 +26,7 @@ extends qw( MooseX::App::Cmd::Command );
 with qw(
 MooseX::Log::Log4perl
 DesignCreate::Role::Action
+DesignCreate::Role::EnsEMBL
 );
 
 has trace => (
@@ -54,6 +55,9 @@ has verbose => (
 
 sub BUILD {
     my $self = shift;
+
+    # Add command name as a design parameter
+    $self->set_param( 'command-name', $self->command_names );
 
     my $log_level
         = $self->trace   ? $TRACE

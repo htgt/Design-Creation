@@ -1,7 +1,7 @@
 package DesignCreate::Action::DelExonDesign;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::DelExonDesign::VERSION = '0.009';
+    $DesignCreate::Action::DelExonDesign::VERSION = '0.010';
 }
 ## use critic
 
@@ -26,8 +26,6 @@ use Try::Tiny;
 use Fcntl; # O_ constants
 use Data::Dump qw( pp );
 
-
-#TODO this almost exactly mimics the InsDelDesign Action, need to factor things out
 extends qw( DesignCreate::Action );
 with qw(
 DesignCreate::CmdRole::OligoRegionsDelExon
@@ -55,7 +53,7 @@ target_file
 exonerate_target_file
 design_data_file
 validated_oligo_dir
-aos_output_dir
+oligo_finder_output_dir
 oligo_target_regions_dir
 aos_location
 base_chromosome_dir
@@ -71,7 +69,7 @@ sub execute {
     Log::Log4perl::NDC->push( @{ $self->target_genes }[0] );
     Log::Log4perl::NDC->push( $self->target_exon );
 
-    $self->log->info( 'Starting new design create run: ' . join(',', @{ $self->target_genes } ) );
+    $self->log->info( 'Starting new del-exon design create run: ' . join(',', @{ $self->target_genes } ) );
     $self->log->debug( 'Design run args: ' . pp($opts) );
 
     try {
