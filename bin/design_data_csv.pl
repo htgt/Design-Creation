@@ -12,6 +12,7 @@ use Const::Fast;
 use Text::CSV;
 use IO::Handle;
 use Try::Tiny;
+use Bio::Perl;
 
 const my @COLUMN_HEADERS => qw(
 target_gene
@@ -55,19 +56,36 @@ for my $dir_name ( @ARGV ) {
     my %params = slice_def( $design_params, qw( chr_name chr_strand target_exon ) );
     $params{target_gene} = @{ $design_params->{target_genes} }[0];
 
-    my %data = ( %{ parse_oligo_data( $design->{oligos} ) }, %params );
+    my %data = ( %{ parse_oligo_data( $design->{oligos}, $params{chr_strand} ) }, %params );
     $output_csv->print( $io_output, [ @data{ @COLUMN_HEADERS } ] );
 }
 
 sub parse_oligo_data {
-    my $oligos = shift;
+    my ( $oligos, $strand ) = @_;
     my %oligo_data;
 
     for my $oligo ( @{ $oligos } ) {
-       $oligo_data{ $oligo->{type} } = $oligo->{seq};
+        $oligo_data{ $oligo->{type} } = _seq_comp( $oligo, $strand ); 
     }
 
     return \%oligo_data;
+}
+
+# revcomp oligo seq where appropriate
+sub _seq_comp {
+    my ( $oligo, $strand ) = @_;
+    my $type = $oligo->{type};
+    my $seq = $oligo->{seq};
+
+    if ( $type =~ /F$/ ) {
+        return $strand == 1 ? $seq : revcom( $seq )->seq;
+    }
+    elsif ( $type =~ /R$/ ) {
+        return $strand == 1 ? revcom( $seq )->seq : $seq;
+    }
+    else {
+        LOGDIE( "Unknown oligo type $type" );
+    }
 }
 
 __END__
