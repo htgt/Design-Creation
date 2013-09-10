@@ -172,7 +172,7 @@ sub parse_exonerate_output {
         my $end                  = $exonerate_output[8];
 
         if ($mismatch_bases) {
-            $self->log->debug("$seq_id alignment has $mismatch_bases mismatch(s) - skip");
+            $self->log->trace("$seq_id alignment has $mismatch_bases mismatch(s) - skip");
             next;
         }
         my $percentage_match = $percentage_alignment * ( $alignment_length / $seq_length );
@@ -184,7 +184,7 @@ sub parse_exonerate_output {
         }
 
         $matches{$seq_id}{'hits'}++ if $percentage_match >= $self->percentage_hit_match;
-        $self->log->debug("$seq_id - Percent Match: $percentage_match");
+        $self->log->trace("$seq_id - Percent Match: $percentage_match");
     }
 
     $self->matches( \%matches );
