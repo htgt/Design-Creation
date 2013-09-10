@@ -23,6 +23,7 @@ use Const::Fast;
 use Fcntl; # O_ constants
 use List::MoreUtils qw( any );
 use namespace::autoclean;
+use Bio::SeqIO;
 
 with qw(
 DesignCreate::Role::FilterOligos
@@ -87,9 +88,11 @@ sub _validate_oligo {
 
     $self->check_oligo_sequence( $oligo_data, $oligo_slice ) or return;
     $self->check_oligo_length( $oligo_data )                 or return;
+    #TODO fix this check sp12 Tue 10 Sep 2013 09:07:52 BST
     #if ( $oligo_type =~ /5R|EF|ER|3F/ ) {
         #$self->check_oligo_not_near_exon( $oligo_data, $oligo_slice ) or return;
     #}
+
     #exonerate check, probably replace this
     $self->check_oligo_specificity(
         $oligo_data->{id},
