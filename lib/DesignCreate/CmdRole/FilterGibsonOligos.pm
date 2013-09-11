@@ -88,10 +88,9 @@ sub _validate_oligo {
 
     $self->check_oligo_sequence( $oligo_data, $oligo_slice ) or return;
     $self->check_oligo_length( $oligo_data )                 or return;
-    #TODO fix this check sp12 Tue 10 Sep 2013 09:07:52 BST
-    #if ( $oligo_type =~ /5R|EF|ER|3F/ ) {
-        #$self->check_oligo_not_near_exon( $oligo_data, $oligo_slice ) or return;
-    #}
+    if ( $oligo_type =~ /5R|EF|ER|3F/ ) {
+        $self->check_oligo_not_near_exon( $oligo_data, $oligo_slice ) or return;
+    }
 
     #exonerate check, probably replace this
     $self->check_oligo_specificity(
@@ -107,27 +106,39 @@ sub _validate_oligo {
 
 Check that the oligo is not within a certain number of bases of a exon
 
-Not sure this belongs here, should either check before we invoke design creation
-that the oligo candidate regions are valid, or validate the design after it is
-created.
-
 =cut
 sub check_oligo_not_near_exon {
     my ( $self, $oligo_data, $oligo_slice  ) = @_;
-
+    my $critical_exon_id = $self->design_param( 'target_exon' );
     return 1 if $self->exon_check_flank_length == 0;
 
     my $expanded_slice
         = $oligo_slice->expand( $self->exon_check_flank_length, $self->exon_check_flank_length );
+    my $expanded_slice_start = $expanded_slice->start;
+    my $expanded_slice_end = $expanded_slice->end;
 
-    my $exons = $expanded_slice->get_all_Exons;
-    #TODO must avoid counting critical exon here sp12 Tue 20 Aug 2013 08:36:39 BST
-    #TODO only care about coding exons? sp12 Wed 21 Aug 2013 15:06:31 BST
+    # grab all genes that overlap this slice, including on reverse strand
+    my $genes = $expanded_slice->get_all_Genes;
 
+    my @flanking_exons;
+    for my $gene ( @{ $genes } ) {
+        my $canonical_transcript = $gene->canonical_transcript;
+
+        for my $exon ( @{ $canonical_transcript->get_all_Exons } ) {
+            next if $exon->stable_id eq $critical_exon_id;
+            if (   ( $expanded_slice_start < $exon->start && $expanded_slice_end > $exon->start )
+                || ( $expanded_slice_start < $exon->end && $expanded_slice_end > $exon->end ) )
+            {
+                $self->log->debug( "Critical exon $critical_exon_id is flanked too closely by exon "
+                        . $exon->stable_id );
+                push @flanking_exons, $exon;
+            }
+        }
+    }
     # if no exons in slice we pass the check
-    return 1 unless @{ $exons };
+    return 1 unless @flanking_exons;
 
-    my $exon_ids = join( ', ', map { $_->stable_id } @{$exons} );
+    my $exon_ids = join( ', ', map { $_->stable_id } @flanking_exons );
     $self->log->debug(
         'Oligo ' . $oligo_data->{id} . " overlaps or is too close to exon(s): $exon_ids" );
 
