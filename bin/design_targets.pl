@@ -25,7 +25,6 @@ GetOptions(
     'gene=s'               => \my $single_gene,
     'species=s'            => \my $species,
     'base-design-params=s' => \my $base_params_file,
-    'gibson'               => \my $gibson,
 ) or pod2usage(2);
 
 Log::Log4perl->easy_init( { level => $log_level, layout => '%p %x %m%n' } );
@@ -64,21 +63,34 @@ const my @TARGET_COLUMN_HEADERS => (
 'automatically_picked',
 );
 
+const my @FAILED_TARGETS_HEADERS => qw(
+gene_id
+marker_symbol
+ensembl_id
+ensembl_id_b
+);
+
 my $ensembl_util = LIMS2::Util::EnsEMBL->new( species => $species );
 my $db = $ensembl_util->db_adaptor;
 my $db_details = $db->to_hash;
 WARN("Ensembl DB: " . $db_details->{DBNAME});
 
-my ( $target_output, $target_output_csv, $design_output, $design_output_csv );
+my ( $target_output, $target_output_csv, $design_output, $design_output_csv, $failed_output, $failed_output_csv );
 $target_output = IO::File->new( 'target_parameters.csv' , 'w' );
 $target_output_csv = Text::CSV->new( { eol => "\n" } );
 $target_output_csv->print( $target_output, \@TARGET_COLUMN_HEADERS );
+
+$failed_output = IO::File->new( 'failed_targets.csv' , 'w' );
+$failed_output_csv = Text::CSV->new( { eol => "\n" } );
+$failed_output_csv->print( $failed_output, \@FAILED_TARGETS_HEADERS );
 
 if ( $base_params_file ) {
     $design_output = IO::File->new( 'design_parameters.csv' , 'w' );
     $design_output_csv = Text::CSV->new( { eol => "\n" } );
     $design_output_csv->print( $design_output, \@DESIGN_COLUMN_HEADERS );
 }
+
+my @failed_targets;
 
 ## no critic(InputOutput::RequireBriefOpen)
 {
@@ -96,7 +108,11 @@ if ( $base_params_file ) {
         }
         catch{
             ERROR('Problem processing target: ' . $_ );
+            push @failed_targets, $data;
         };
+    }
+    for my $failed_target ( @failed_targets ) {
+        $failed_output_csv->print( $failed_output, [ @{ $failed_target }{ @FAILED_TARGETS_HEADERS } ] );
     }
     close $input_fh;
 }
@@ -111,12 +127,14 @@ sub process_target {
     my $gene = $ensembl_util->gene_adaptor->fetch_by_stable_id( $ensembl_id );
     unless ( $gene ) {
         ERROR( "Can not find ensembl gene: " . $ensembl_id );
+        push @failed_targets, $data;
         return;
     }
 
     my @exons = @{ get_all_critical_exons( $gene, $data ) };
     unless ( @exons ) {
         ERROR('Unable to find any valid critical exons');
+        push @failed_targets, $data;
         return;
     }
 
@@ -259,12 +277,9 @@ sub get_all_critical_exons {
     my $critical_exons_ids = find_critical_exons( \%transcript_exons, \@coding_transcript_names );
     my @critical_exons;
     while ( my ( $exon_id, $exon ) = each %valid_exons ) {
-        if ( $gibson ) {
-            next if flanking_exons_too_close( $exon, \%transcript_exons );
+        if ( exists $critical_exons_ids->{ $exon_id } ) {
+            push @critical_exons, $valid_exons{ $exon_id };
         }
-
-        push @critical_exons, $valid_exons{ $exon_id }
-            if exists $critical_exons_ids->{ $exon_id };
     }
 
     my $num_critical_exons = @critical_exons;
@@ -327,10 +342,6 @@ sub find_valid_exons {
     for my $exon ( @exons ) {
 
         my $exon_length = $exon->length;
-        if ( $exon_length > 300 ) {
-            TRACE( 'Exon ' . $exon->stable_id . " is too long: $exon_length" );
-            next;
-        }
         if ( $exon_length % 3 == 0  ) {
             TRACE( 'Exon ' . $exon->stable_id . " removal would not create frame shift" );
             next;
@@ -340,10 +351,6 @@ sub find_valid_exons {
         unless ( $exon->coding_region_start( $transcript ) ) {
             INFO( 'Exon ' . $exon->stable_id . " is non coding in transcript " , $transcript->stable_id );
             next;
-        }
-
-        if ( $gibson ) {
-            next if too_few_exon_coding_bases( $exon, $transcript );
         }
 
         TRACE( 'Exon ' . $exon->stable_id . ' is VALID' );
@@ -357,60 +364,6 @@ sub find_valid_exons {
     }
 
     return;
-}
-
-=head2 flanking_exons_too_close
-
-For gibson designs we don't want other exons within around
-400 bases of the critical exon
-
-=cut
-sub flanking_exons_too_close {
-    my ( $critical_exon, $transcript_exons ) = @_;
-    my $critical_exon_id = $critical_exon->stable_id;
-    my $critical_exon_start = $critical_exon->seq_region_start;
-    my $critical_exon_end = $critical_exon->seq_region_end;
-
-    my $exon_slice = $critical_exon->feature_Slice;
-    my $expanded_slice = $exon_slice->expand( 400, 400 );
-
-    my $exons = $expanded_slice->get_all_Exons;
-
-    my @flanking_exons;
-    for my $exon ( @{ $exons } ) {
-        next if $exon->stable_id eq $critical_exon_id;
-        next if $exon->seq_region_start == $critical_exon_start;
-        next if $exon->seq_region_end == $critical_exon_end;
-        next if !exists $transcript_exons->{ $exon->stable_id };
-
-        push @flanking_exons, $exon;
-    }
-
-    if ( @flanking_exons ) {
-        WARN( "Exon $critical_exon_id has another exon within 400 bases: " . join(' ', map{ $_->stable_id } @flanking_exons ) );
-        return 1;
-    }
-
-    return;
-}
-
-=head2 too_few_exon_coding_bases
-
-return true if exon does not have at least 30 coding bases
-
-=cut
-sub too_few_exon_coding_bases {
-    my ( $exon, $transcript ) = @_;
-
-    my $length = $exon->cdna_coding_end( $transcript ) - $exon->cdna_coding_start( $transcript ) + 1;
-
-    if ( $length < 30 ) {
-        DEBUG( 'Exon ' . $exon->stable_id . " only has $length coding bases " );
-        return 1;
-    }
-    else {
-        return;
-    }
 }
 
 =head2 find_critical_exons
