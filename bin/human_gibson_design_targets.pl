@@ -25,10 +25,12 @@ GetOptions(
     'gene=s'               => \my $single_gene,
     'base-design-params=s' => \my $base_params_file,
     'strict'               => \my $strict,
+    'loose'                => \my $loose,
 ) or pod2usage(2);
 
 Log::Log4perl->easy_init( { level => $log_level, layout => '%p %x %m%n' } );
 LOGDIE( 'Specify file with gene names' ) unless $genes_file;
+LOGDIE( 'Cannot specify both strict and lose criteria' ) if $strict && $loose;
 
 const my $DEFAULT_ASSEMBLY => 'GRCh37';
 const my $DEFAULT_BUILD => 72;
@@ -257,6 +259,7 @@ sub get_all_critical_exons {
     my %valid_exons;
     my %transcript_exons;
     my @coding_transcript_names;
+    my @critical_exons;
 
     my @coding_transcripts = grep{ valid_coding_transcript($_) } @{ $gene->get_all_Transcripts };
 
@@ -265,22 +268,31 @@ sub get_all_critical_exons {
         return [];
     }
 
-    for my $tran ( @coding_transcripts ) {
-        push @coding_transcript_names, $tran->stable_id;
-        find_valid_exons( $tran, \%valid_exons, \%transcript_exons );
+    if ( $loose ) {
+        #TODO no reason why exons picked with loose criteria cant be checked with strict filters sp12 Wed 11 Sep 2013 08:56:26 BST
+        my $canonical_transcript = $gene->canonical_transcript;
+        push @coding_transcript_names, $canonical_transcript;
+        find_valid_exons( $canonical_transcript, \%valid_exons, \%transcript_exons );
+        DEBUG( 'Canonical transcript for gene: ' . $canonical_transcript->stable_id );
+        DEBUG( 'Valid Exon Transcripts: ' . p( %transcript_exons ) );
+        push @critical_exons, values %valid_exons;
     }
+    else {
+        for my $tran ( @coding_transcripts ) {
+            push @coding_transcript_names, $tran->stable_id;
+            find_valid_exons( $tran, \%valid_exons, \%transcript_exons );
+        }
+        DEBUG( 'Valid Exon Transcripts: ' . p( %transcript_exons ) );
+        DEBUG( 'Valid Coding Transcripts: ' . p( @coding_transcript_names ) );
 
-    DEBUG( 'Valid Coding Transcripts: ' . p( @coding_transcript_names ) );
-    DEBUG( 'Valid Exon Transcripts: ' . p( %transcript_exons ) );
-
-    my $critical_exons_ids = find_critical_exons( \%transcript_exons, \@coding_transcript_names );
-    my @critical_exons;
-    while ( my ( $exon_id, $exon ) = each %valid_exons ) {
-        if ( exists $critical_exons_ids->{ $exon_id } ) {
-            if ( $strict ) {
-                next if flanking_exons_too_close( $exon, \%transcript_exons );
+        my $critical_exons_ids = find_critical_exons( \%transcript_exons, \@coding_transcript_names );
+        while ( my ( $exon_id, $exon ) = each %valid_exons ) {
+            if ( exists $critical_exons_ids->{ $exon_id } ) {
+                if ( $strict ) {
+                    next if flanking_exons_too_close( $exon, \%transcript_exons );
+                }
+                push @critical_exons, $valid_exons{ $exon_id };
             }
-            push @critical_exons, $valid_exons{ $exon_id };
         }
     }
 
