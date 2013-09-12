@@ -25,12 +25,10 @@ GetOptions(
     'gene=s'               => \my $single_gene,
     'base-design-params=s' => \my $base_params_file,
     'strict'               => \my $strict,
-    'loose'                => \my $loose,
 ) or pod2usage(2);
 
 Log::Log4perl->easy_init( { level => $log_level, layout => '%p %x %m%n' } );
 LOGDIE( 'Specify file with gene names' ) unless $genes_file;
-LOGDIE( 'Cannot specify both strict and lose criteria' ) if $strict && $loose;
 
 const my $DEFAULT_ASSEMBLY => 'GRCh37';
 const my $DEFAULT_BUILD => 72;
@@ -204,7 +202,6 @@ sub print_design_targets {
     );
 
     my $canonical_transcript = $gene->canonical_transcript;
-    INFO( 'Canonical transcript: ' . $canonical_transcript->stable_id );
     my $exon_rank = get_exon_rank( $exon, $canonical_transcript );
 
     $target_params{ 'gene_id' } = $data->{gene_id};
@@ -259,47 +256,57 @@ sub get_all_critical_exons {
     my %valid_exons;
     my %transcript_exons;
     my @coding_transcript_names;
-    my @critical_exons;
 
     my @coding_transcripts = grep{ valid_coding_transcript($_) } @{ $gene->get_all_Transcripts };
 
     unless ( @coding_transcripts ) {
-        ERROR( 'Can not find coding transcripts for gene: ' . $gene->stable_id );
+        WARN( 'Can not find coding transcripts for gene: ' . $gene->stable_id );
         return [];
     }
 
-    if ( $loose ) {
-        #TODO no reason why exons picked with loose criteria cant be checked with strict filters sp12 Wed 11 Sep 2013 08:56:26 BST
-        my $canonical_transcript = $gene->canonical_transcript;
-        push @coding_transcript_names, $canonical_transcript;
-        find_valid_exons( $canonical_transcript, \%valid_exons, \%transcript_exons );
-        DEBUG( 'Canonical transcript for gene: ' . $canonical_transcript->stable_id );
-        DEBUG( 'Valid Exon Transcripts: ' . p( %transcript_exons ) );
-        push @critical_exons, values %valid_exons;
+    for my $tran ( @coding_transcripts ) {
+        push @coding_transcript_names, $tran->stable_id;
+        find_valid_exons( $tran, \%valid_exons, \%transcript_exons );
     }
-    else {
-        for my $tran ( @coding_transcripts ) {
-            push @coding_transcript_names, $tran->stable_id;
-            find_valid_exons( $tran, \%valid_exons, \%transcript_exons );
-        }
-        DEBUG( 'Valid Exon Transcripts: ' . p( %transcript_exons ) );
-        DEBUG( 'Valid Coding Transcripts: ' . p( @coding_transcript_names ) );
+    unless ( keys %valid_exons ) {
+        WARN( 'No valid exons for gene: ' . $gene->stable_id );
+        return [];
+    }
+    DEBUG( 'Valid Exon Transcripts: ' . p( %transcript_exons ) );
+    DEBUG( 'Valid Coding Transcripts: ' . p( @coding_transcript_names ) );
 
-        my $critical_exons_ids = find_critical_exons( \%transcript_exons, \@coding_transcript_names );
-        while ( my ( $exon_id, $exon ) = each %valid_exons ) {
-            if ( exists $critical_exons_ids->{ $exon_id } ) {
-                if ( $strict ) {
-                    next if flanking_exons_too_close( $exon, \%transcript_exons );
-                }
-                push @critical_exons, $valid_exons{ $exon_id };
-            }
-        }
+    my $critical_exons_ids = find_critical_exons( \%transcript_exons, \@coding_transcript_names );
+
+    unless ( $critical_exons_ids ) {
+        WARN( 'No critical exons for gene: ' . $gene->stable_id );
+        return [];
     }
 
-    my $num_critical_exons = @critical_exons;
+    my @valid_critical_exons;
+    while ( my ( $exon_id, $exon ) = each %valid_exons ) {
+        push @valid_critical_exons, $valid_exons{ $exon_id }
+            if exists $critical_exons_ids->{ $exon_id };
+    }
+
+    unless ( @valid_critical_exons ){
+        WARN( 'No valid exons that are also critical for gene ' . $gene->stable_id );
+        return [];
+    }
+
+    if ( $strict ) {
+        my @copy_critical_exons = @valid_critical_exons;
+        @valid_critical_exons = grep{ exons_not_too_close( $_ ) } @copy_critical_exons;
+
+        unless ( @valid_critical_exons ){
+            WARN( 'No valid critical exons pass exon closeness check for gene ' . $gene->stable_id );
+            return [];
+        }
+    }
+
+    my $num_critical_exons = @valid_critical_exons;
     INFO( "Has $num_critical_exons critical exons" );
 
-    my @ordered_critical_exons = sort most_five_prime @critical_exons;
+    my @ordered_critical_exons = sort most_five_prime @valid_critical_exons;
 
     #if we have multiple critical exons we skip the exon with the start codon
     if ( $num_critical_exons > 1 ) {
@@ -350,7 +357,7 @@ Create hash of exons for each transcript, keyed on transcript stable id
 =cut
 sub find_valid_exons {
     my ( $transcript, $valid_exons, $transcript_exons ) = @_;
-    my @critical_exons;
+    my @valid_exons;
     my @exons = @{ $transcript->get_all_Exons };
 
     for my $exon ( @exons ) {
@@ -376,10 +383,10 @@ sub find_valid_exons {
         }
 
         TRACE( 'Exon ' . $exon->stable_id . ' is VALID' );
-        push @critical_exons, $exon;
+        push @valid_exons, $exon;
     }
 
-    for my $exon ( @critical_exons ) {
+    for my $exon ( @valid_exons ) {
         push @{ $transcript_exons->{ $exon->stable_id } }, $transcript->stable_id;
         $valid_exons->{ $exon->stable_id } = $exon
             unless exists $valid_exons->{ $exon->stable_id };
@@ -388,13 +395,13 @@ sub find_valid_exons {
     return;
 }
 
-=head2 flanking_exons_too_close
+=head2 exons_not_too_close
 
 For gibson designs we don't want other exons within around
 400 bases of the critical exon
 
 =cut
-sub flanking_exons_too_close {
+sub exons_not_too_close {
     my ( $critical_exon, $transcript_exons ) = @_;
     my $critical_exon_id = $critical_exon->stable_id;
 
@@ -415,22 +422,17 @@ sub flanking_exons_too_close {
             if (   ( $expanded_slice_start < $exon->start && $expanded_slice_end > $exon->start )
                 || ( $expanded_slice_start < $exon->end && $expanded_slice_end > $exon->end ) )
             {
-                DEBUG(   "Critical exon $critical_exon_id is flanked too closely by exon "
-                        . $exon->stable_id . ' which belongs to gene: '
-                        . $gene->stable_id . ' on canonical transcript '
-                        . $canonical_transcript->stable_id
-                    );
                 push @flanking_exons, $exon;
             }
         }
     }
 
     if ( @flanking_exons ) {
-        WARN( "Exon $critical_exon_id has another exon within 400 bases: " . join(' ', map{ $_->stable_id } @flanking_exons ) );
-        return 1;
+        DEBUG( "Exon $critical_exon_id has another exon within 400 bases: " . join(' ', map{ $_->stable_id } @flanking_exons ) );
+        return;
     }
 
-    return;
+    return 1;
 }
 
 =head2 too_few_exon_coding_bases
@@ -472,6 +474,7 @@ sub find_critical_exons {
             TRACE( "Exon $exon not present in all valid transcripts" );
         }
     }
+    return unless keys %critical_exons;
 
     return \%critical_exons;
 }
