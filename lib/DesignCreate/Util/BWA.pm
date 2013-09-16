@@ -16,6 +16,7 @@ use DesignCreate::Exception::MissingFile;
 use Path::Class  qw( file );
 use DesignCreate::Types qw( PositiveInt YesNo Species );
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
+use YAML::Any qw( LoadFile DumpFile );
 use IPC::Run 'run';
 use Const::Fast;
 use namespace::autoclean;
@@ -106,7 +107,6 @@ sub _build_sorted_bam_file {
     return $file;
 }
 
-use Smart::Comments;
 sub run_bwa_checks {
     my $self = shift;
 
@@ -176,6 +176,7 @@ Take sam file output from bwa and generate sorted bam files.
 =cut
 sub generate_bam_files {
     my ( $self ) = @_;
+    my ( $out, $err ) =  ( "", "" );
     $self->log->info( 'Generate sorted bam files' );
 
     my @xa2multi_command = (
@@ -186,13 +187,11 @@ sub generate_bam_files {
 
     my $xa2multi_file = $self->work_dir->file('query.multi.sam')->absolute;
     my $xa2multi_log_file = $self->work_dir->file('xa2multi.log')->absolute;
-    run( \@xa2multi_command,
-        '<', \undef,
-        '>', $xa2multi_file->stringify,
-        '2>', $xa2multi_log_file->stringify
-    ) or DesignCreate::Exception->throw(
-            "Failed to run xa2multi command, see log file: $xa2multi_log_file" );
+    run( \@xa2multi_command, '<', \undef, '>', $xa2multi_file->stringify, '2>', \$err)
+        or DesignCreate::Exception->throw(
+            "Failed to run xa2multi command: $err" );
 
+    #TODO can i filter this on the MAPQ value? sp12 Mon 16 Sep 2013 13:18:33 BST
     my @view_command = (
         $SAMTOOLS_CMD,
         'view',                    #
@@ -202,13 +201,13 @@ sub generate_bam_files {
     $self->log->debug( "samtools view command: " . join( ' ', @view_command ) );
 
     my $samtools_view_file = $self->work_dir->file('query.bam')->absolute;
-    my $samtools_view_log_file = $self->work_dir->file('samtools_view.log')->absolute;
-    run( \@view_command,
-        '<', \undef,
-        '>', $samtools_view_file->stringify,
-        '2>', $samtools_view_log_file->stringify
-    ) or DesignCreate::Exception->throw(
-            "Failed to run xa2multi command, see log file: $samtools_view_log_file" );
+    $err = "";
+    run( \@view_command, '<', \undef, '>', $samtools_view_file->stringify, '2>', \$err)
+        or DesignCreate::Exception->throw(
+            "Failed to run samtools view command: $err" );
+
+    #TODO sam files contain useful info not in bed file sp12 Mon 16 Sep 2013 13:00:36 BST
+    # can we parse and make use of this
 
     my $samtools_sort_file = $self->work_dir->file('query.sorted')->absolute;
     my @sort_command = (
@@ -219,18 +218,13 @@ sub generate_bam_files {
     );
     $self->log->debug( "samtools sort command: " . join( ' ', @sort_command ) );
 
+    #TODO do I even need to sort this? sp12 Mon 16 Sep 2013 12:53:41 BST
     my $samtools_sort_log_file = $self->work_dir->file('samtools_sort.log')->absolute;
-    run( \@sort_command,
-        '<', \undef,
-        '&>', $samtools_sort_log_file->stringify
-    ) or DesignCreate::Exception->throw(
-            "Failed to run samtools sort command, see log file: $samtools_sort_log_file" );
+    $err = "";
+    run( \@sort_command, '<', \undef, '>', \$out, '2>', \$err)
+        or DesignCreate::Exception->throw(
+            "Failed to run samtools sort command: $err" );
 
-    # TODO cleanup surplus files if we are successful
-    $xa2multi_log_file->remove;
-    $samtools_view_log_file->remove;
-    $samtools_sort_log_file->remove;
-    $samtools_view_file->remove;
 }
 
 =head2 parse_bam_file
@@ -241,8 +235,69 @@ Need to grab sequence of alignment.
 =cut
 sub parse_bam_file {
     my ( $self  ) = @_;
+    my ( $out, $err ) =  ( "", "" );
     # bamToBed -i [test-oligos.sorted.bam] > [test-oligos.bed]
 
+    my @bamToBed_command = (
+        'bamToBed',
+        "-i", $self->sorted_bam_file->stringify,
+    );
+    $self->log->debug( "bamToBed command: " . join( ' ', @bamToBed_command ) );
+
+    my $bed_file = $self->work_dir->file('query.bed')->absolute;
+    run( \@bamToBed_command, '<', \undef, '>', $bed_file->stringify, '2>', \$err,)
+        or DesignCreate::Exception->throw(
+            "Failed to run bamToBed command: $err" );
+
+    #TODO filter out oligos with too many hits here sp12 Mon 16 Sep 2013 12:59:57 BST
+    # should save a lot of time in the next step
+
+    # fastaFromBed -tab -fi /lustre/scratch105/vrpipe/refs/human/ncbi37/hs37d5.fa -bed [test-oligos.bed] -fo [test-oligos.with-seqs.tsv]
+    my $seq_file = $self->work_dir->file('query.seqs.tsv')->absolute;
+    my @fastaFromBed_command = (
+        'fastaFromBed',
+        '-tab',                               # write output in tab delimited format
+        '-fi', $self->target_file->stringify, # target genome file, indexed for bwa
+        '-bed', $bed_file->stringify,         # input file of alignments
+        '-fo', $seq_file->stringify,          # output file
+    );
+    $self->log->debug( "fastaFromBed command: " . join( ' ', @fastaFromBed_command ) );
+
+    run( \@fastaFromBed_command, '<', \undef, '>', \$out, '2>', \$err,)
+        or DesignCreate::Exception->throw(
+            "Failed to run fastaFromBed command: $err" );
+
+    my %alignments;
+    # merge bed data with seq data
+    my $seq_fh = $seq_file->openr;
+    my $bed_fh = $bed_file->openr;
+    while ( my $bed_line = <$bed_fh> ) {
+        my $seq_line = <$seq_fh>;
+
+        my ( $location, $seq ) = split /\s+/, $seq_line;
+        #the location needs to be further split to match the bed file format
+        my ( $seq_chr, $seq_start, $seq_end ) = $location =~ /(.+):(\d+)-(\d+)/;
+
+        my ( $chr, $start, $end, $name, $score, $strand ) = split /\s+/, $bed_line;
+
+        #make sure the locations from each file are the same or everything would be wrong
+        if ( $chr eq $seq_chr and $start == $seq_start and $end == $seq_end ) {
+            push @{ $alignments{ $name } }, {
+                chr    => $chr,
+                start  => $start,
+                end    => $end,
+                strand => $strand,
+                score  => $score,
+                seq    => $seq,
+            };
+        }
+        else {
+            die "$seq_line doesn't match $bed_line!";
+        }
+    }
+
+    my $alignment_file = $self->work_dir->file( 'alignments.yaml' );
+    DumpFile( $alignment_file, \%alignments );
 }
 
 
