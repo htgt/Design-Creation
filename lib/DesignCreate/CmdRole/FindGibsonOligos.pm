@@ -375,8 +375,8 @@ sub _build_region_slice {
         $self->no_repeat_mask_classes ? undef : $self->repeat_mask_class
     );
 
-    # primer3 expects sequence in a 5' to 3' direction, so invert if
-    # target is on the -ve strand ( not revcomp )
+    # primer3 expects sequence in a 5' to 3' direction, so reverse compliment if
+    # target is on the -ve strand
     return $self->design_param( 'chr_strand' ) == 1 ? $slice : $slice->invert;
 }
 
