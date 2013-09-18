@@ -64,9 +64,8 @@ seperate area where the reverse primer should be found.
 
 ### Strand / Revcom workflow
 * Primer3 expects sequence in 5' to 3' direction
-* Primers all outputed in +ve strand
 * If design is on +ve strand then we just send in the sequence for the target region slice ( always on +ve strand )
-* If design is on -ve strand then the target region slice is inverted ( not revcomped  ) so it runs from 5' to 3' direction
+* If design is on -ve strand then the target region slice is rev comped so it runs from 5' to 3' direction
 * Primer returns the forward ( left ) primer on the +ve strand and the reverse ( right ) primer on the -ve strand.
 * When we get the results from Primer3 we want to parse the data and store the oligo in the +ve strand.
 * If +ve strand design then revcomp the reverse primer
