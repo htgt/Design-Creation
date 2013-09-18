@@ -107,12 +107,31 @@ sub _build_sorted_bam_file {
     return $file;
 }
 
+# oligo seqs, all on +ve strand
+has oligo_seqs => (
+    is         => 'ro',
+    isa        => 'HashRef',
+    lazy_build => 1,
+);
+
+sub _build_oligo_seqs {
+    my $self = shift;
+    my %oligo_seqs;
+
+    my $seq_in = Bio::SeqIO->new( -fh => $self->query_file->openr, -format => 'fasta' );
+    while ( my $seq = $seq_in->next_seq ) {
+        $oligo_seqs{ $seq->display_id } = $seq->seq;
+    }
+
+    return \%oligo_seqs;
+}
+
 sub run_bwa_checks {
     my $self = shift;
 
     $self->run_bwa;
     $self->generate_bam_files;
-    $self->parse_bam_file;
+    return $self->parse_bam_file;
 }
 
 =head2 run_bwa
@@ -191,7 +210,6 @@ sub generate_bam_files {
         or DesignCreate::Exception->throw(
             "Failed to run xa2multi command: $err" );
 
-    #TODO can i filter this on the MAPQ value? sp12 Mon 16 Sep 2013 13:18:33 BST
     my @view_command = (
         $SAMTOOLS_CMD,
         'view',                    #
@@ -219,7 +237,6 @@ sub generate_bam_files {
     $self->log->debug( "samtools sort command: " . join( ' ', @sort_command ) );
 
     #TODO do I even need to sort this? sp12 Mon 16 Sep 2013 12:53:41 BST
-    my $samtools_sort_log_file = $self->work_dir->file('samtools_sort.log')->absolute;
     $err = "";
     run( \@sort_command, '<', \undef, '>', \$out, '2>', \$err)
         or DesignCreate::Exception->throw(
@@ -253,6 +270,7 @@ sub parse_bam_file {
     # should save a lot of time in the next step
 
     # fastaFromBed -tab -fi /lustre/scratch105/vrpipe/refs/human/ncbi37/hs37d5.fa -bed [test-oligos.bed] -fo [test-oligos.with-seqs.tsv]
+    #TODO outpu in fasta format sp12 Tue 17 Sep 2013 10:19:08 BST
     my $seq_file = $self->work_dir->file('query.seqs.tsv')->absolute;
     my @fastaFromBed_command = (
         'fastaFromBed',
@@ -296,8 +314,15 @@ sub parse_bam_file {
         }
     }
 
-    my $alignment_file = $self->work_dir->file( 'alignments.yaml' );
-    DumpFile( $alignment_file, \%alignments );
+    return \%alignments;
+}
+
+sub hamming_distance {
+    #use string xor to get the number of mismatches between the two strings.
+    #the xor returns a string with the binary digits of each char xor'd,
+    #which will be an ascii char between 001 and 255. tr returns the number of characters replaced.
+    die "Strings passed to hamming distance differ" if length($_[0]) != length($_[1]);
+    return (uc($_[0]) ^ uc($_[1])) =~ tr/\001-\255//;
 }
 
 
