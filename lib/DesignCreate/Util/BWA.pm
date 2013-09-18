@@ -20,6 +20,7 @@ use YAML::Any qw( LoadFile DumpFile );
 use IPC::Run 'run';
 use Const::Fast;
 use namespace::autoclean;
+use Bio::SeqIO;
 
 with qw( MooseX::Log::Log4perl );
 
@@ -60,11 +61,24 @@ has species => (
     required => 1,
 );
 
+# default of 2 only gets hits with > 90% similarity
 has num_mismatches => (
     is       => 'ro',
     isa      => PositiveInt,
     required => 1,
-    default  => 3,
+    default  => 2,
+);
+
+has three_prime_check => (
+    is      => 'ro',
+    isa     => 'Bool',
+    default => 0,
+);
+
+has delete_bwa_files => (
+    is      => 'ro',
+    isa     => 'Bool',
+    default => 1,
 );
 
 has target_file => (
@@ -90,28 +104,30 @@ sub _build_sam_file {
     return shift->work_dir->file('query.sam')->absolute;
 }
 
-has sorted_bam_file => (
+has bed_file => (
     is         => 'ro',
     isa        => AbsFile,
     lazy_build => 1,
 );
 
-sub _build_sorted_bam_file {
-    my $self = shift;
-
-    my $file = $self->work_dir->file('query.sorted.bam')->absolute;
-    unless ( $self->work_dir->contains( $file ) ) {
-        DesignCreate::Exception::MissingFile->throw( file => $file, dir => $self->work_dir )
-    }
-
-    return $file;
+sub _build_bed_file {
+    return shift->work_dir->file('query.bed')->absolute;
 }
 
 # oligo seqs, all on +ve strand
 has oligo_seqs => (
-    is         => 'ro',
-    isa        => 'HashRef',
-    lazy_build => 1,
+    is                => 'ro',
+    isa               => 'HashRef',
+    lazy_build        => 1,
+    traits            => [ 'Hash' ],
+    handles           => {
+        get_oligo_seq => 'get',
+    }
+);
+
+has matches => (
+    is  => 'rw',
+    isa => 'HashRef',
 );
 
 sub _build_oligo_seqs {
@@ -130,8 +146,21 @@ sub run_bwa_checks {
     my $self = shift;
 
     $self->run_bwa;
-    $self->generate_bam_files;
-    return $self->parse_bam_file;
+    $self->generate_bed_file;
+    my $oligo_hits = $self->oligo_hits;
+    if ( $self->three_prime_check ) {
+        $self->oligo_hits_three_prime_check( $oligo_hits );
+    }
+    else {
+        # the basic oligo hits info is good enough
+        $self->matches( $oligo_hits );
+    }
+
+    if ( $self->delete_bwa_files ) {
+        $self->bed_file->remove;
+    }
+
+    return;
 }
 
 =head2 run_bwa
@@ -182,21 +211,25 @@ sub run_bwa {
     ) or DesignCreate::Exception->throw(
             "Failed to run bwa samse command, see log file: $bwa_samse_log_file" );
 
+    if ( $self->delete_bwa_files ) {
+        $bwa_aln_file->remove;
+    }
+
     return;
 }
 
-=head2 generate_bam_files
+=head2 generate_bed_file
 
-Take sam file output from bwa and generate sorted bam files.
-    # /software/solexa/bin/aligners/bwa/current/xa2multi.pl [test-oligos.sam]
-    # | /software/solexa/bin/samtools view -bS -
-    # | /software/solexa/bin/samtools sort - [test-oligos.sorted]
+Take sam file output from bwa and generate bed file.
+    # xa2multi.pl [test-oligos.sam] > [test-oligos.multi.sam]
+    # samtools view -bS [test-oligos.multi.sam] > [test-oligos.bam]
+    # bamToBed -i [test-oligos.bam] > [test-oligos.bed]
 
 =cut
-sub generate_bam_files {
+sub generate_bed_file {
     my ( $self ) = @_;
-    my ( $out, $err ) =  ( "", "" );
-    $self->log->info( 'Generate sorted bam files' );
+    my ( $out, $err ) = ( "","" );
+    $self->log->info( 'Generating bed file' );
 
     my @xa2multi_command = (
         $XA2MULTI_CMD,
@@ -210,6 +243,9 @@ sub generate_bam_files {
         or DesignCreate::Exception->throw(
             "Failed to run xa2multi command: $err" );
 
+    #TODO sam files contain useful info not in bed file sp12 Mon 16 Sep 2013 13:00:36 BST
+    # can we parse and make use of this
+
     my @view_command = (
         $SAMTOOLS_CMD,
         'view',                    #
@@ -218,69 +254,142 @@ sub generate_bam_files {
     );
     $self->log->debug( "samtools view command: " . join( ' ', @view_command ) );
 
-    my $samtools_view_file = $self->work_dir->file('query.bam')->absolute;
     $err = "";
-    run( \@view_command, '<', \undef, '>', $samtools_view_file->stringify, '2>', \$err)
+    my $bam_file = $self->work_dir->file('query.bam')->absolute;
+    run( \@view_command, '<', \undef, '>', $bam_file->stringify, '2>', \$err)
         or DesignCreate::Exception->throw(
             "Failed to run samtools view command: $err" );
 
-    #TODO sam files contain useful info not in bed file sp12 Mon 16 Sep 2013 13:00:36 BST
-    # can we parse and make use of this
+    if ( $self->three_prime_check ) {
+        my $temp_file = $self->work_dir->file('query.sorted')->absolute;
+        my @sort_command = (
+            $SAMTOOLS_CMD,
+            'sort',                         #
+            $bam_file->stringify,
+            $temp_file->stringify,
+        );
+        $self->log->debug( "samtools sort command: " . join( ' ', @sort_command ) );
 
-    my $samtools_sort_file = $self->work_dir->file('query.sorted')->absolute;
-    my @sort_command = (
-        $SAMTOOLS_CMD,
-        'sort',                         #
-        $samtools_view_file->stringify,
-        $samtools_sort_file->stringify,
-    );
-    $self->log->debug( "samtools sort command: " . join( ' ', @sort_command ) );
+        $err = "";
+        run( \@sort_command, '<', \undef, '>', \$out, '2>', \$err)
+            or DesignCreate::Exception->throw(
+                "Failed to run samtools sort command: $err" );
 
-    #TODO do I even need to sort this? sp12 Mon 16 Sep 2013 12:53:41 BST
-    $err = "";
-    run( \@sort_command, '<', \undef, '>', \$out, '2>', \$err)
-        or DesignCreate::Exception->throw(
-            "Failed to run samtools sort command: $err" );
-
-}
-
-=head2 parse_bam_file
-
-Parse sorted bam files into output we can use.
-Need to grab sequence of alignment.
-
-=cut
-sub parse_bam_file {
-    my ( $self  ) = @_;
-    my ( $out, $err ) =  ( "", "" );
-    # bamToBed -i [test-oligos.sorted.bam] > [test-oligos.bed]
+        $bam_file = $self->work_dir->file('query.sorted.bam')->absolute;
+        DesignCreate::Exception::MissingFile->throw( file => $bam_file, dir => $self->work_dir )
+            unless $self->work_dir->contains( $bam_file );
+    }
 
     my @bamToBed_command = (
         'bamToBed',
-        "-i", $self->sorted_bam_file->stringify,
+        "-i", $bam_file->stringify,
     );
     $self->log->debug( "bamToBed command: " . join( ' ', @bamToBed_command ) );
 
-    my $bed_file = $self->work_dir->file('query.bed')->absolute;
-    run( \@bamToBed_command, '<', \undef, '>', $bed_file->stringify, '2>', \$err,)
+    run( \@bamToBed_command, '<', \undef, '>', $self->bed_file->stringify, '2>', \$err,)
         or DesignCreate::Exception->throw(
             "Failed to run bamToBed command: $err" );
 
-    #TODO filter out oligos with too many hits here sp12 Mon 16 Sep 2013 12:59:57 BST
-    # should save a lot of time in the next step
+    if ( $self->delete_bwa_files ) {
+        $bam_file->remove;
+        $xa2multi_file->remove;
+        $self->sam_file->remove;
+    }
 
-    # fastaFromBed -tab -fi /lustre/scratch105/vrpipe/refs/human/ncbi37/hs37d5.fa -bed [test-oligos.bed] -fo [test-oligos.with-seqs.tsv]
-    #TODO outpu in fasta format sp12 Tue 17 Sep 2013 10:19:08 BST
+    return;
+}
+
+=head2 oligo_hits
+
+Calculate number of hits each oligo got againts the genome
+We have a bed file to work with.
+
+=cut
+sub oligo_hits {
+    my ( $self ) = @_;
+    $self->log->info( 'Calculating oligo hits' );
+    my %oligo_hits;
+
+    my $bed_fh = $self->bed_file->openr;
+    while ( <$bed_fh> ) {
+        my @data = split /\t/;
+        my $id = $data[3];
+        my $score = $data[4];
+        if ( $score > 10 ) {
+            $oligo_hits{ $id }{'unique_alignment'}++;
+        }
+        else {
+            $oligo_hits{ $id }{ 'hits' }++;
+        }
+    }
+
+    my $oligo_hits_file = $self->work_dir->file( 'oligo_hits.yaml' );
+    DumpFile( $oligo_hits_file, \%oligo_hits );
+
+    return \%oligo_hits;
+}
+
+=head2 oligo_hits_three_prime_check
+
+When looks at hits the three prime end of the oligo is critical.
+So a hit on a oligo where the mismatches occur in the last 3-4 three prime bases of
+the oligo should not count
+
+This involves fetching the sequence of the alignments which can be very time consuming
+
+=cut
+sub oligo_hits_three_prime_check {
+    my ( $self, $oligo_hits ) = @_;
+
+    my $oligo_alignments = $self->fetch_alignment_sequence( $oligo_hits );
+
+    #TODO add 3' oligo alignment check sp12 Wed 18 Sep 2013 10:32:49 BST
+    # temp code, need to replace with 3' check
+    my %matches;
+    for my $oligo ( keys %{ $oligo_alignments } ) {
+        for my $alignment ( @{ $oligo_alignments->{ $oligo } } ) {
+            if ( $alignment->{percent_hit}  == 100 ) {
+                $matches{$oligo}{'exact_matches'}++;
+            }
+            elsif ( $alignment->{percent_hit}  >= 90 ) {
+                $matches{$oligo}{'hits'}++;
+            }
+        }
+    }
+
+    $self->matches( \%matches );
+
+    return;
+}
+
+=head2 fetch_alignment_sequence
+
+Parse bed file into output we can use.
+
+Need to grab sequence of alignment.
+
+    # fastaFromBed -tab -fi [ref-seq.fasta]-bed [test-oligos.bed] -fo [test-oligos.with-seqs.tsv]
+
+=cut
+sub fetch_alignment_sequence {
+    my ( $self, $oligo_hits ) = @_;
+
+    #TODO filter out oligos with too many hits here sp12 Mon 16 Sep 2013 12:59:57 BST
+    # should save a lot of time in the next step, use $oligo_hits
+
+    #TODO output in fasta format sp12 Tue 17 Sep 2013 10:19:08 BST
     my $seq_file = $self->work_dir->file('query.seqs.tsv')->absolute;
     my @fastaFromBed_command = (
         'fastaFromBed',
         '-tab',                               # write output in tab delimited format
         '-fi', $self->target_file->stringify, # target genome file, indexed for bwa
-        '-bed', $bed_file->stringify,         # input file of alignments
+        '-bed', $self->bed_file->stringify,   # input file of alignments
         '-fo', $seq_file->stringify,          # output file
+        '-s'                                  # take notice of strand
     );
     $self->log->debug( "fastaFromBed command: " . join( ' ', @fastaFromBed_command ) );
 
+    my ( $out, $err ) =  ( "", "" );
     run( \@fastaFromBed_command, '<', \undef, '>', \$out, '2>', \$err,)
         or DesignCreate::Exception->throw(
             "Failed to run fastaFromBed command: $err" );
@@ -288,7 +397,7 @@ sub parse_bam_file {
     my %alignments;
     # merge bed data with seq data
     my $seq_fh = $seq_file->openr;
-    my $bed_fh = $bed_file->openr;
+    my $bed_fh = $self->bed_file->openr;
     while ( my $bed_line = <$bed_fh> ) {
         my $seq_line = <$seq_fh>;
 
@@ -301,12 +410,13 @@ sub parse_bam_file {
         #make sure the locations from each file are the same or everything would be wrong
         if ( $chr eq $seq_chr and $start == $seq_start and $end == $seq_end ) {
             push @{ $alignments{ $name } }, {
-                chr    => $chr,
-                start  => $start,
-                end    => $end,
-                strand => $strand,
-                score  => $score,
-                seq    => $seq,
+                chr         => $chr,
+                start       => $start,
+                end         => $end,
+                strand      => $strand,
+                bwa_score   => $score,
+                seq         => $seq,
+                percent_hit => $self->calculate_percent_alignment( $name, $seq ),
             };
         }
         else {
@@ -314,13 +424,33 @@ sub parse_bam_file {
         }
     }
 
+
     return \%alignments;
 }
 
+=head2 calculate_percent_alignment
+
+Calculate the percentage hit a aligment has
+
+=cut
+sub calculate_percent_alignment {
+    my ( $self, $name, $alignment_seq ) = @_;
+    my $oligo_seq = $self->get_oligo_seq( $name );
+    my $oligo_length = length( $oligo_seq );
+    my $hamming_distance = hamming_distance( $alignment_seq, $oligo_seq );
+
+    my $percent_hit = 100 * ( ( $oligo_length - $hamming_distance ) / $oligo_length );
+    return sprintf("%.0f", $percent_hit);
+}
+
+=head2 hamming_distance
+
+use string xor to get the number of mismatches between the two strings.
+the xor returns a string with the binary digits of each char xor'd,
+which will be an ascii char between 001 and 255. tr returns the number of characters replaced.
+
+=cut
 sub hamming_distance {
-    #use string xor to get the number of mismatches between the two strings.
-    #the xor returns a string with the binary digits of each char xor'd,
-    #which will be an ascii char between 001 and 255. tr returns the number of characters replaced.
     die "Strings passed to hamming distance differ" if length($_[0]) != length($_[1]);
     return (uc($_[0]) ^ uc($_[1])) =~ tr/\001-\255//;
 }
