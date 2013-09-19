@@ -42,7 +42,7 @@ has exon_check_flank_length => (
     documentation => 'Number of flanking bases surrounding middle oligos to check for exons,'
                      . ' set to 0 to turn off check',
     cmd_flag      => 'exon-check-flank-length',
-    default       => 100,
+    default       => 0,
 );
 
 has oligo_three_prime_align => (
@@ -237,7 +237,7 @@ sub check_oligo_specificity {
             return;
         }
         # a hit is above 90% similarity
-        elsif ( $match_info->{hits} > 1 ) {
+        elsif ( $match_info->{hits} >=  1 ) {
             $self->log->info( "Oligo $oligo_id is invalid, has multiple hits: " . $match_info->{hits} );
             return;
         }
@@ -248,7 +248,7 @@ sub check_oligo_specificity {
             return;
         }
         # a hit is above 90% similarity
-        elsif ( $match_info->{hits} > 1 ) {
+        elsif ( exists $match_info->{hits} && $match_info->{hits} >= 1 ) {
             $self->log->debug( "Oligo $oligo_id is invalid, has multiple hits: " . $match_info->{hits} );
             return;
         }
@@ -265,7 +265,7 @@ sub run_bwa {
         query_file        => $self->bwa_query_file,
         work_dir          => $self->bwa_dir,
         species           => $self->design_param( 'species' ),
-        three_prime_check => $self->oligo_three_prime_align eq 'yes' ? 1 : 0,
+        three_prime_check => $self->oligo_three_prime_align,
     );
 
     try{
