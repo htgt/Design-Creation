@@ -14,7 +14,7 @@ use Moose;
 use DesignCreate::Exception;
 use DesignCreate::Exception::MissingFile;
 use Path::Class  qw( file );
-use DesignCreate::Types qw( PositiveInt YesNo Species );
+use DesignCreate::Types qw( PositiveInt Species );
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
 use YAML::Any qw( LoadFile DumpFile );
 use IPC::Run 'run';
@@ -32,10 +32,6 @@ const my $SAMTOOLS_CMD => $ENV{SAMTOOLS_CMD}
 
 const my $XA2MULTI_CMD => $ENV{XA2MULTI_CMD}
     || '/software/solexa/bin/aligners/bwa/current/xa2multi.pl';
-
-# bedtools - install somewhere sensible
-    # bamToBed
-    # fastaFromBed
 
 const my %BWA_GENOME_FILES => (
     Mouse => '/lustre/scratch105/vrpipe/refs/mouse/GRCm38/GRCm38_68.fa',
@@ -94,14 +90,14 @@ sub _build_target_file {
     return $file->absolute;
 }
 
-has sam_file => (
+has sam_multi_file => (
     is         => 'ro',
     isa        => AbsFile,
     lazy_build => 1,
 );
 
-sub _build_sam_file {
-    return shift->work_dir->file('query.sam')->absolute;
+sub _build_sam_multi_file {
+    return shift->work_dir->file('query.multi.sam')->absolute;
 }
 
 has bed_file => (
@@ -142,18 +138,28 @@ sub _build_oligo_seqs {
     return \%oligo_seqs;
 }
 
+=head2 run_bwa_checks
+
+Run bwa alignments along with multiple other steps to parse this output.
+Generate number of hits a oligo has against the genome.
+
+=cut
 sub run_bwa_checks {
     my $self = shift;
 
-    $self->run_bwa;
-    $self->generate_bed_file;
+    $self->generate_sam_file;
     my $oligo_hits = $self->oligo_hits;
     if ( $self->three_prime_check ) {
+        $self->generate_bed_file;
         $self->oligo_hits_three_prime_check( $oligo_hits );
+
+        my $three_prime_check_file = $self->work_dir->file( 'three_prime_check.yaml' );
+        DumpFile( $three_prime_check_file, $self->matches );
     }
     else {
         # the basic oligo hits info is good enough
         $self->matches( $oligo_hits );
+        $self->sam_multi_file->remove if $self->delete_bwa_files;
     }
 
     if ( $self->delete_bwa_files ) {
@@ -163,13 +169,13 @@ sub run_bwa_checks {
     return;
 }
 
-=head2 run_bwa
+=head2 generate_sam_file
 
 Run the aln and samse steps of bwa.
 Output is a sam file.
 
 =cut
-sub run_bwa {
+sub generate_sam_file {
     my $self = shift;
     $self->log->info( 'Running bwa commands' );
 
@@ -203,15 +209,29 @@ sub run_bwa {
     );
     $self->log->debug( "BWA samse command: " . join( ' ', @samse_command ) );
 
+    my $sam_file = $self->work_dir->file('query.sam')->absolute;
     my $bwa_samse_log_file = $self->work_dir->file( 'bwa_samse.log' )->absolute;
     run( \@samse_command,
         '<', \undef,
-        '>', $self->sam_file->stringify,
+        '>', $sam_file->stringify,
         '2>', $bwa_samse_log_file->stringify
     ) or DesignCreate::Exception->throw(
             "Failed to run bwa samse command, see log file: $bwa_samse_log_file" );
 
+    my @xa2multi_command = (
+        $XA2MULTI_CMD,
+        $sam_file->stringify,
+    );
+    $self->log->debug( "xa2multi command: " . join( ' ', @xa2multi_command ) );
+
+    my $xa2multi_log_file = $self->work_dir->file('xa2multi.log')->absolute;
+    my $err = "";
+    run( \@xa2multi_command, '<', \undef, '>', $self->sam_multi_file->stringify, '2>', \$err)
+        or DesignCreate::Exception->throw(
+            "Failed to run xa2multi command: $err" );
+
     if ( $self->delete_bwa_files ) {
+        $sam_file->remove;
         $bwa_aln_file->remove;
     }
 
@@ -220,10 +240,10 @@ sub run_bwa {
 
 =head2 generate_bed_file
 
-Take sam file output from bwa and generate bed file.
-    # xa2multi.pl [test-oligos.sam] > [test-oligos.multi.sam]
-    # samtools view -bS [test-oligos.multi.sam] > [test-oligos.bam]
-    # bamToBed -i [test-oligos.bam] > [test-oligos.bed]
+Take sam file output from previous steps and generate bed file.
+* samtools view -bS [test-oligos.multi.sam] > [test-oligos.bam]
+* samtools sort [test-oligos.bam] > [test-oligos.sorted.bam]
+* bamToBed -i [test-oligos.bam] > [test-oligos.bed]
 
 =cut
 sub generate_bed_file {
@@ -231,26 +251,11 @@ sub generate_bed_file {
     my ( $out, $err ) = ( "","" );
     $self->log->info( 'Generating bed file' );
 
-    my @xa2multi_command = (
-        $XA2MULTI_CMD,
-        $self->sam_file->stringify,
-    );
-    $self->log->debug( "xa2multi command: " . join( ' ', @xa2multi_command ) );
-
-    my $xa2multi_file = $self->work_dir->file('query.multi.sam')->absolute;
-    my $xa2multi_log_file = $self->work_dir->file('xa2multi.log')->absolute;
-    run( \@xa2multi_command, '<', \undef, '>', $xa2multi_file->stringify, '2>', \$err)
-        or DesignCreate::Exception->throw(
-            "Failed to run xa2multi command: $err" );
-
-    #TODO sam files contain useful info not in bed file sp12 Mon 16 Sep 2013 13:00:36 BST
-    # can we parse and make use of this
-
     my @view_command = (
         $SAMTOOLS_CMD,
         'view',                    #
         '-bS',                     #
-        $xa2multi_file->stringify,
+        $self->sam_multi_file->stringify,
     );
     $self->log->debug( "samtools view command: " . join( ' ', @view_command ) );
 
@@ -260,29 +265,27 @@ sub generate_bed_file {
         or DesignCreate::Exception->throw(
             "Failed to run samtools view command: $err" );
 
-    if ( $self->three_prime_check ) {
-        my $temp_file = $self->work_dir->file('query.sorted')->absolute;
-        my @sort_command = (
-            $SAMTOOLS_CMD,
-            'sort',                         #
-            $bam_file->stringify,
-            $temp_file->stringify,
-        );
-        $self->log->debug( "samtools sort command: " . join( ' ', @sort_command ) );
+    my $temp_file = $self->work_dir->file('query.sorted')->absolute;
+    my @sort_command = (
+        $SAMTOOLS_CMD,
+        'sort',                         #
+        $bam_file->stringify,
+        $temp_file->stringify,
+    );
+    $self->log->debug( "samtools sort command: " . join( ' ', @sort_command ) );
 
-        $err = "";
-        run( \@sort_command, '<', \undef, '>', \$out, '2>', \$err)
-            or DesignCreate::Exception->throw(
-                "Failed to run samtools sort command: $err" );
+    $err = "";
+    run( \@sort_command, '<', \undef, '>', \$out, '2>', \$err)
+        or DesignCreate::Exception->throw(
+            "Failed to run samtools sort command: $err" );
 
-        $bam_file = $self->work_dir->file('query.sorted.bam')->absolute;
-        DesignCreate::Exception::MissingFile->throw( file => $bam_file, dir => $self->work_dir )
-            unless $self->work_dir->contains( $bam_file );
-    }
+    my $sorted_bam_file = $self->work_dir->file('query.sorted.bam')->absolute;
+    DesignCreate::Exception::MissingFile->throw( file => $sorted_bam_file, dir => $self->work_dir )
+        unless $self->work_dir->contains( $sorted_bam_file );
 
     my @bamToBed_command = (
         'bamToBed',
-        "-i", $bam_file->stringify,
+        "-i", $sorted_bam_file->stringify,
     );
     $self->log->debug( "bamToBed command: " . join( ' ', @bamToBed_command ) );
 
@@ -292,8 +295,8 @@ sub generate_bed_file {
 
     if ( $self->delete_bwa_files ) {
         $bam_file->remove;
-        $xa2multi_file->remove;
-        $self->sam_file->remove;
+        $sorted_bam_file->remove;
+        $self->sam_multi_file->remove;
     }
 
     return;
@@ -301,8 +304,8 @@ sub generate_bed_file {
 
 =head2 oligo_hits
 
-Calculate number of hits each oligo got againts the genome
-We have a bed file to work with.
+Calculate number of hits each oligo got against the genome.
+This is done by parsing the data from the sam multi file.
 
 =cut
 sub oligo_hits {
@@ -310,13 +313,17 @@ sub oligo_hits {
     $self->log->info( 'Calculating oligo hits' );
     my %oligo_hits;
 
-    my $bed_fh = $self->bed_file->openr;
-    while ( <$bed_fh> ) {
+    my $fh = $self->sam_multi_file->openr;
+    while ( <$fh> ) {
+        next if /^@/;
         my @data = split /\t/;
-        my $id = $data[3];
+        my $id = $data[0];
         my $score = $data[4];
-        if ( $score > 10 ) {
-            $oligo_hits{ $id }{'unique_alignment'}++;
+        if ( $score > 30 ) {
+            $oligo_hits{ $id }{'unique_alignment'} = 1;
+        }
+        elsif ( $score > 10 ) {
+            $oligo_hits{ $id }{ 'okay_hit' } = 1;
         }
         else {
             $oligo_hits{ $id }{ 'hits' }++;
@@ -335,7 +342,7 @@ When looks at hits the three prime end of the oligo is critical.
 So a hit on a oligo where the mismatches occur in the last 3-4 three prime bases of
 the oligo should not count
 
-This involves fetching the sequence of the alignments which can be very time consuming
+This involves fetching the sequence of the alignments which can be very time consuming.
 
 =cut
 sub oligo_hits_three_prime_check {
@@ -364,11 +371,10 @@ sub oligo_hits_three_prime_check {
 
 =head2 fetch_alignment_sequence
 
-Parse bed file into output we can use.
+Grab sequence for alignments found by bwa using fastaFromBed script.
+* fastaFromBed -tab -fi [ref-seq.fasta]-bed [test-oligos.bed] -fo [test-oligos.with-seqs.tsv]
 
-Need to grab sequence of alignment.
-
-    # fastaFromBed -tab -fi [ref-seq.fasta]-bed [test-oligos.bed] -fo [test-oligos.with-seqs.tsv]
+This can be a very time consuming process depending on the number of hits.
 
 =cut
 sub fetch_alignment_sequence {
