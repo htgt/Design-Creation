@@ -171,10 +171,6 @@ sub parse_exonerate_output {
         my $start                = $exonerate_output[7];
         my $end                  = $exonerate_output[8];
 
-        if ($mismatch_bases) {
-            $self->log->trace("$seq_id alignment has $mismatch_bases mismatch(s) - skip");
-            next;
-        }
         my $percentage_match = $percentage_alignment * ( $alignment_length / $seq_length );
 
         if ($percentage_match == 100) {

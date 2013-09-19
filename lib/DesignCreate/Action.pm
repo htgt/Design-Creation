@@ -63,7 +63,7 @@ sub BUILD {
     Log::Log4perl->easy_init(
         {
             level    => $log_level,
-            file     => ">>" . $self->dir . '/design-create.log',
+            file     => ">" . $self->dir . '/design-create.log',
             layout   => '%d %c %p %x %m%n',
         },
         {
