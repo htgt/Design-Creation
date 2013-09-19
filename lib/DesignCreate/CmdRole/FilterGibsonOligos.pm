@@ -16,14 +16,15 @@ use Moose::Role;
 use DesignCreate::Exception;
 use YAML::Any qw( LoadFile DumpFile );
 use DesignCreate::Types qw( NaturalNumber );
-use DesignCreate::Util::Exonerate;
-use DesignCreate::Constants qw( $DEFAULT_EXONERATE_OLIGO_DIR_NAME );
+use DesignCreate::Util::BWA;
+use DesignCreate::Constants qw( $DEFAULT_BWA_OLIGO_DIR_NAME );
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
 use Const::Fast;
 use Fcntl; # O_ constants
 use List::MoreUtils qw( any );
 use namespace::autoclean;
 use Bio::SeqIO;
+use Try::Tiny;
 
 with qw(
 DesignCreate::Role::FilterOligos
@@ -31,11 +32,7 @@ DesignCreate::Role::FilterOligos
 
 const my @DESIGN_PARAMETERS => qw(
 exon_check_flank_length
-);
-
-const my %GENOME_FILES => (
-    Mouse => '/lustre/scratch110/blastdb/Ensembl/Mouse/GRCm38/unmasked/toplevel.fa',
-    Human => '/lustre/scratch110/blastdb/Ensembl/Human/GRCh37/genome/unmasked/toplevel.primary.single_chrY_without_Ns.unmasked.fa',
+oligo_three_prime_align
 );
 
 has exon_check_flank_length => (
@@ -46,6 +43,45 @@ has exon_check_flank_length => (
                      . ' set to 0 to turn off check',
     cmd_flag      => 'exon-check-flank-length',
     default       => 100,
+);
+
+has oligo_three_prime_align => (
+    is            => 'ro',
+    isa           => 'Bool',
+    traits        => [ 'Getopt' ],
+    documentation => 'Oligo alignment check looks at three prime mismatches ( default false )',
+    cmd_flag      => 'oligo-three-prime-align',
+    default       => 0,
+);
+
+has bwa_query_file => (
+    is     => 'rw',
+    isa    => AbsFile,
+    traits => [ 'NoGetopt' ],
+);
+
+has bwa_dir => (
+    is         => 'ro',
+    isa        => 'Path::Class::Dir',
+    traits     => [ 'NoGetopt' ],
+    lazy_build => 1,
+);
+
+sub _build_bwa_dir {
+    my $self = shift;
+
+    my $bwa_oligo_dir = $self->dir->subdir( $DEFAULT_BWA_OLIGO_DIR_NAME )->absolute;
+    $bwa_oligo_dir->rmtree();
+    $bwa_oligo_dir->mkpath();
+
+    return $bwa_oligo_dir;
+}
+
+has bwa_matches => (
+    is      => 'rw',
+    isa     => 'HashRef',
+    traits  => [ 'NoGetopt' ],
+    default => sub { {  } },
 );
 
 has validated_oligo_pairs => (
@@ -63,7 +99,7 @@ sub filter_oligos {
     my ( $self, $opts, $args ) = @_;
 
     $self->add_design_parameters( \@DESIGN_PARAMETERS );
-    $self->run_exonerate;
+    $self->run_bwa;
 
     # the following 2 commands are consumed from DesignCreate::Role::FilterOligos
     $self->validate_oligos;
@@ -92,10 +128,9 @@ sub _validate_oligo {
         $self->check_oligo_not_near_exon( $oligo_data, $oligo_slice ) or return;
     }
 
-    #exonerate check, probably replace this
     $self->check_oligo_specificity(
         $oligo_data->{id},
-        $self->exonerate_matches->{ $oligo_data->{id} }
+        $self->bwa_matches->{ $oligo_data->{id} }
     ) or return;
 
     return 1;
@@ -181,53 +216,9 @@ sub output_valid_oligo_pairs {
     return;
 }
 
-# EXONERATE
-# PROBABLY REPLACE WITH BWA?
-
-has exonerate_query_file => (
-    is     => 'rw',
-    isa    => AbsFile,
-    traits => [ 'NoGetopt' ],
-);
-
-has exonerate_target_file => (
-    is            => 'rw',
-    isa           => AbsFile,
-    traits        => [ 'Getopt' ],
-    coerce        => 1,
-    documentation => "Target file for exonerate ( defaults to species genome )",
-    cmd_flag      => 'exonerate-target-file',
-    predicate     => 'has_exonerate_target_file',
-);
-
-has exonerate_oligo_dir => (
-    is         => 'ro',
-    isa        => 'Path::Class::Dir',
-    traits     => [ 'NoGetopt' ],
-    lazy_build => 1,
-);
-
-sub _build_exonerate_oligo_dir {
-    my $self = shift;
-
-    my $exonerate_oligo_dir = $self->dir->subdir( $DEFAULT_EXONERATE_OLIGO_DIR_NAME )->absolute;
-    $exonerate_oligo_dir->rmtree();
-    $exonerate_oligo_dir->mkpath();
-
-    return $exonerate_oligo_dir;
-}
-
-has exonerate_matches => (
-    is      => 'rw',
-    isa     => 'HashRef',
-    traits  => [ 'NoGetopt' ],
-    default => sub { {  } },
-);
-
 =head2 check_oligo_specificity
 
-Send in exonerate match information for a given oligo.
-Return 1 if it passes checks, undef otherwise.
+Filter out oligos that have mulitple hits against the reference genome.
 
 =cut
 sub check_oligo_specificity {
@@ -235,65 +226,64 @@ sub check_oligo_specificity {
     # if we have no match info then fail oligo
     return unless $match_info;
 
-    if ( !$match_info->{exact_matches} ) {
-        $self->log->error( 'Oligo ' . $oligo_id
-            . ' does not have any exact matches, somethings wrong' );
-        return;
+    if ( $self->oligo_three_prime_align ) {
+        if ( !$match_info->{exact_matches} ) {
+            $self->log->error( "Oligo $oligo_id does not have any exact matches, somethings wrong" );
+            return;
+        }
+        elsif ( $match_info->{exact_matches} > 1 ) {
+            $self->log->info( "Oligo $oligo_id is invalid, has multiple exact matches: "
+                . $match_info->{exact_matches} );
+            return;
+        }
+        # a hit is above 90% similarity
+        elsif ( $match_info->{hits} > 1 ) {
+            $self->log->info( "Oligo $oligo_id is invalid, has multiple hits: " . $match_info->{hits} );
+            return;
+        }
     }
-    elsif ( $match_info->{exact_matches} > 1 ) {
-        $self->log->info( 'Oligo ' . $oligo_id
-            . ' is invalid, has multiple exact matches: ' . $match_info->{exact_matches} );
-        return;
+    else {
+        if ( !$match_info->{unique_alignment} ) {
+            $self->log->trace( "Oligo $oligo_id has no a unique alignment");
+            return;
+        }
+        # a hit is above 90% similarity
+        elsif ( $match_info->{hits} > 1 ) {
+            $self->log->debug( "Oligo $oligo_id is invalid, has multiple hits: " . $match_info->{hits} );
+            return;
+        }
     }
-    # a hit is above 90% similarity
-    elsif ( $match_info->{hits} > 1 ) {
-        $self->log->info( 'Oligo ' . $oligo_id
-            . ' is invalid, has multiple hits: ' . $match_info->{hits} );
-        return;
-    }
-
-    #TODO add ranking of oligo here sp12 Mon 09 Sep 2013 08:48:24 BST
 
     return 1;
 }
 
-=head2 run_exonerate
-
-Run exonerate against all our oligo candidates.
-Build up a hash of exonerate hits keyed against the oligo ids.
-
-=cut
-sub run_exonerate {
+sub run_bwa {
     my $self = shift;
-    $self->define_exonerate_query_file;
-    $self->define_exonerate_target_file;
+    $self->define_bwa_query_file;
 
-    # now run exonerate
-    my $exonerate = DesignCreate::Util::Exonerate->new(
-        target_file          => $self->exonerate_target_file->stringify,
-        query_file           => $self->exonerate_query_file->stringify,
-        percentage_hit_match => 90,
+    my $bwa = DesignCreate::Util::BWA->new(
+        query_file        => $self->bwa_query_file,
+        work_dir          => $self->bwa_dir,
+        species           => $self->design_param( 'species' ),
+        three_prime_check => $self->oligo_three_prime_align eq 'yes' ? 1 : 0,
     );
 
-    $exonerate->run_exonerate;
-    # put exonerate output in a log file
-    my $exonerate_output = $self->exonerate_oligo_dir->file('exonerate_output.log');
-    my $fh = $exonerate_output->open( O_WRONLY|O_CREAT ) or die( "Open $exonerate_output: $!" );
-    print $fh $exonerate->raw_output;
+    try{
+        $bwa->run_bwa_checks;
+    }
+    catch{
+        DesignCreate::Exception->throw("Error running bwa " . $_);
+    };
 
-    my $matches = $exonerate->parse_exonerate_output;
-    DesignCreate::Exception->throw("No output from exonerate")
-        unless $matches;
-
-    $self->exonerate_matches( $matches );
+    $self->bwa_matches( $bwa->matches );
 
     return;
 }
 
-sub define_exonerate_query_file {
+sub define_bwa_query_file {
     my $self = shift;
 
-    my $query_file = $self->exonerate_oligo_dir->file('exonerate_query.fasta');
+    my $query_file = $self->bwa_dir->file('bwa_query.fasta');
     my $fh         = $query_file->open( O_WRONLY|O_CREAT ) or die( "Open $query_file: $!" );
     my $seq_out    = Bio::SeqIO->new( -fh => $fh, -format => 'fasta' );
 
@@ -304,21 +294,8 @@ sub define_exonerate_query_file {
         }
     }
 
-    $self->log->debug("Created exonerate query file $query_file");
-    $self->exonerate_query_file( $query_file );
-    return;
-}
-
-sub define_exonerate_target_file {
-    my $self = shift;
-
-    if ( $self->has_exonerate_target_file ) {
-        $self->log->debug( 'We have a user defined exonerate target file: '
-            . $self->exonerate_target_file->stringify );
-        return;
-    }
-
-    $self->exonerate_target_file( $GENOME_FILES{ $self->design_param( 'species' ) } );
+    $self->log->debug("Created bwa query file $query_file");
+    $self->bwa_query_file( $query_file );
     return;
 }
 
