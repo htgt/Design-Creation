@@ -121,11 +121,6 @@ has oligo_seqs => (
     }
 );
 
-has matches => (
-    is  => 'rw',
-    isa => 'HashRef',
-);
-
 sub _build_oligo_seqs {
     my $self = shift;
     my %oligo_seqs;
@@ -138,6 +133,11 @@ sub _build_oligo_seqs {
     return \%oligo_seqs;
 }
 
+has matches => (
+    is  => 'rw',
+    isa => 'HashRef',
+);
+
 =head2 run_bwa_checks
 
 Run bwa alignments along with multiple other steps to parse this output.
@@ -146,6 +146,7 @@ Generate number of hits a oligo has against the genome.
 =cut
 sub run_bwa_checks {
     my $self = shift;
+    $self->log->info( 'Running bwa alignment checks' );
 
     $self->generate_sam_file;
     my $oligo_hits = $self->oligo_hits;
@@ -162,22 +163,22 @@ sub run_bwa_checks {
         $self->sam_multi_file->remove if $self->delete_bwa_files;
     }
 
-    if ( $self->delete_bwa_files ) {
-        $self->bed_file->remove;
-    }
+    $self->bed_file->remove if $self->delete_bwa_files;
 
     return;
 }
 
 =head2 generate_sam_file
 
-Run the aln and samse steps of bwa.
-Output is a sam file.
+Run the aln and samse steps of bwa, output is a sam file.
+* bwa aln - perform alignments of oligo sequences against whole genome
+* bwa samse - convert sai file from bwa aln step into a sam file
+* xa2multi - put each hit for oligo into seperate line in sam file
 
 =cut
 sub generate_sam_file {
     my $self = shift;
-    $self->log->info( 'Running bwa commands' );
+    $self->log->info( 'Generating sam file' );
 
     my @aln_command = (
         $BWA_CMD,
@@ -186,7 +187,7 @@ sub generate_sam_file {
         "-o", 0,                       # disable gapped alignments
         "-N",                          # disable iterative search to get all hits
         $self->target_file->stringify, # target genome file, indexed for bwa
-        $self->query_file->stringify,  # query file
+        $self->query_file->stringify,  # query file with oligo sequences
     );
     $self->log->debug( "BWA aln command: " . join( ' ', @aln_command ) );
 
@@ -201,11 +202,11 @@ sub generate_sam_file {
 
     my @samse_command = (
         $BWA_CMD,
-        'samse',
-        '-n 900000',
-        $self->target_file->stringify,
-        $bwa_aln_file->stringify,
-        $self->query_file->stringify,
+        'samse',                       # converts sai file (binary) to sam file
+        '-n 900000',                   # max number of allowed hits per oligo
+        $self->target_file->stringify, # target genome file
+        $bwa_aln_file->stringify,      # sai binary file, output from bwa aln step
+        $self->query_file->stringify,  # query file with oligo sequences
     );
     $self->log->debug( "BWA samse command: " . join( ' ', @samse_command ) );
 
@@ -220,7 +221,7 @@ sub generate_sam_file {
 
     my @xa2multi_command = (
         $XA2MULTI_CMD,
-        $sam_file->stringify,
+        $sam_file->stringify, # sam file output from samse step
     );
     $self->log->debug( "xa2multi command: " . join( ' ', @xa2multi_command ) );
 
@@ -233,70 +234,6 @@ sub generate_sam_file {
     if ( $self->delete_bwa_files ) {
         $sam_file->remove;
         $bwa_aln_file->remove;
-    }
-
-    return;
-}
-
-=head2 generate_bed_file
-
-Take sam file output from previous steps and generate bed file.
-* samtools view -bS [test-oligos.multi.sam] > [test-oligos.bam]
-* samtools sort [test-oligos.bam] > [test-oligos.sorted.bam]
-* bamToBed -i [test-oligos.bam] > [test-oligos.bed]
-
-=cut
-sub generate_bed_file {
-    my ( $self ) = @_;
-    my ( $out, $err ) = ( "","" );
-    $self->log->info( 'Generating bed file' );
-
-    my @view_command = (
-        $SAMTOOLS_CMD,
-        'view',                    #
-        '-bS',                     #
-        $self->sam_multi_file->stringify,
-    );
-    $self->log->debug( "samtools view command: " . join( ' ', @view_command ) );
-
-    $err = "";
-    my $bam_file = $self->work_dir->file('query.bam')->absolute;
-    run( \@view_command, '<', \undef, '>', $bam_file->stringify, '2>', \$err)
-        or DesignCreate::Exception->throw(
-            "Failed to run samtools view command: $err" );
-
-    my $temp_file = $self->work_dir->file('query.sorted')->absolute;
-    my @sort_command = (
-        $SAMTOOLS_CMD,
-        'sort',                         #
-        $bam_file->stringify,
-        $temp_file->stringify,
-    );
-    $self->log->debug( "samtools sort command: " . join( ' ', @sort_command ) );
-
-    $err = "";
-    run( \@sort_command, '<', \undef, '>', \$out, '2>', \$err)
-        or DesignCreate::Exception->throw(
-            "Failed to run samtools sort command: $err" );
-
-    my $sorted_bam_file = $self->work_dir->file('query.sorted.bam')->absolute;
-    DesignCreate::Exception::MissingFile->throw( file => $sorted_bam_file, dir => $self->work_dir )
-        unless $self->work_dir->contains( $sorted_bam_file );
-
-    my @bamToBed_command = (
-        'bamToBed',
-        "-i", $sorted_bam_file->stringify,
-    );
-    $self->log->debug( "bamToBed command: " . join( ' ', @bamToBed_command ) );
-
-    run( \@bamToBed_command, '<', \undef, '>', $self->bed_file->stringify, '2>', \$err,)
-        or DesignCreate::Exception->throw(
-            "Failed to run bamToBed command: $err" );
-
-    if ( $self->delete_bwa_files ) {
-        $bam_file->remove;
-        $sorted_bam_file->remove;
-        $self->sam_multi_file->remove;
     }
 
     return;
@@ -319,9 +256,11 @@ sub oligo_hits {
         my @data = split /\t/;
         my $id = $data[0];
         my $score = $data[4];
+        # score ok above 30 look to be totally unique
         if ( $score > 30 ) {
             $oligo_hits{ $id }{'unique_alignment'} = 1;
         }
+        # score of above 10 are probably unique but have a few other hits
         elsif ( $score > 10 ) {
             $oligo_hits{ $id }{ 'okay_hit' } = 1;
         }
@@ -334,6 +273,71 @@ sub oligo_hits {
     DumpFile( $oligo_hits_file, \%oligo_hits );
 
     return \%oligo_hits;
+}
+
+=head2 generate_bed_file
+
+Take sam file output from previous steps and generate bed file.
+* samtools view - convert sam file to bam file
+* samtools sort - sort bam file by left most coordinate, in chromosome order
+* bamToBed - convert bam file to bed file
+
+=cut
+sub generate_bed_file {
+    my ( $self ) = @_;
+    my ( $out, $err ) = ( "","" );
+    $self->log->info( 'Generating bed file' );
+
+    my @view_command = (
+        $SAMTOOLS_CMD,
+        'view',                           # convert same file to bam file
+        '-b',                             # output in bam format
+        '-S',                             # input is sam file
+        $self->sam_multi_file->stringify, # sam file
+    );
+    $self->log->debug( "samtools view command: " . join( ' ', @view_command ) );
+
+    $err = "";
+    my $bam_file = $self->work_dir->file('query.bam')->absolute;
+    run( \@view_command, '<', \undef, '>', $bam_file->stringify, '2>', \$err)
+        or DesignCreate::Exception->throw(
+            "Failed to run samtools view command: $err" );
+
+    my $temp_file = $self->work_dir->file('query.sorted')->absolute;
+    my @sort_command = (
+        $SAMTOOLS_CMD,
+        'sort',                         # sort by left most coordinate
+        $bam_file->stringify,           # input bam file
+        $temp_file->stringify,          # output - sorted bam file
+    );
+    $self->log->debug( "samtools sort command: " . join( ' ', @sort_command ) );
+
+    $err = "";
+    run( \@sort_command, '<', \undef, '>', \$out, '2>', \$err)
+        or DesignCreate::Exception->throw(
+            "Failed to run samtools sort command: $err" );
+
+    my $sorted_bam_file = $self->work_dir->file('query.sorted.bam')->absolute;
+    DesignCreate::Exception::MissingFile->throw( file => $sorted_bam_file, dir => $self->work_dir )
+        unless $self->work_dir->contains( $sorted_bam_file );
+
+    my @bamToBed_command = (
+        'bamToBed',                        # convert bam to bed file
+        "-i", $sorted_bam_file->stringify, # input bam file
+    );
+    $self->log->debug( "bamToBed command: " . join( ' ', @bamToBed_command ) );
+
+    run( \@bamToBed_command, '<', \undef, '>', $self->bed_file->stringify, '2>', \$err,)
+        or DesignCreate::Exception->throw(
+            "Failed to run bamToBed command: $err" );
+
+    if ( $self->delete_bwa_files ) {
+        $bam_file->remove;
+        $sorted_bam_file->remove;
+        $self->sam_multi_file->remove;
+    }
+
+    return;
 }
 
 =head2 oligo_hits_three_prime_check
@@ -372,7 +376,7 @@ sub oligo_hits_three_prime_check {
 =head2 fetch_alignment_sequence
 
 Grab sequence for alignments found by bwa using fastaFromBed script.
-* fastaFromBed -tab -fi [ref-seq.fasta]-bed [test-oligos.bed] -fo [test-oligos.with-seqs.tsv]
+* fastaFromBed - get sequence for each alignment
 
 This can be a very time consuming process depending on the number of hits.
 
@@ -386,7 +390,7 @@ sub fetch_alignment_sequence {
     #TODO output in fasta format sp12 Tue 17 Sep 2013 10:19:08 BST
     my $seq_file = $self->work_dir->file('query.seqs.tsv')->absolute;
     my @fastaFromBed_command = (
-        'fastaFromBed',
+        'fastaFromBed',                       # get sequence for each alignment
         '-tab',                               # write output in tab delimited format
         '-fi', $self->target_file->stringify, # target genome file, indexed for bwa
         '-bed', $self->bed_file->stringify,   # input file of alignments
@@ -460,7 +464,6 @@ sub hamming_distance {
     die "Strings passed to hamming distance differ" if length($_[0]) != length($_[1]);
     return (uc($_[0]) ^ uc($_[1])) =~ tr/\001-\255//;
 }
-
 
 __PACKAGE__->meta->make_immutable;
 
