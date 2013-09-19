@@ -260,9 +260,9 @@ sub oligo_hits {
         if ( $score > 30 ) {
             $oligo_hits{ $id }{'unique_alignment'} = 1;
         }
-        # score of above 10 are probably unique but have a few other hits
+        # score of above 10 means bwa thinks its probably unique but it does have other hits
         elsif ( $score > 10 ) {
-            $oligo_hits{ $id }{ 'okay_hit' } = 1;
+            $oligo_hits{ $id }{ 'risky_alignment' } = 1;
         }
         else {
             $oligo_hits{ $id }{ 'hits' }++;
