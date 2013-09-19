@@ -58,6 +58,7 @@ sub _build_software_version {
 has oligo_classes => (
     is         => 'ro',
     isa        => 'ArrayRef',
+    traits     => [ 'NoGetopt' ],
     lazy_build => 1,
 );
 
