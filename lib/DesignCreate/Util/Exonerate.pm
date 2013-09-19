@@ -81,13 +81,6 @@ has percentage_hit_match => (
     default  => 80,
 );
 
-has alignment_model => (
-    is       => 'ro',
-    isa      => 'Str',
-    required => 1,
-    default  => 'affine:local',
-);
-
 has raw_output => (
     is  => 'rw',
     isa => 'Str'
@@ -114,7 +107,6 @@ sub run_exonerate {
 
     my @command = (
         $EXONERATE_CMD,
-        "--model",         $self->alignment_model,
         "--bestn",         $self->bestn,
         "--query",         $self->query_file->stringify,
         "--target",        $self->target_file->stringify,
