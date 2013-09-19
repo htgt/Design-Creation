@@ -11,6 +11,7 @@ BEGIN {
     $DEFAULT_OLIGO_FINDER_OUTPUT_DIR_NAME
     $DEFAULT_OLIGO_TARGET_REGIONS_DIR_NAME
     $DEFAULT_EXONERATE_OLIGO_DIR_NAME
+    $DEFAULT_BWA_OLIGO_DIR_NAME
     $DEFAULT_BLOCK_OLIGO_LOG_DIR_NAME
     $DEFAULT_AOS_WORK_DIR_NAME
     $DEFAULT_GAP_OLIGO_LOG_DIR_NAME
@@ -32,6 +33,7 @@ const our $DEFAULT_VALIDATED_OLIGO_DIR_NAME      => 'validated_oligos';
 const our $DEFAULT_OLIGO_FINDER_OUTPUT_DIR_NAME  => 'oligo_finder_output';
 const our $DEFAULT_OLIGO_TARGET_REGIONS_DIR_NAME => 'oligo_target_regions';
 const our $DEFAULT_EXONERATE_OLIGO_DIR_NAME      => 'exonerate_oligos';
+const our $DEFAULT_BWA_OLIGO_DIR_NAME            => 'bwa_oligos';
 const our $DEFAULT_BLOCK_OLIGO_LOG_DIR_NAME      => 'block_oligo_logs';
 const our $DEFAULT_AOS_WORK_DIR_NAME             => 'aos_work';
 const our $DEFAULT_GAP_OLIGO_LOG_DIR_NAME        => 'gap_oligo_logs';
