@@ -18,14 +18,15 @@ BEGIN {
     __PACKAGE__->mk_classdata( 'test_role' => 'DesignCreate::CmdRole::FilterGibsonOligos' );
 }
 
-sub run_exonerate : Test(startup => 2) {
+sub run_bwa : Test(startup => 2) {
     my $test = shift;
 
-    note( 'Run exonerate once and startup and store data to save on time' );
+    note( 'Run bwa once and startup and store data to save on time' );
     ok my $o = $test->_get_test_object, 'can grab test object';
-    lives_ok { $o->run_exonerate } 'can call run_exonerate';
+    note( 'Running bwa may take some time' );
+    lives_ok { $o->run_bwa } 'can call run_bwa';
 
-    $test->{exonerate_data} = $o->exonerate_matches;
+    $test->{bwa_data} = $o->bwa_matches;
 }
 
 sub valid_filter_oligos_cmd : Test(1) {
@@ -115,8 +116,8 @@ sub validate_oligo : Test(5) {
         , 'can load oligo yaml data file';
     my $oligo_data = $oligos_data->[1];
 
-    # setup exonerate match data to save time
-    $o->exonerate_matches( $test->{exonerate_data} );
+    # setup bwa match data to save time
+    $o->bwa_matches( $test->{bwa_data} );
 
     ok $o->validate_oligo( $oligo_data, '5R' ), 'validate_oligo check passes';
     ok !$o->validate_oligo( $oligo_data, 'U3' ), 'validate_oligo check fails, wrong oligo type';
@@ -127,14 +128,14 @@ sub validate_oligo : Test(5) {
 sub validate_oligos : Test(6) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
-    # setup exonerate match data to save time
-    $o->exonerate_matches( $test->{exonerate_data} );
+    # setup bwa match data to save time
+    $o->bwa_matches( $test->{bwa_data} );
 
     ok $o->validate_oligos(), 'validate_oligos check passes';
 
     ok my $new_o = $test->_get_test_object, 'can grab another test object';
-    # setup exonerate match data to save time
-    $new_o->exonerate_matches( $test->{exonerate_data} );
+    # setup bwa match data to save time
+    $new_o->bwa_matches( $test->{bwa_data} );
 
     lives_ok { $new_o->all_oligos } 'can call all_oligos on test object';
     ok $new_o->all_oligos->{'5F'} = [], 'delete 5F oligo data';
@@ -147,8 +148,8 @@ sub validate_oligos : Test(6) {
 sub output_validated_oligos : Test(9){
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
-    # setup exonerate match data to save time
-    $o->exonerate_matches( $test->{exonerate_data} );
+    # setup bwa match data to save time
+    $o->bwa_matches( $test->{bwa_data} );
     lives_ok{
         $o->validate_oligos;
     } 'setup test object';
@@ -174,7 +175,10 @@ sub _get_test_object {
     dircopy( $data_dir->stringify, $dir->stringify );
 
     my $metaclass = $test->get_test_object_metaclass( [ 'DesignCreate::Role::EnsEMBL' ] );
-    return $metaclass->new_object( dir => $dir);
+    return $metaclass->new_object(
+        dir => $dir,
+        exon_check_flank_length => 100,
+    );
 }
 
 1;
