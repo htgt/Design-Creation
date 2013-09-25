@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::FindOligos;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::FindOligos::VERSION = '0.010';
+    $DesignCreate::CmdRole::FindOligos::VERSION = '0.011';
 }
 ## use critic
 

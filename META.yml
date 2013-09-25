@@ -25,6 +25,7 @@ meta-spec:
   version: 1.4
 name: Design-Creation
 requires:
+  Bio::Perl: 0
   Bio::Seq: 0
   Bio::SeqIO: 0
   Bio::Tools::Primer3Redux: 0
@@ -69,4 +70,4 @@ requires:
   namespace::autoclean: 0
   strict: 0
   warnings: 0
-version: 0.010
+version: 0.011

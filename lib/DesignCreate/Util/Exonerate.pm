@@ -1,7 +1,7 @@
 package DesignCreate::Util::Exonerate;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Util::Exonerate::VERSION = '0.010';
+    $DesignCreate::Util::Exonerate::VERSION = '0.011';
 }
 ## use critic
 
@@ -87,13 +87,6 @@ has percentage_hit_match => (
     default  => 80,
 );
 
-has alignment_model => (
-    is       => 'ro',
-    isa      => 'Str',
-    required => 1,
-    default  => 'affine:local',
-);
-
 has raw_output => (
     is  => 'rw',
     isa => 'Str'
@@ -120,7 +113,6 @@ sub run_exonerate {
 
     my @command = (
         $EXONERATE_CMD,
-        "--model",         $self->alignment_model,
         "--bestn",         $self->bestn,
         "--query",         $self->query_file->stringify,
         "--target",        $self->target_file->stringify,
@@ -177,10 +169,6 @@ sub parse_exonerate_output {
         my $start                = $exonerate_output[7];
         my $end                  = $exonerate_output[8];
 
-        if ($mismatch_bases) {
-            $self->log->debug("$seq_id alignment has $mismatch_bases mismatch(s) - skip");
-            next;
-        }
         my $percentage_match = $percentage_alignment * ( $alignment_length / $seq_length );
 
         if ($percentage_match == 100) {
@@ -190,7 +178,7 @@ sub parse_exonerate_output {
         }
 
         $matches{$seq_id}{'hits'}++ if $percentage_match >= $self->percentage_hit_match;
-        $self->log->debug("$seq_id - Percent Match: $percentage_match");
+        $self->log->trace("$seq_id - Percent Match: $percentage_match");
     }
 
     $self->matches( \%matches );

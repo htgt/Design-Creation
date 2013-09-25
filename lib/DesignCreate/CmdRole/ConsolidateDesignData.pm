@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::ConsolidateDesignData;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::ConsolidateDesignData::VERSION = '0.010';
+    $DesignCreate::CmdRole::ConsolidateDesignData::VERSION = '0.011';
 }
 ## use critic
 
@@ -64,6 +64,7 @@ sub _build_software_version {
 has oligo_classes => (
     is         => 'ro',
     isa        => 'ArrayRef',
+    traits     => [ 'NoGetopt' ],
     lazy_build => 1,
 );
 

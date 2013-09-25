@@ -1,7 +1,7 @@
 package DesignCreate::Action;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::VERSION = '0.010';
+    $DesignCreate::Action::VERSION = '0.011';
 }
 ## use critic
 
@@ -69,7 +69,7 @@ sub BUILD {
     Log::Log4perl->easy_init(
         {
             level    => $log_level,
-            file     => ">>" . $self->dir . '/design-create.log',
+            file     => ">" . $self->dir . '/design-create.log',
             layout   => '%d %c %p %x %m%n',
         },
         {

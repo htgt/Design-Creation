@@ -35,11 +35,13 @@ my %WriteMakefileArgs = (
     "bin/design_target_report.pl",
     "bin/design_data_csv.pl",
     "bin/farm-wrapper-script.sh",
-    "bin/design_targets.pl"
+    "bin/design_targets.pl",
+    "bin/human_gibson_design_targets.pl"
   ],
   "LICENSE" => "perl",
   "NAME" => "Design::Creation",
   "PREREQ_PM" => {
+    "Bio::Perl" => 0,
     "Bio::Seq" => 0,
     "Bio::SeqIO" => 0,
     "Bio::Tools::Primer3Redux" => 0,
@@ -85,7 +87,7 @@ my %WriteMakefileArgs = (
     "strict" => 0,
     "warnings" => 0
   },
-  "VERSION" => "0.010",
+  "VERSION" => "0.011",
   "test" => {
     "TESTS" => "t/*.t"
   }

@@ -23,16 +23,15 @@ GetOptions(
     'trace'                => sub { $log_level = $TRACE },
     'genes-file=s'         => \my $genes_file,
     'gene=s'               => \my $single_gene,
-    'species=s'            => \my $species,
     'base-design-params=s' => \my $base_params_file,
+    'strict'               => \my $strict,
 ) or pod2usage(2);
 
 Log::Log4perl->easy_init( { level => $log_level, layout => '%p %x %m%n' } );
 LOGDIE( 'Specify file with gene names' ) unless $genes_file;
-LOGDIE( 'Must specify species' ) unless $species;
 
-const my $DEFAULT_ASSEMBLY => $species eq 'Human' ? 'GRCh37' :  $species eq 'Mouse' ? 'GRCm38' : undef;
-const my $DEFAULT_BUILD => 72;
+const my $DEFAULT_ASSEMBLY => 'GRCh37';
+const my $DEFAULT_BUILD => 73;
 
 WARN( "ASSEMBLY: $DEFAULT_ASSEMBLY, BUILD: $DEFAULT_BUILD" );
 
@@ -70,7 +69,7 @@ ensembl_id
 ensembl_id_b
 );
 
-my $ensembl_util = LIMS2::Util::EnsEMBL->new( species => $species );
+my $ensembl_util = LIMS2::Util::EnsEMBL->new( species => 'Human' );
 my $db = $ensembl_util->db_adaptor;
 my $db_details = $db->to_hash;
 WARN("Ensembl DB: " . $db_details->{DBNAME});
@@ -198,14 +197,13 @@ sub print_design_targets {
     }
 
     my %target_params = (
-        species  => $species,
+        species  => 'Human',
         assembly => $DEFAULT_ASSEMBLY,
         build    => $DEFAULT_BUILD,
         automatically_picked => 1,
     );
 
     my $canonical_transcript = $gene->canonical_transcript;
-    INFO( 'Canonical transcript: ' . $canonical_transcript->stable_id );
     my $exon_rank = get_exon_rank( $exon, $canonical_transcript );
 
     $target_params{ 'gene_id' } = $data->{gene_id};
@@ -264,7 +262,7 @@ sub get_all_critical_exons {
     my @coding_transcripts = grep{ valid_coding_transcript($_) } @{ $gene->get_all_Transcripts };
 
     unless ( @coding_transcripts ) {
-        ERROR( 'Can not find coding transcripts for gene: ' . $gene->stable_id );
+        WARN( 'Can not find coding transcripts for gene: ' . $gene->stable_id );
         return [];
     }
 
@@ -272,22 +270,45 @@ sub get_all_critical_exons {
         push @coding_transcript_names, $tran->stable_id;
         find_valid_exons( $tran, \%valid_exons, \%transcript_exons );
     }
-
-    DEBUG( 'Valid Coding Transcripts: ' . p( @coding_transcript_names ) );
+    unless ( keys %valid_exons ) {
+        WARN( 'No valid exons for gene: ' . $gene->stable_id );
+        return [];
+    }
     DEBUG( 'Valid Exon Transcripts: ' . p( %transcript_exons ) );
+    DEBUG( 'Valid Coding Transcripts: ' . p( @coding_transcript_names ) );
 
     my $critical_exons_ids = find_critical_exons( \%transcript_exons, \@coding_transcript_names );
-    my @critical_exons;
+
+    unless ( $critical_exons_ids ) {
+        WARN( 'No critical exons for gene: ' . $gene->stable_id );
+        return [];
+    }
+
+    my @valid_critical_exons;
     while ( my ( $exon_id, $exon ) = each %valid_exons ) {
-        if ( exists $critical_exons_ids->{ $exon_id } ) {
-            push @critical_exons, $valid_exons{ $exon_id };
+        push @valid_critical_exons, $valid_exons{ $exon_id }
+            if exists $critical_exons_ids->{ $exon_id };
+    }
+
+    unless ( @valid_critical_exons ){
+        WARN( 'No valid exons that are also critical for gene ' . $gene->stable_id );
+        return [];
+    }
+
+    if ( $strict ) {
+        my @copy_critical_exons = @valid_critical_exons;
+        @valid_critical_exons = grep{ exons_not_too_close( $_ ) } @copy_critical_exons;
+
+        unless ( @valid_critical_exons ){
+            WARN( 'No valid critical exons pass exon closeness check for gene ' . $gene->stable_id );
+            return [];
         }
     }
 
-    my $num_critical_exons = @critical_exons;
+    my $num_critical_exons = @valid_critical_exons;
     INFO( "Has $num_critical_exons critical exons" );
 
-    my @ordered_critical_exons = sort most_five_prime @critical_exons;
+    my @ordered_critical_exons = sort most_five_prime @valid_critical_exons;
 
     #if we have multiple critical exons we skip the exon with the start codon
     if ( $num_critical_exons > 1 ) {
@@ -338,12 +359,16 @@ Create hash of exons for each transcript, keyed on transcript stable id
 =cut
 sub find_valid_exons {
     my ( $transcript, $valid_exons, $transcript_exons ) = @_;
-    my @critical_exons;
+    my @valid_exons;
     my @exons = @{ $transcript->get_all_Exons };
 
     for my $exon ( @exons ) {
 
         my $exon_length = $exon->length;
+        if ( $exon_length > 300 ) {
+            TRACE( 'Exon ' . $exon->stable_id . " is too long: $exon_length" );
+            next;
+        }
         if ( $exon_length % 3 == 0  ) {
             TRACE( 'Exon ' . $exon->stable_id . " removal would not create frame shift" );
             next;
@@ -355,17 +380,80 @@ sub find_valid_exons {
             next;
         }
 
+        if ( $strict ) {
+            next if too_few_exon_coding_bases( $exon, $transcript );
+        }
+
         TRACE( 'Exon ' . $exon->stable_id . ' is VALID' );
-        push @critical_exons, $exon;
+        push @valid_exons, $exon;
     }
 
-    for my $exon ( @critical_exons ) {
+    for my $exon ( @valid_exons ) {
         push @{ $transcript_exons->{ $exon->stable_id } }, $transcript->stable_id;
         $valid_exons->{ $exon->stable_id } = $exon
             unless exists $valid_exons->{ $exon->stable_id };
     }
 
     return;
+}
+
+=head2 exons_not_too_close
+
+For gibson designs we don't want other exons within around
+400 bases of the critical exon
+
+=cut
+sub exons_not_too_close {
+    my ( $critical_exon, $transcript_exons ) = @_;
+    my $critical_exon_id = $critical_exon->stable_id;
+
+    my $exon_slice = $critical_exon->feature_Slice;
+    my $expanded_slice = $exon_slice->expand( 400, 400 );
+    my $expanded_slice_start = $expanded_slice->start;
+    my $expanded_slice_end = $expanded_slice->end;
+
+    my @flanking_exons;
+    # grab all genes that overlap this slice, including on reverse strand
+    my $genes = $expanded_slice->get_all_Genes;
+
+    for my $gene ( @{ $genes } ) {
+        my $canonical_transcript = $gene->canonical_transcript;
+
+        for my $exon ( @{ $canonical_transcript->get_all_Exons } ) {
+            next if $exon->stable_id eq $critical_exon_id;
+            if (   ( $expanded_slice_start < $exon->start && $expanded_slice_end > $exon->start )
+                || ( $expanded_slice_start < $exon->end && $expanded_slice_end > $exon->end ) )
+            {
+                push @flanking_exons, $exon;
+            }
+        }
+    }
+
+    if ( @flanking_exons ) {
+        DEBUG( "Exon $critical_exon_id has another exon within 400 bases: " . join(' ', map{ $_->stable_id } @flanking_exons ) );
+        return;
+    }
+
+    return 1;
+}
+
+=head2 too_few_exon_coding_bases
+
+return true if exon does not have at least 30 coding bases
+
+=cut
+sub too_few_exon_coding_bases {
+    my ( $exon, $transcript ) = @_;
+
+    my $length = $exon->cdna_coding_end( $transcript ) - $exon->cdna_coding_start( $transcript ) + 1;
+
+    if ( $length < 30 ) {
+        DEBUG( 'Exon ' . $exon->stable_id . " only has $length coding bases " );
+        return 1;
+    }
+    else {
+        return;
+    }
 }
 
 =head2 find_critical_exons
@@ -388,6 +476,7 @@ sub find_critical_exons {
             TRACE( "Exon $exon not present in all valid transcripts" );
         }
     }
+    return unless keys %critical_exons;
 
     return \%critical_exons;
 }
@@ -459,11 +548,11 @@ __END__
 
 =head1 NAME
 
-design_targets.pl - Create design targets list given list of gene names.
+human_gibson_design_targets.pl - Create design targets list given list of gene names.
 
 =head1 SYNOPSIS
 
-  human_design_targets.pl [options]
+  human_gibson_design_targets.pl [options]
 
       --help            Display a brief help message
       --man             Display the manual page
@@ -472,10 +561,10 @@ design_targets.pl - Create design targets list given list of gene names.
       --trace           Trace output
       --genes-file      File with genes names.
       --gene            Specify only one gene from the file
-      --species         Species linked to gene names
+      --strict          More strict target criteria
 
       The genes file should be a csv file with 3 column headers: gene_id, marker_symbol and ensembl_id.
-      The gene_id column will use HGNC / MGI ID's depending on the species.
+      The gene_id column will use HGNC ids
       A fourth optionally column is exon_id if the critical exons have been pre-defined.
 
 =head1 DESCRIPTION
@@ -490,6 +579,10 @@ For our purposes a critical exon is:
 
 Exons are ranked according to which is most five prime.
 Currently a maximum of 5 critical exons are found for each gene target.
+
+If the strict option is given following criteria adde:
+- Exon must have at least 30 coding bases
+- Exon must not have another exon within 400 bases on either side
 
 =head1 AUTHOR
 
