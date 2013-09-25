@@ -158,6 +158,7 @@ sub get_ensembl_id {
            }
            else {
                ERROR( 'Mismatch in ensembl ids: ' . $data->{ensembl_id} . ' and ' . $data->{ensembl_id_b});
+               push @failed_targets, $data;
                return;
            }
         }
@@ -171,6 +172,7 @@ sub get_ensembl_id {
         }
         else {
             ERROR( 'No Ensembl ID found' );
+            push @failed_targets, $data;
             return;
         }
     }

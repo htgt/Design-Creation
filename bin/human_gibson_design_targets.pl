@@ -31,7 +31,7 @@ Log::Log4perl->easy_init( { level => $log_level, layout => '%p %x %m%n' } );
 LOGDIE( 'Specify file with gene names' ) unless $genes_file;
 
 const my $DEFAULT_ASSEMBLY => 'GRCh37';
-const my $DEFAULT_BUILD => 72;
+const my $DEFAULT_BUILD => 73;
 
 WARN( "ASSEMBLY: $DEFAULT_ASSEMBLY, BUILD: $DEFAULT_BUILD" );
 
@@ -157,6 +157,7 @@ sub get_ensembl_id {
            }
            else {
                ERROR( 'Mismatch in ensembl ids: ' . $data->{ensembl_id} . ' and ' . $data->{ensembl_id_b});
+               push @failed_targets, $data;
                return;
            }
         }
@@ -170,6 +171,7 @@ sub get_ensembl_id {
         }
         else {
             ERROR( 'No Ensembl ID found' );
+            push @failed_targets, $data;
             return;
         }
     }
