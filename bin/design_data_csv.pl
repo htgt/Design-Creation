@@ -65,7 +65,7 @@ sub parse_oligo_data {
     my %oligo_data;
 
     for my $oligo ( @{ $oligos } ) {
-        $oligo_data{ $oligo->{type} } = _seq_comp( $oligo, $strand ); 
+        $oligo_data{ $oligo->{type} } = _seq_comp( $oligo, $strand );
     }
 
     return \%oligo_data;
@@ -86,6 +86,8 @@ sub _seq_comp {
     else {
         LOGDIE( "Unknown oligo type $type" );
     }
+
+    return;
 }
 
 __END__
