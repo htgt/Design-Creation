@@ -60,6 +60,7 @@ const my @TARGET_COLUMN_HEADERS => (
 'chr_end',
 'chr_strand',
 'automatically_picked',
+'comment',
 );
 
 const my @FAILED_TARGETS_HEADERS => qw(
@@ -197,11 +198,16 @@ sub print_design_targets {
     }
 
     my %target_params = (
-        species  => 'Human',
-        assembly => $DEFAULT_ASSEMBLY,
-        build    => $DEFAULT_BUILD,
+        species              => 'Human',
+        assembly             => $DEFAULT_ASSEMBLY,
+        build                => $DEFAULT_BUILD,
         automatically_picked => 1,
     );
+
+    if ( $data->{exon_ids} ) {
+        $target_params{ 'comment' } = $data->{comment} if $data->{comment};
+        $target_params{ 'automatically_picked' } = 0;
+    }
 
     my $canonical_transcript = $gene->canonical_transcript;
     my $exon_rank = get_exon_rank( $exon, $canonical_transcript );
