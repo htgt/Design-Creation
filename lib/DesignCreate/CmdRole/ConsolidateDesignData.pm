@@ -350,7 +350,7 @@ sub calculate_gene_type {
     my ( $self, $gene_id ) = @_;
 
     my $gene_type = $gene_id =~ /^MGI/  ? 'MGI'
-                  : $gene_id =~ /^HGNC/ ? 'HGCN'
+                  : $gene_id =~ /^HGNC/ ? 'HGNC'
                   : $gene_id =~ /^LBL/  ? 'enhancer-region'
                   : $gene_id =~ /^CGI/  ? 'CPG-island'
                   : $gene_id =~ /^mmu/  ? 'miRBase'
