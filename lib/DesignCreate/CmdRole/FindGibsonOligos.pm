@@ -24,6 +24,7 @@ use DesignCreate::Types qw( YesNo );
 use YAML::Any qw( DumpFile LoadFile );
 use Bio::Seq;
 use Const::Fast;
+use Data::Printer;
 use namespace::autoclean;
 
 const my @FIND_GIBSON_OLIGOS_PARAMETERS => qw(
@@ -196,6 +197,8 @@ sub run_primer3 {
         primer_lowercase_masking => $self->mask_by_lower_case eq 'yes' ? 1 : 0,
     );
 
+    my @failed_primer_regions;
+
     for my $region ( keys %GIBSON_PRIMER_REGIONS ) {
         $self->log->debug("Finding primers for $region primer region");
         my $log_file = $self->oligo_finder_output_dir->file( 'primer3_output_' . $region . '.log' );
@@ -205,7 +208,7 @@ sub run_primer3 {
         my $region_slice   = $self->$slice_name;
         my $region_bio_seq = Bio::Seq->new( -display_id => $region, -seq => $region_slice->seq );
 
-        my $result = $p3->run_primer3( $log_file->absolute, $region_bio_seq,
+        my ( $result, $primer3_explain ) = $p3->run_primer3( $log_file->absolute, $region_bio_seq,
             { SEQUENCE_TARGET => $target_string } );
 
         DesignCreate::Exception->throw( "Errors running primer3 on $region region" )
@@ -216,8 +219,15 @@ sub run_primer3 {
             $self->add_primer3_result( $region => $result );
         }
         else {
-            DesignCreate::Exception->throw( "Can not find any primer pairs for $region primer region" );
+            $self->log->debug( "Failed to generate primer pairs for $region region: " );
+            $self->log->debug( p($primer3_explain) );
+            push @failed_primer_regions, $region;
         }
+    }
+
+    if (@failed_primer_regions) {
+        DesignCreate::Exception->throw( "Can not find any primer pairs for following regions: "
+                . join( ',', @failed_primer_regions ) );
     }
 
     return;

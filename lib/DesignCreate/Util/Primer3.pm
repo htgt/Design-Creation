@@ -139,7 +139,9 @@ sub run_primer3 {
 
     my $results = $primer3->pick_pcr_primers( $seq );
     # we are only sending in one sequence so we will only have one result
-    my $result =  $results->next_result;
+    my $result = $results->next_result;
+
+    my $primer3_explain = $self->parse_primer_explain_details( $outfile );
 
     if ( $result->warnings ) {
         $self->log->warn( "Primer3 warning: $_" ) for $result->warnings;
@@ -150,7 +152,25 @@ sub run_primer3 {
         return;
     };
 
-    return $result;
+    return ( $result, $primer3_explain );
+}
+
+=head2 parse_primer_explain_details
+
+Parse out the details of the left and right primer explain flags from primer3 log output.
+This gives details on how many potential primers there were and the numbers that were excluded.
+
+=cut
+sub parse_primer_explain_details {
+    my ( $self, $outfile  ) = @_;
+    my %primer3_explain;
+
+    my @output = $outfile->slurp;
+    my @explain_data = map{ chomp; $_ } grep{ /PRIMER_(LEFT|RIGHT)_EXPLAIN=/ } @output;
+
+    %primer3_explain = map{ split /=/ } @explain_data;
+
+    return \%primer3_explain;
 }
 
 1;
