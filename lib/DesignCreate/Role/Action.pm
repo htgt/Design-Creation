@@ -152,6 +152,13 @@ sub _init_output_dir {
     return;
 }
 
+has rm_dir => (
+    is      => 'ro',
+    isa     => 'Bool',
+    traits  => [ 'NoGetopt' ],
+    default => 0,
+);
+
 has validated_oligo_dir => (
     is            => 'ro',
     isa           => 'Path::Class::Dir',

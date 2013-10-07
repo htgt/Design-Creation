@@ -51,6 +51,11 @@ for my $attribute ( @ATTRIBUTES_NO_CMD_OPTION ) {
     has '+' . $attribute => ( traits => [ 'NoGetopt' ] );
 }
 
+# wipe work directory before starting
+has '+rm_dir' => (
+    default => 1,
+);
+
 sub execute {
     my ( $self, $opts, $args ) = @_;
     Log::Log4perl::NDC->push( @{ $self->target_genes }[0] );
