@@ -119,18 +119,19 @@ If it passes all checks return 1, otherwise return undef.
 =cut
 ## no critic(Subroutines::ProhibitUnusedPrivateSubroutine)
 sub _validate_oligo {
-    my ( $self, $oligo_data, $oligo_type, $oligo_slice ) = @_;
+    my ( $self, $oligo_data, $oligo_type, $oligo_slice, $invalid_reason ) = @_;
     $self->log->debug( "$oligo_type oligo, id: " . $oligo_data->{id} );
 
-    $self->check_oligo_sequence( $oligo_data, $oligo_slice ) or return;
-    $self->check_oligo_length( $oligo_data )                 or return;
+    $self->check_oligo_sequence( $oligo_data, $oligo_slice, $invalid_reason ) or return;
+    $self->check_oligo_length( $oligo_data, $invalid_reason )                 or return;
     if ( $oligo_type =~ /5R|EF|ER|3F/ ) {
-        $self->check_oligo_not_near_exon( $oligo_data, $oligo_slice ) or return;
+        $self->check_oligo_not_near_exon( $oligo_data, $oligo_slice, $invalid_reason ) or return;
     }
 
     $self->check_oligo_specificity(
         $oligo_data->{id},
-        $self->bwa_matches->{ $oligo_data->{id} }
+        $self->bwa_matches->{ $oligo_data->{id} },
+        $invalid_reason,
     ) or return;
 
     return 1;
@@ -143,7 +144,7 @@ Check that the oligo is not within a certain number of bases of a exon
 
 =cut
 sub check_oligo_not_near_exon {
-    my ( $self, $oligo_data, $oligo_slice  ) = @_;
+    my ( $self, $oligo_data, $oligo_slice, $invalid_reason ) = @_;
     my $critical_exon_id = $self->design_param( 'target_exon' );
     return 1 if $self->exon_check_flank_length == 0;
 
@@ -176,6 +177,7 @@ sub check_oligo_not_near_exon {
     my $exon_ids = join( ', ', map { $_->stable_id } @flanking_exons );
     $self->log->debug(
         'Oligo ' . $oligo_data->{id} . " overlaps or is too close to exon(s): $exon_ids" );
+    $$invalid_reason = "Too close to exons $exon_ids";
 
     return 0;
 }
@@ -222,10 +224,11 @@ Filter out oligos that have mulitple hits against the reference genome.
 
 =cut
 sub check_oligo_specificity {
-    my ( $self, $oligo_id, $match_info ) = @_;
+    my ( $self, $oligo_id, $match_info, $invalid_reason ) = @_;
     # if we have no match info then fail oligo
     return unless $match_info;
 
+    #TODO implement three_prime_align checks sp12 Mon 07 Oct 2013 11:14:29 BST
     if ( $self->oligo_three_prime_align ) {
         if ( !$match_info->{exact_matches} ) {
             $self->log->error( "Oligo $oligo_id does not have any exact matches, somethings wrong" );
@@ -245,11 +248,13 @@ sub check_oligo_specificity {
     else {
         if ( !$match_info->{unique_alignment} ) {
             $self->log->trace( "Oligo $oligo_id has no a unique alignment");
+            $$invalid_reason = "No unique genomic alignment";
             return;
         }
         # a hit is above 90% similarity
         elsif ( exists $match_info->{hits} && $match_info->{hits} >= 1 ) {
             $self->log->debug( "Oligo $oligo_id is invalid, has multiple hits: " . $match_info->{hits} );
+            $$invalid_reason = "Multiple genomic hits: " . $match_info->{hits}; 
             return;
         }
     }
