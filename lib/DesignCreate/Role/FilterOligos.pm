@@ -12,6 +12,7 @@ Common attributes and subroutines used by the filter oligo commands.
 
 use Moose::Role;
 use DesignCreate::Exception;
+use DesignCreate::Exception::OligoValidation;
 use YAML::Any qw( LoadFile DumpFile );
 use Data::Printer;
 use namespace::autoclean;
@@ -91,14 +92,16 @@ sub validate_oligos {
             $self->log->info("We have $oligo_type oligos that pass checks");
         }
         else {
+            $self->log->warn( "No valid $oligo_type oligos" );
             push @no_valid_oligos_of_type, $oligo_type;
         }
     }
 
     if (@no_valid_oligos_of_type) {
-        $self->log->debug( p( $self->invalid_oligos ) );
-        DesignCreate::Exception->throw(
-            "No valid oligos of type: " . join( ',', @no_valid_oligos_of_type ) );
+        DesignCreate::Exception::OligoValidation->throw(
+            oligo_types     => \@no_valid_oligos_of_type,
+            invalid_reasons => $self->invalid_oligos,
+        );
     }
 
     return 1;
