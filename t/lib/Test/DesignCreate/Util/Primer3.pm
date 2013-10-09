@@ -76,7 +76,7 @@ sub run_primer : Test(9) {
     } qr/primer3 can not be found/
         , 'throw error if incorrect path to primer3 set';
 
-    ok my $result
+    ok my ( $result, $primer3_explain )
         = $o->run_primer3( $log_file->absolute, $region_bio_seq, { SEQUENCE_TARGET => '500,500' } ),
         'can call run_primer3';
 
