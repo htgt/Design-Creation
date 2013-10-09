@@ -33,6 +33,18 @@ override as_string => sub {
     return $str;
 };
 
+around as_hash => sub {
+    my $orig = shift;
+    my $self = shift;
+
+    my $hash = $self->$orig;
+
+    $hash->{name} = $self->attribute_name;
+    $hash->{missing_from} = $self->class;
+
+    return $hash;
+};
+
 __PACKAGE__->meta->make_immutable( inline_constructor => 0 );
 
 1;
