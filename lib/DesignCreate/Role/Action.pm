@@ -66,6 +66,23 @@ sub _build_design_parameters_file {
     return $file->absolute;
 }
 
+has design_fail_file => (
+    is         => 'ro',
+    isa        => AbsFile,
+    traits     => [ 'NoGetopt' ],
+    lazy_build => 1,
+);
+
+sub _build_design_fail_file {
+    my $self = shift;
+
+    my $file = $self->dir->file( 'fail.yaml' );
+    #create file if it does not exist
+    $file->touch unless $self->dir->contains( $file );
+
+    return $file->absolute;
+}
+
 has oligos => (
     is         => 'ro',
     isa        => 'ArrayRef',

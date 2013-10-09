@@ -19,6 +19,8 @@ use Const::Fast;
 use Try::Tiny;
 use Fcntl; # O_ constants
 use Data::Dump qw( pp );
+use Scalar::Util 'blessed';
+use YAML::Any qw( DumpFile );
 
 extends qw( DesignCreate::Action );
 with qw(
@@ -73,6 +75,9 @@ sub execute {
         $self->log->info( 'DESIGN DONE: ' . join(',', @{ $self->target_genes } ) );
     }
     catch {
+        if (blessed($_) and $_->isa('DesignCreate::Exception')) {
+            DumpFile( $self->design_fail_file, $_->as_hash );
+        }
         $self->log->error( 'DESIGN INCOMPLETE: ' . $_ );
     };
 
