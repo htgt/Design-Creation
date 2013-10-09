@@ -14,6 +14,7 @@ gibson design.
 use Moose::Role;
 use DesignCreate::Util::Primer3;
 use DesignCreate::Exception;
+use DesignCreate::Exception::Primer3FailedFindOligos;
 use DesignCreate::Constants qw(
     $DEFAULT_OLIGO_COORD_FILE_NAME
     $DEFAULT_PRIMER3_CONFIG_FILE
@@ -197,7 +198,7 @@ sub run_primer3 {
         primer_lowercase_masking => $self->mask_by_lower_case eq 'yes' ? 1 : 0,
     );
 
-    my @failed_primer_regions;
+    my %failed_primer_regions;
 
     for my $region ( keys %GIBSON_PRIMER_REGIONS ) {
         $self->log->debug("Finding primers for $region primer region");
@@ -219,15 +220,16 @@ sub run_primer3 {
             $self->add_primer3_result( $region => $result );
         }
         else {
-            $self->log->debug( "Failed to generate primer pairs for $region region: " );
-            $self->log->debug( p($primer3_explain) );
-            push @failed_primer_regions, $region;
+            $self->log->warn( "Failed to generate primer pairs for $region region" );
+            $failed_primer_regions{$region} = $primer3_explain;
         }
     }
 
-    if (@failed_primer_regions) {
-        DesignCreate::Exception->throw( "Can not find any primer pairs for following regions: "
-                . join( ',', @failed_primer_regions ) );
+    if (%failed_primer_regions) {
+        DesignCreate::Exception::Primer3FailedFindOligos->throw(
+            regions             => [ keys %failed_primer_regions ],
+            primer_fail_reasons => \%failed_primer_regions,
+        );
     }
 
     return;
