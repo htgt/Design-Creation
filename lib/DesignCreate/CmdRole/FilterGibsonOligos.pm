@@ -15,7 +15,7 @@ meet our requirments.
 use Moose::Role;
 use DesignCreate::Exception;
 use YAML::Any qw( LoadFile DumpFile );
-use DesignCreate::Types qw( NaturalNumber );
+use DesignCreate::Types qw( NaturalNumber PositiveInt );
 use DesignCreate::Util::BWA;
 use DesignCreate::Constants qw( $DEFAULT_BWA_OLIGO_DIR_NAME );
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
@@ -52,6 +52,15 @@ has oligo_three_prime_align => (
     documentation => 'Oligo alignment check looks at three prime mismatches ( default false )',
     cmd_flag      => 'oligo-three-prime-align',
     default       => 0,
+);
+
+has num_bwa_threads => (
+    is            => 'ro',
+    isa           => PositiveInt,
+    traits        => [ 'Getopt' ],
+    documentation => 'Number of threads bwa aln will use ( default 2 )',
+    cmd_flag      => 'num-bwa-threads',
+    default       => 2,
 );
 
 has bwa_query_file => (
@@ -271,6 +280,7 @@ sub run_bwa {
         work_dir          => $self->bwa_dir,
         species           => $self->design_param( 'species' ),
         three_prime_check => $self->oligo_three_prime_align,
+        num_bwa_threads   => $self->num_bwa_threads,
     );
 
     try{

@@ -34,8 +34,10 @@ const my $XA2MULTI_CMD => $ENV{XA2MULTI_CMD}
     || '/software/solexa/bin/aligners/bwa/current/xa2multi.pl';
 
 const my %BWA_GENOME_FILES => (
-    Mouse => '/lustre/scratch105/vrpipe/refs/mouse/GRCm38/GRCm38_68.fa',
-    Human => '/lustre/scratch105/vrpipe/refs/human/ncbi37/hs37d5.fa',
+    #Mouse => '/lustre/scratch105/vrpipe/refs/mouse/GRCm38/GRCm38_68.fa',
+    #Human => '/lustre/scratch105/vrpipe/refs/human/ncbi37/hs37d5.fa',
+    Human => '/lustre/scratch109/srpipe/references/Human/GRCh37_53/all/bwa/Homo_sapiens.GRCh37.dna.all.fa',
+    Mouse => '/lustre/scratch109/srpipe/references/Mus_musculus/GRCm38/all/bwa/Mus_musculus.GRCm38.68.dna.toplevel.fa',
 );
 
 has query_file => (
@@ -55,6 +57,12 @@ has species => (
     is       => 'ro',
     isa      => Species,
     required => 1,
+);
+
+has num_bwa_threads => (
+    is     => 'ro',
+    isa     => PositiveInt,
+    default => 2,
 );
 
 # default of 2 only gets hits with > 90% similarity
@@ -186,6 +194,7 @@ sub generate_sam_file {
         "-n", $self->num_mismatches,   # number of mismatches allowed over sequence
         "-o", 0,                       # disable gapped alignments
         "-N",                          # disable iterative search to get all hits
+        "-t", $self->num_bwa_threads,  # specify number of threads
         $self->target_file->stringify, # target genome file, indexed for bwa
         $self->query_file->stringify,  # query file with oligo sequences
     );
