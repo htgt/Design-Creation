@@ -105,6 +105,7 @@ sub get_params {
     my @params;
     while ( my( $cmd, $arg ) = each %{ $data } ) {
         next unless $arg;
+        next unless $cmd;
         next if $cmd eq 'comment';
         # if multiple args we need to split it
         my @args = split /\|/, $arg;
