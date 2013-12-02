@@ -41,15 +41,20 @@ OLIGO VALIDATION
 REGION CHANGES
 --------------
 
-* 5F - Increate 5F ( 1000 ) offset
+* 5F - Increase 5F ( 1000 ) offset
     * Increase in blocks of 500 bases ( max +3000? )
 * 5R - Increase 5R-EF ( 200 ) offset
-    * Increase in blocks on 50 bases ( max +200? )
+    * Increase in blocks on 50 bases ( max +400? )
 * EF - Increase 5R-EF ( 200 ) offset
-    * Increase in blocks on 50 bases ( max +200? )
+    * Increase in blocks on 50 bases ( max +400? )
 * ER - Increase ER-3F ( 100 ) offset
-    * Increase in blocks on 50 bases ( max +200? )
+    * Increase in blocks on 50 bases ( max +400? )
 * 3F - Increase ER-3F ( 100 ) offset
-    * Increase in blocks on 50 bases ( max +200? )
+    * Increase in blocks on 50 bases ( max +400? )
 * 3R - Increate 3R ( 1000 ) offset
     * Increase in blocks of 500 bases ( max +3000? )
+
+* ER-3F offset can be decreased to around 25 bases if needed.
+* 5R-EF offset ( 200 ) should probably not be decreased  ( but try 150 if desperate )
+
+* ER-3F to 5R-EF total length should not go above 1000 bases ( length of exon is important factor here )

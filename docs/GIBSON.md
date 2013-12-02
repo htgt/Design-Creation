@@ -46,6 +46,7 @@ We define 3 seperate regions which we want to find primer pairs for.
 * Want to keep gap between 5R-EF and ER-3F oligos down to a minumum 
     * This corresponds to the deleted region
 * Want to keep exon region small, default gaps are 200 5' and 100 3'
+    * The 200 gap is because there may be important signals 5' of the exon, so we don't want to delete that
 * Arms are smaller than traditional designs, around 1000 base gap ( can be pushed out to say 2000 )
 * Ideally we should be able to independantly set the offset for oligos in the inner regions. 
 
