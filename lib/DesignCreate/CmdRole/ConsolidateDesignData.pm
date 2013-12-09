@@ -188,6 +188,7 @@ sub consolidate_design_data {
 
     $self->create_primary_design_file;
     $self->create_alt_design_file if $self->num_alt_designs;
+    $self->update_design_attempt_record( { status => 'design_data_consolidated' } );
 
     return;
 }

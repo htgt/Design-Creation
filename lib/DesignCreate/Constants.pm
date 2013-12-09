@@ -19,12 +19,19 @@ BEGIN {
     $DEFAULT_OLIGO_COORD_FILE_NAME
     $DEFAULT_DESIGN_DATA_FILE_NAME
     $DEFAULT_ALT_DESIGN_DATA_FILE_NAME
-    $DEFAULT_PRIMER3_CONFIG_FILE
 
-    $DEFAULT_AOS_LOCATION
+    $PRIMER3_CONFIG_FILE
+    $PRIMER3_CMD
+    $AOS_LOCATION
+    $BWA_CMD
+    $SAMTOOLS_CMD
+    $XA2MULTI_CMD
+    $EXONERATE_CMD
+
     %CURRENT_ASSEMBLY
     %GIBSON_PRIMER_REGIONS
     %DEFAULT_CHROMOSOME_DIR
+    %BWA_GENOME_FILES
     );
     our %EXPORT_TAGS = ();
 }
@@ -41,13 +48,43 @@ const our $DEFAULT_GAP_OLIGO_LOG_DIR_NAME        => 'gap_oligo_logs';
 const our $DEFAULT_OLIGO_COORD_FILE_NAME     => 'oligo_region_coords.yaml';
 const our $DEFAULT_DESIGN_DATA_FILE_NAME     => 'design_data.yaml';
 const our $DEFAULT_ALT_DESIGN_DATA_FILE_NAME => 'alt_designs.yaml';
-#TODO move this sp12 Mon 05 Aug 2013 09:23:31 BST
-const our $DEFAULT_PRIMER3_CONFIG_FILE       =>
-    '/nfs/users/nfs_s/sp12/workspace/Design-Creation/tmp/primer3/primer3_config.yaml';
 
-#TODO change default location sp12 Mon 05 Aug 2013 09:02:36 BST
-const our $DEFAULT_AOS_LOCATION => $ENV{AOS_LOCATION}
+#TODO move this sp12 Mon 05 Aug 2013 09:23:31 BST
+const our $PRIMER3_CONFIG_FILE       => $ENV{PRIMER3_CONFIG}
+    || '/nfs/users/nfs_s/sp12/workspace/Design-Creation/tmp/primer3/primer3_config.yaml';
+#const our $PRIMER3_CONFIG_FILE => $ENV{PRIMER3_CONFIG}
+    #|| '/software/team87/pandora/conf/primer3_config.yaml';
+
+const our $AOS_LOCATION => $ENV{AOS_LOCATION}
     || '/nfs/users/nfs_s/sp12/workspace/ArrayOligoSelector';
+#const our $AOS_LOCATION => $ENV{AOS_LOCATION}
+    #|| '/software/team87/pandora/software/ArrayOligoSelector';
+
+const our $PRIMER3_CMD => $ENV{PRIMER3_CMD}
+    || '/nfs/users/nfs_s/sp12/workspace/primer3-2.3.5/src/primer3_core',
+#const our $PRIMER3_CMD => $ENV{PRIMER3_CMD}
+    #|| '/software/team87/pandora/software/primer3/src/primer3_core';
+
+const our $BWA_CMD => $ENV{BWA_CMD}
+    || '/software/solexa/bin/bwa';
+
+const our $SAMTOOLS_CMD => $ENV{SAMTOOLS_CMD}
+    || '/software/solexa/bin/samtools';
+
+const our $XA2MULTI_CMD => $ENV{XA2MULTI_CMD}
+    || '/software/solexa/bin/aligners/bwa/current/xa2multi.pl';
+
+const my $EXONERATE_CMD => $ENV{EXONERATE_CMD}
+    || '/software/team87/brave_new_world/app/exonerate-2.2.0-x86_64/bin/exonerate';
+#const my $EXONERATE_CMD => $ENV{EXONERATE_CMD}
+    #|| '/software/team87/pandora/software/exonerate-2.2.0-x86_64/bin/exonerate';
+
+const our %BWA_GENOME_FILES => (
+    #Mouse => '/lustre/scratch105/vrpipe/refs/mouse/GRCm38/GRCm38_68.fa',
+    #Human => '/lustre/scratch105/vrpipe/refs/human/ncbi37/hs37d5.fa',
+    Human => '/lustre/scratch110/srpipe/references/Human/GRCh37_53/all/bwa/Homo_sapiens.GRCh37.dna.all.fa',
+    Mouse => '/lustre/scratch110/srpipe/references/Mus_musculus/GRCm38/all/bwa/Mus_musculus.GRCm38.68.dna.toplevel.fa',
+);
 
 const our %CURRENT_ASSEMBLY => (
     Mouse => 'GRCm38',

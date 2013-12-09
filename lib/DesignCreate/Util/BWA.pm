@@ -13,9 +13,15 @@ Align sequence(s) against a genome to find number of hits using BWA
 use Moose;
 use DesignCreate::Exception;
 use DesignCreate::Exception::MissingFile;
-use Path::Class  qw( file );
 use DesignCreate::Types qw( PositiveInt Species );
+use DesignCreate::Constants qw(
+    $BWA_CMD
+    $SAMTOOLS_CMD
+    $XA2MULTI_CMD
+    %BWA_GENOME_FILES
+);
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
+use Path::Class  qw( file );
 use YAML::Any qw( LoadFile DumpFile );
 use IPC::Run 'run';
 use Const::Fast;
@@ -23,22 +29,6 @@ use namespace::autoclean;
 use Bio::SeqIO;
 
 with qw( MooseX::Log::Log4perl );
-
-const my $BWA_CMD => $ENV{BWA_CMD}
-    || '/software/solexa/bin/bwa';
-
-const my $SAMTOOLS_CMD => $ENV{SAMTOOLS_CMD}
-    || '/software/solexa/bin/samtools';
-
-const my $XA2MULTI_CMD => $ENV{XA2MULTI_CMD}
-    || '/software/solexa/bin/aligners/bwa/current/xa2multi.pl';
-
-const my %BWA_GENOME_FILES => (
-    #Mouse => '/lustre/scratch105/vrpipe/refs/mouse/GRCm38/GRCm38_68.fa',
-    #Human => '/lustre/scratch105/vrpipe/refs/human/ncbi37/hs37d5.fa',
-    Human => '/lustre/scratch109/srpipe/references/Human/GRCh37_53/all/bwa/Homo_sapiens.GRCh37.dna.all.fa',
-    Mouse => '/lustre/scratch109/srpipe/references/Mus_musculus/GRCm38/all/bwa/Mus_musculus.GRCm38.68.dna.toplevel.fa',
-);
 
 has query_file => (
     is       => 'ro',

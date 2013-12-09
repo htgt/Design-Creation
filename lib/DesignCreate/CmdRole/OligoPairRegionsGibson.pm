@@ -419,6 +419,7 @@ sub get_oligo_pair_region_coordinates {
 
     # in Role::OligoRegionCoordinates
     $self->create_oligo_region_coordinate_file;
+    $self->update_design_attempt_record( { status => 'coordinates_calculated' } );
 
     return;
 }

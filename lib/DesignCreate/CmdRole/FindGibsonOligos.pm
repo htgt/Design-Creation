@@ -17,7 +17,7 @@ use DesignCreate::Exception;
 use DesignCreate::Exception::Primer3FailedFindOligos;
 use DesignCreate::Constants qw(
     $DEFAULT_OLIGO_COORD_FILE_NAME
-    $DEFAULT_PRIMER3_CONFIG_FILE
+    $PRIMER3_CONFIG_FILE
     %GIBSON_PRIMER_REGIONS
 );
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
@@ -37,10 +37,10 @@ has primer3_config_file => (
     is            => 'ro',
     isa           => AbsFile,
     traits        => [ 'Getopt' ],
-    documentation => "File containing primer3 config details ( default $DEFAULT_PRIMER3_CONFIG_FILE )",
+    documentation => "File containing primer3 config details ( default $PRIMER3_CONFIG_FILE )",
     cmd_flag      => 'primer3-config-file',
     coerce        => 1,
-    default       => sub{ Path::Class::File->new( $DEFAULT_PRIMER3_CONFIG_FILE )->absolute },
+    default       => sub{ Path::Class::File->new( $PRIMER3_CONFIG_FILE )->absolute },
 );
 
 # default of masking all sequence ensembl considers to be a repeat region
@@ -181,6 +181,7 @@ sub find_oligos {
     $self->run_primer3;
     $self->parse_primer3_results;
     $self->create_oligo_files;
+    $self->update_design_attempt_record( { status => 'oligos_found' } );
 
     return;
 }

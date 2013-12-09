@@ -20,6 +20,7 @@ use Try::Tiny;
 use Fcntl; # O_ constants
 use Data::Dump qw( pp );
 use Scalar::Util 'blessed';
+use JSON;
 use YAML::Any qw( DumpFile );
 
 extends qw( DesignCreate::Action );
@@ -65,6 +66,7 @@ sub execute {
 
     $self->log->info( 'Starting new gibson design create run: ' . join(',', @{ $self->target_genes } ) );
     $self->log->debug( 'Design run args: ' . pp($opts) );
+    $self->create_design_attempt_record;
 
     try {
         $self->get_oligo_pair_region_coordinates;
@@ -73,10 +75,28 @@ sub execute {
         $self->consolidate_design_data;
         $self->persist_design if $self->persist;
         $self->log->info( 'DESIGN DONE: ' . join(',', @{ $self->target_genes } ) );
+
+        $self->update_design_attempt_record(
+            {   status => 'success',
+                design_ids => join( ' ', @{ $self->design_ids } ),
+            }
+        );
     }
     catch {
         if (blessed($_) and $_->isa('DesignCreate::Exception')) {
             DumpFile( $self->design_fail_file, $_->as_hash );
+            $self->update_design_attempt_record(
+                {   status => 'fail',
+                    fail   => encode_json( $_->as_hash ),
+                }
+            );
+        }
+        else {
+            $self->update_design_attempt_record(
+                {   status => 'error',
+                    error => $_,
+                }
+            );
         }
         $self->log->error( 'DESIGN INCOMPLETE: ' . $_ );
     };

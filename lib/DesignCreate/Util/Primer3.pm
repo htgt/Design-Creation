@@ -18,6 +18,7 @@ use Bio::Tools::Run::Primer3Redux;
 use DesignCreate::Types qw( PositiveInt );
 use Const::Fast;
 use Scalar::Util qw( blessed reftype );
+use DesignCreate::Constants qw( $PRIMER3_CMD );
 use namespace::autoclean;
 
 with qw( MooseX::Log::Log4perl MooseX::SimpleConfig );
@@ -35,14 +36,6 @@ const my @PRIMER3_GLOBAL_ARGUMENTS => (
     'primer_min_three_prime_distance',
     'primer_product_size_range',
     'primer_thermodynamic_parameters_path',
-);
-
-#TODO change path to primer3 sp12 Wed 17 Jul 2013 10:13:33 BST
-has primer3_path => (
-    is       => 'ro',
-    isa      => 'Str',
-    required => 1,
-    default  => '/nfs/users/nfs_s/sp12/workspace/primer3-2.3.5/src/primer3_core',
 );
 
 has [
@@ -124,7 +117,7 @@ sub run_primer3 {
 
     my $primer3 = Bio::Tools::Run::Primer3Redux->new(
         -outfile => $outfile->stringify,
-        -path    => $self->primer3_path
+        -path    => $PRIMER3_CMD,
     );
     DesignCreate::Exception->throw( "primer3 can not be found" )
         unless $primer3->executable;

@@ -25,9 +25,12 @@ use DesignCreate::Constants qw(
     $DEFAULT_DESIGN_DATA_FILE_NAME
     $DEFAULT_ALT_DESIGN_DATA_FILE_NAME
 );
+use LIMS2::REST::Client;
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsDir AbsFile/;
 use YAML::Any qw( LoadFile DumpFile );
 use Const::Fast;
+use Try::Tiny;
+use JSON;
 use namespace::autoclean;
 
 has design_parameters => (
@@ -112,6 +115,28 @@ sub _build_oligos {
 
     return;
 }
+
+has lims2_api => (
+    is         => 'ro',
+    isa        => 'LIMS2::REST::Client',
+    traits     => [ 'NoGetopt' ],
+    lazy_build => 1
+);
+
+sub _build_lims2_api {
+    my $self = shift;
+
+    return LIMS2::REST::Client->new_with_config();
+}
+
+#design attempt id
+has da_id => (
+    is            => 'rw',
+    isa           => 'Int',
+    traits        => [ 'Getopt' ],
+    documentation => 'ID of the associated design attempt',
+    cmd_flag      => 'da-id',
+);
 
 #
 # Directories common to multiple commands
@@ -281,6 +306,56 @@ sub design_param {
     }
 
     return $self->get_design_param( $param_name );
+}
+
+=head2 create_design_attempt_record
+
+Create a new design attempt record
+Only called if a da_id has not already been set and we are persisting data.
+
+=cut
+sub create_design_attempt_record {
+    my ( $self ) = shift;
+    return unless $self->persist;
+    return if $self->da_id;
+
+    my $da_data = {
+        gene_id    => join( ' ', @{ $self->design_param( 'target_genes' ) } ),
+        status     => 'started',
+        created_by => $self->created_by,
+    };
+
+    try{
+        my $design_attempt = $self->lims2_api->POST( 'design_attempt', $da_data );
+        $self->da_id( $design_attempt->{id} );
+    }
+    catch {
+        DesignCreate::Exception->throw( "Error creating design attempt record: $_" );
+    };
+
+    return;
+}
+
+=head2 update_design_attempt_record
+
+Update the associated design_attempt record to latest status.
+Only called if persist flag is set.
+
+=cut
+sub update_design_attempt_record {
+    my ( $self, $data ) = @_;
+    return unless $self->persist;
+
+    $data->{id} = $self->da_id;
+    $data->{design_parameters} = encode_json( $self->design_parameters ),
+    try{
+        my $design_attempt = $self->lims2_api->PUT( 'design_attempt', $data );
+    }
+    catch {
+        $self->log->error( "Error updating design attempt record: $_" );
+    };
+
+    return;
 }
 
 1;

@@ -116,6 +116,7 @@ sub filter_oligos {
 
     $self->validate_oligo_pairs;
     $self->output_valid_oligo_pairs;
+    $self->update_design_attempt_record( { status => 'oligos_validated' } );
 
     return;
 }

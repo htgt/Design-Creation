@@ -14,6 +14,7 @@ pass a input file (sequences in fasta file) into exonerate
 use Moose;
 use DesignCreate::Exception;
 use DesignCreate::Types qw( PositiveInt YesNo );
+use DesignCreate::Constants qw( $EXONERATE_CMD );
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
 use IPC::Run 'run';
 use Const::Fast;
@@ -22,9 +23,6 @@ use namespace::autoclean;
 with qw( MooseX::Log::Log4perl );
 
 const my $RYO => "RESULT: %qi %qal %ql %pi %s %em %tab %tae\n";
-const my $EXONERATE_CMD => $ENV{EXONERATE_CMD}
-    || '/software/team87/brave_new_world/app/exonerate-2.2.0-x86_64/bin/exonerate';
-
 
 has query_file => (
     is       => 'ro',
