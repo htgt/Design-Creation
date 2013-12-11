@@ -322,7 +322,8 @@ sub create_design_attempt_record {
     my $da_data = {
         gene_id    => join( ' ', @{ $self->design_param( 'target_genes' ) } ),
         status     => 'started',
-        created_by => $self->created_by,
+        created_by => $self->design_param( 'created_by' ),
+        species    => $self->design_param( 'species' ),
     };
 
     try{
