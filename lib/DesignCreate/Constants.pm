@@ -69,7 +69,7 @@ const our $SAMTOOLS_CMD => $ENV{SAMTOOLS_CMD}
 const our $XA2MULTI_CMD => $ENV{XA2MULTI_CMD}
     || '/software/solexa/bin/aligners/bwa/current/xa2multi.pl';
 
-const my $EXONERATE_CMD => $ENV{EXONERATE_CMD}
+const our $EXONERATE_CMD => $ENV{EXONERATE_CMD}
     || '/software/team87/brave_new_world/app/exonerate-2.2.0-x86_64/bin/exonerate';
 #TODO switch to value below once vms upgraded sp12 Wed 11 Dec 2013 13:58:43 GMT
 # '/software/ensembl/exonerate-2.2.0/bin/exonerate'
