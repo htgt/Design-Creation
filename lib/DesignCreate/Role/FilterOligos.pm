@@ -1,7 +1,7 @@
 package DesignCreate::Role::FilterOligos;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Role::FilterOligos::VERSION = '0.011';
+    $DesignCreate::Role::FilterOligos::VERSION = '0.012';
 }
 ## use critic
 
@@ -18,7 +18,9 @@ Common attributes and subroutines used by the filter oligo commands.
 
 use Moose::Role;
 use DesignCreate::Exception;
+use DesignCreate::Exception::OligoValidation;
 use YAML::Any qw( LoadFile DumpFile );
+use Data::Printer;
 use namespace::autoclean;
 
 requires '_validate_oligo';
@@ -77,24 +79,39 @@ Throw error if we have no valid oligoes for a oligo type.
 =cut
 sub validate_oligos {
     my $self = shift;
+    my @no_valid_oligos_of_type;
 
     for my $oligo_type ( $self->expected_oligos ) {
         $self->log->debug( "Validating $oligo_type oligos" );
 
         for my $oligo_data ( @{ $self->all_oligos->{$oligo_type} } ) {
-            if ( $self->validate_oligo( $oligo_data, $oligo_type ) ) {
+            # pass a string ref to $invalid_reason to the validate methods so we can get back the
+            # reason  oligo failed validation. We can not return this value directly from the
+            # validation subroutines because they are set up to trun true or false depending on
+            # if the oligo passes the validation check or not.
+            my $invalid_reason;
+            if ( $self->validate_oligo( $oligo_data, $oligo_type, \$invalid_reason ) ) {
                 push @{ $self->validated_oligos->{$oligo_type} }, $oligo_data;
             }
             else {
-                $self->add_invalid_oligo( $oligo_data->{id} => 1 );
+                $self->add_invalid_oligo( $oligo_data->{id} => $invalid_reason );
             }
         }
 
-        unless ( exists $self->validated_oligos->{$oligo_type} ) {
-            DesignCreate::Exception->throw("No valid $oligo_type oligos, halting filter process");
+        if ( exists $self->validated_oligos->{$oligo_type} ) {
+            $self->log->info("We have $oligo_type oligos that pass checks");
         }
+        else {
+            $self->log->warn( "No valid $oligo_type oligos" );
+            push @no_valid_oligos_of_type, $oligo_type;
+        }
+    }
 
-        $self->log->info("We have $oligo_type oligos that pass checks");
+    if (@no_valid_oligos_of_type) {
+        DesignCreate::Exception::OligoValidation->throw(
+            oligo_types     => \@no_valid_oligos_of_type,
+            invalid_reasons => $self->invalid_oligos,
+        );
     }
 
     return 1;
@@ -110,12 +127,13 @@ consumes with role.
 
 =cut
 sub validate_oligo {
-    my ( $self, $oligo_data, $oligo_type ) = @_;
+    my ( $self, $oligo_data, $oligo_type, $invalid_reason ) = @_;
     $self->log->debug( "$oligo_type oligo, id: " . $oligo_data->{id} );
 
     if ( !defined $oligo_data->{oligo} || $oligo_data->{oligo} ne $oligo_type )   {
         $self->log->error("Oligo name mismatch, expecting $oligo_type, got: "
             . $oligo_data->{oligo} . 'for: ' . $oligo_data->{id} );
+        $$invalid_reason = "Type mismatch, expecting $oligo_type, got " . $oligo_data->{oligo};
         return;
     }
 
@@ -125,7 +143,7 @@ sub validate_oligo {
         $self->design_param( 'chr_name' ),
     );
 
-    return $self->_validate_oligo( $oligo_data, $oligo_type, $oligo_slice );
+    return $self->_validate_oligo( $oligo_data, $oligo_type, $oligo_slice, $invalid_reason );
 }
 
 =head2 output_validated_oligos
@@ -153,12 +171,13 @@ worked out.
 
 =cut
 sub check_oligo_sequence {
-    my ( $self, $oligo_data, $oligo_slice ) = @_;
+    my ( $self, $oligo_data, $oligo_slice, $invalid_reason ) = @_;
 
     if ( $oligo_slice->seq ne uc( $oligo_data->{oligo_seq} ) ) {
         $self->log->error( 'Oligo seq does not match coordinate sequence: ' . $oligo_data->{id} );
         $self->log->trace( 'Oligo seq  : ' . $oligo_data->{oligo_seq} );
         $self->log->trace( "Ensembl seq: " . $oligo_slice->seq );
+        $$invalid_reason = "Sequence does not match coordinate sequence";
         return 0;
     }
 
@@ -172,12 +191,13 @@ Check the length of the oligo sequence is the same value we expect.
 
 =cut
 sub check_oligo_length {
-    my ( $self, $oligo_data ) = @_;
+    my ( $self, $oligo_data, $invalid_reason) = @_;
 
     my $oligo_length = length($oligo_data->{oligo_seq});
     if ( $oligo_length != $oligo_data->{oligo_length} ) {
         $self->log->error("Oligo length is $oligo_length, should be "
                            . $oligo_data->{oligo_length} . ' for: ' . $oligo_data->{id} );
+        $$invalid_reason = "Length is $oligo_length, should be " . $oligo_data->{oligo_length};
         return 0;
     }
 

@@ -1,7 +1,7 @@
-package DesignCreate::Exception::NonExistantAttribute;
+package DesignCreate::Exception::OligoValidation;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Exception::NonExistantAttribute::VERSION = '0.012';
+    $DesignCreate::Exception::OligoValidation::VERSION = '0.012';
 }
 ## use critic
 
@@ -12,25 +12,26 @@ use namespace::autoclean;
 extends qw( DesignCreate::Exception );
 
 has '+message' => (
-    default => 'Attribute not found'
+    default => 'Failed to find any valid oligos for one or more oligo types'
 );
 
-has attribute_name => (
+has oligo_types => (
     is       => 'ro',
-    isa      => 'Str',
+    isa      => 'ArrayRef',
     required => 1,
 );
 
-has class => (
+# $reason{'region'}{'left'}
+has invalid_reasons => (
     is       => 'ro',
-    isa      => 'Str',
+    isa      => 'HashRef',
     required => 1,
 );
 
 override as_string => sub {
     my $self = shift;
 
-    my $str = 'Attribute ' . $self->attribute_name . ' does not exist in class ' . $self->class;
+    my $str = 'Failed to find any valid oligos of types: ' . join(',', @{ $self->oligo_types } );
 
     if ( $self->show_stack_trace ) {
         $str .= "\n\n" . $self->stack_trace->as_string;
@@ -45,8 +46,8 @@ around as_hash => sub {
 
     my $hash = $self->$orig;
 
-    $hash->{name} = $self->attribute_name;
-    $hash->{missing_from} = $self->class;
+    $hash->{oligo_Types} = $self->oligo_types;
+    $hash->{reasons} = $self->invalid_reasons;
 
     return $hash;
 };

@@ -1,7 +1,7 @@
 package DesignCreate::Action::DelExonDesign;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::DelExonDesign::VERSION = '0.011';
+    $DesignCreate::Action::DelExonDesign::VERSION = '0.012';
 }
 ## use critic
 
@@ -64,6 +64,11 @@ for my $attribute ( @ATTRIBUTES_NO_CMD_OPTION ) {
     has '+' . $attribute => ( traits => [ 'NoGetopt' ] );
 }
 
+# wipe work directory before starting
+has '+rm_dir' => (
+    default => 1,
+);
+
 sub execute {
     my ( $self, $opts, $args ) = @_;
     Log::Log4perl::NDC->push( @{ $self->target_genes }[0] );
@@ -71,6 +76,7 @@ sub execute {
 
     $self->log->info( 'Starting new del-exon design create run: ' . join(',', @{ $self->target_genes } ) );
     $self->log->debug( 'Design run args: ' . pp($opts) );
+    $self->create_design_attempt_record;
 
     try {
         $self->get_oligo_region_coordinates;
@@ -83,6 +89,21 @@ sub execute {
         $self->log->info( 'DESIGN DONE: ' . join(',', @{ $self->target_genes } ) );
     }
     catch {
+        if (blessed($_) and $_->isa('DesignCreate::Exception')) {
+            DumpFile( $self->design_fail_file, $_->as_hash );
+            $self->update_design_attempt_record(
+                {   status => 'fail',
+                    fail   => encode_json( $_->as_hash ),
+                }
+            );
+        }
+        else {
+            $self->update_design_attempt_record(
+                {   status => 'error',
+                    error => $_,
+                }
+            );
+        }
         $self->log->error( 'DESIGN INCOMPLETE: ' . $_ );
     };
 

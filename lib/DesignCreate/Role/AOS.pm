@@ -1,7 +1,7 @@
 package DesignCreate::Role::AOS;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Role::AOS::VERSION = '0.011';
+    $DesignCreate::Role::AOS::VERSION = '0.012';
 }
 ## use critic
 
@@ -21,7 +21,7 @@ target_file
 use Moose::Role;
 use DesignCreate::Exception;
 use DesignCreate::Types qw( PositiveInt YesNo AOSSearchMethod );
-use DesignCreate::Constants qw( $DEFAULT_AOS_LOCATION $DEFAULT_AOS_WORK_DIR_NAME );
+use DesignCreate::Constants qw( $AOS_LOCATION $DEFAULT_AOS_WORK_DIR_NAME );
 use Const::Fast;
 use IPC::System::Simple qw( system );
 use IPC::Run qw( run );
@@ -40,8 +40,8 @@ has aos_location => (
     isa           => 'Path::Class::Dir',
     traits        => [ 'Getopt' ],
     coerce        => 1,
-    default       => sub{ Path::Class::Dir->new( $DEFAULT_AOS_LOCATION )->absolute },
-    documentation => "Location of AOS scripts ( default $DEFAULT_AOS_LOCATION )",
+    default       => sub{ Path::Class::Dir->new( $AOS_LOCATION )->absolute },
+    documentation => "Location of AOS scripts ( default $AOS_LOCATION )",
     cmd_flag      => 'aos-location'
 );
 

@@ -1,7 +1,7 @@
 package DesignCreate::Util::BWA;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Util::BWA::VERSION = '0.011';
+    $DesignCreate::Util::BWA::VERSION = '0.012';
 }
 ## use critic
 
@@ -19,9 +19,15 @@ Align sequence(s) against a genome to find number of hits using BWA
 use Moose;
 use DesignCreate::Exception;
 use DesignCreate::Exception::MissingFile;
-use Path::Class  qw( file );
 use DesignCreate::Types qw( PositiveInt Species );
+use DesignCreate::Constants qw(
+    $BWA_CMD
+    $SAMTOOLS_CMD
+    $XA2MULTI_CMD
+    %BWA_GENOME_FILES
+);
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
+use Path::Class  qw( file );
 use YAML::Any qw( LoadFile DumpFile );
 use IPC::Run 'run';
 use Const::Fast;
@@ -29,20 +35,6 @@ use namespace::autoclean;
 use Bio::SeqIO;
 
 with qw( MooseX::Log::Log4perl );
-
-const my $BWA_CMD => $ENV{BWA_CMD}
-    || '/software/solexa/bin/bwa';
-
-const my $SAMTOOLS_CMD => $ENV{SAMTOOLS_CMD}
-    || '/software/solexa/bin/samtools';
-
-const my $XA2MULTI_CMD => $ENV{XA2MULTI_CMD}
-    || '/software/solexa/bin/aligners/bwa/current/xa2multi.pl';
-
-const my %BWA_GENOME_FILES => (
-    Mouse => '/lustre/scratch105/vrpipe/refs/mouse/GRCm38/GRCm38_68.fa',
-    Human => '/lustre/scratch105/vrpipe/refs/human/ncbi37/hs37d5.fa',
-);
 
 has query_file => (
     is       => 'ro',
@@ -61,6 +53,12 @@ has species => (
     is       => 'ro',
     isa      => Species,
     required => 1,
+);
+
+has num_bwa_threads => (
+    is     => 'ro',
+    isa     => PositiveInt,
+    default => 2,
 );
 
 # default of 2 only gets hits with > 90% similarity
@@ -192,6 +190,7 @@ sub generate_sam_file {
         "-n", $self->num_mismatches,   # number of mismatches allowed over sequence
         "-o", 0,                       # disable gapped alignments
         "-N",                          # disable iterative search to get all hits
+        "-t", $self->num_bwa_threads,  # specify number of threads
         $self->target_file->stringify, # target genome file, indexed for bwa
         $self->query_file->stringify,  # query file with oligo sequences
     );

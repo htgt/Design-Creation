@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::ConsolidateDesignData;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::ConsolidateDesignData::VERSION = '0.011';
+    $DesignCreate::CmdRole::ConsolidateDesignData::VERSION = '0.012';
 }
 ## use critic
 
@@ -194,6 +194,7 @@ sub consolidate_design_data {
 
     $self->create_primary_design_file;
     $self->create_alt_design_file if $self->num_alt_designs;
+    $self->update_design_attempt_record( { status => 'design_data_consolidated' } );
 
     return;
 }
@@ -356,7 +357,7 @@ sub calculate_gene_type {
     my ( $self, $gene_id ) = @_;
 
     my $gene_type = $gene_id =~ /^MGI/  ? 'MGI'
-                  : $gene_id =~ /^HGNC/ ? 'HGCN'
+                  : $gene_id =~ /^HGNC/ ? 'HGNC'
                   : $gene_id =~ /^LBL/  ? 'enhancer-region'
                   : $gene_id =~ /^CGI/  ? 'CPG-island'
                   : $gene_id =~ /^mmu/  ? 'miRBase'

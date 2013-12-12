@@ -1,7 +1,7 @@
-package DesignCreate::Exception::NonExistantAttribute;
+package DesignCreate::Exception::Primer3FailedFindOligos;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Exception::NonExistantAttribute::VERSION = '0.012';
+    $DesignCreate::Exception::Primer3FailedFindOligos::VERSION = '0.012';
 }
 ## use critic
 
@@ -12,25 +12,26 @@ use namespace::autoclean;
 extends qw( DesignCreate::Exception );
 
 has '+message' => (
-    default => 'Attribute not found'
+    default => 'Primer3 failed to find oligos'
 );
 
-has attribute_name => (
+has regions => (
     is       => 'ro',
-    isa      => 'Str',
+    isa      => 'ArrayRef',
     required => 1,
 );
 
-has class => (
+# $reason{'region'}{'left'}
+has primer_fail_reasons => (
     is       => 'ro',
-    isa      => 'Str',
+    isa      => 'HashRef',
     required => 1,
 );
 
 override as_string => sub {
     my $self = shift;
 
-    my $str = 'Attribute ' . $self->attribute_name . ' does not exist in class ' . $self->class;
+    my $str = 'Primer3 failed to find oligos for following regions: ' . join(',', @{ $self->regions } );
 
     if ( $self->show_stack_trace ) {
         $str .= "\n\n" . $self->stack_trace->as_string;
@@ -45,8 +46,8 @@ around as_hash => sub {
 
     my $hash = $self->$orig;
 
-    $hash->{name} = $self->attribute_name;
-    $hash->{missing_from} = $self->class;
+    $hash->{regions} = $self->regions;
+    $hash->{reasons} = $self->primer_fail_reasons;
 
     return $hash;
 };

@@ -1,7 +1,7 @@
 package DesignCreate::Role::OligoRegionCoordinatesInsDel;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Role::OligoRegionCoordinatesInsDel::VERSION = '0.011';
+    $DesignCreate::Role::OligoRegionCoordinatesInsDel::VERSION = '0.012';
 }
 ## use critic
 

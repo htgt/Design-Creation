@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::FindGibsonOligos;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::FindGibsonOligos::VERSION = '0.011';
+    $DesignCreate::CmdRole::FindGibsonOligos::VERSION = '0.012';
 }
 ## use critic
 
@@ -20,9 +20,10 @@ gibson design.
 use Moose::Role;
 use DesignCreate::Util::Primer3;
 use DesignCreate::Exception;
+use DesignCreate::Exception::Primer3FailedFindOligos;
 use DesignCreate::Constants qw(
     $DEFAULT_OLIGO_COORD_FILE_NAME
-    $DEFAULT_PRIMER3_CONFIG_FILE
+    $PRIMER3_CONFIG_FILE
     %GIBSON_PRIMER_REGIONS
 );
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
@@ -30,6 +31,7 @@ use DesignCreate::Types qw( YesNo );
 use YAML::Any qw( DumpFile LoadFile );
 use Bio::Seq;
 use Const::Fast;
+use Data::Printer;
 use namespace::autoclean;
 
 const my @FIND_GIBSON_OLIGOS_PARAMETERS => qw(
@@ -41,10 +43,10 @@ has primer3_config_file => (
     is            => 'ro',
     isa           => AbsFile,
     traits        => [ 'Getopt' ],
-    documentation => "File containing primer3 config details ( default $DEFAULT_PRIMER3_CONFIG_FILE )",
+    documentation => "File containing primer3 config details ( default $PRIMER3_CONFIG_FILE )",
     cmd_flag      => 'primer3-config-file',
     coerce        => 1,
-    default       => sub{ Path::Class::File->new( $DEFAULT_PRIMER3_CONFIG_FILE )->absolute },
+    default       => sub{ Path::Class::File->new( $PRIMER3_CONFIG_FILE )->absolute },
 );
 
 # default of masking all sequence ensembl considers to be a repeat region
@@ -185,6 +187,7 @@ sub find_oligos {
     $self->run_primer3;
     $self->parse_primer3_results;
     $self->create_oligo_files;
+    $self->update_design_attempt_record( { status => 'oligos_found' } );
 
     return;
 }
@@ -202,6 +205,8 @@ sub run_primer3 {
         primer_lowercase_masking => $self->mask_by_lower_case eq 'yes' ? 1 : 0,
     );
 
+    my %failed_primer_regions;
+
     for my $region ( keys %GIBSON_PRIMER_REGIONS ) {
         $self->log->debug("Finding primers for $region primer region");
         my $log_file = $self->oligo_finder_output_dir->file( 'primer3_output_' . $region . '.log' );
@@ -211,7 +216,7 @@ sub run_primer3 {
         my $region_slice   = $self->$slice_name;
         my $region_bio_seq = Bio::Seq->new( -display_id => $region, -seq => $region_slice->seq );
 
-        my $result = $p3->run_primer3( $log_file->absolute, $region_bio_seq,
+        my ( $result, $primer3_explain ) = $p3->run_primer3( $log_file->absolute, $region_bio_seq,
             { SEQUENCE_TARGET => $target_string } );
 
         DesignCreate::Exception->throw( "Errors running primer3 on $region region" )
@@ -222,8 +227,16 @@ sub run_primer3 {
             $self->add_primer3_result( $region => $result );
         }
         else {
-            DesignCreate::Exception->throw( "Can not find any primer pairs for $region primer region" );
+            $self->log->warn( "Failed to generate primer pairs for $region region" );
+            $failed_primer_regions{$region} = $primer3_explain;
         }
+    }
+
+    if (%failed_primer_regions) {
+        DesignCreate::Exception::Primer3FailedFindOligos->throw(
+            regions             => [ keys %failed_primer_regions ],
+            primer_fail_reasons => \%failed_primer_regions,
+        );
     }
 
     return;

@@ -33,6 +33,7 @@ requires:
   Const::Fast: 0
   DDP: 0
   Data::Dump: 0
+  Data::Printer: 0
   DateTime: 0
   Exporter: 0
   Fcntl: 0
@@ -44,6 +45,7 @@ requires:
   IPC::System::Simple: 0
   JSON: 0
   LIMS2::Model: 0
+  LIMS2::Model::Util::DesignTargets: 0
   LIMS2::REST::Client: 0
   LIMS2::Util::EnsEMBL: 0
   List::MoreUtils: 0
@@ -60,14 +62,17 @@ requires:
   MooseX::Types::Moose: 0
   MooseX::Types::Path::Class::MoreCoercions: 0
   Path::Class: 0
+  Perl6::Slurp: 0
   Pod::Usage: 0
   Scalar::Util: 0
+  Smart::Comments: 0
   Text::CSV: 0
   Throwable::Error: 0
   Try::Tiny: 0
   YAML::Any: 0
   base: 0
+  feature: 0
   namespace::autoclean: 0
   strict: 0
   warnings: 0
-version: 0.011
+version: 0.012

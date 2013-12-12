@@ -69,7 +69,7 @@ sub run_primer3 : Test(7) {
 
     throws_ok{
         $new_o->run_primer3
-    } qr/Can not find any primer pairs for/
+    } 'DesignCreate::Exception::Primer3FailedFindOligos'
         , 'throws error when no primer pairs can be found for region';
 
 }

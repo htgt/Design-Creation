@@ -9,6 +9,7 @@ use Getopt::Long;
 use Path::Class;
 use List::MoreUtils qw( any );
 use Pod::Usage;
+use feature qw( say );
 
 my ( $file, $persist, $base_dir_name, $alt_designs );
 GetOptions(
@@ -20,14 +21,16 @@ GetOptions(
     'dir=s'       => \$base_dir_name,
     'conditional' => \my $conditional,
     'del-exon'    => \my $del_exon,
+    'del'         => \my $del,
+    'gibson'      => \my $gibson,
     'debug'       => \my $debug,
     'gene=s'      => \my @genes,
     'param=s'     => \my %extra_params,
+    'dry-run'     => \my $dry_run,
 ) or pod2usage(2);
 
 die( 'Specify base work dir' ) unless $base_dir_name;
 die( 'Specify file with design info' ) unless $file;
-die( 'Can not be both conditional and del-exon' ) if $conditional && $del_exon;
 
 my %targeted_genes;
 my $base_dir = dir( $base_dir_name );
@@ -53,15 +56,23 @@ sub process_design {
     my ( $params, $dir ) = get_params( $data );
     my @args;
 
+## no critic(ProhibitCascadingIfElse)
     if ( $conditional ) {
         push @args, 'conditional-design';
     }
     elsif ( $del_exon ) {
         push @args, 'del-exon-design';
     }
-    else {
+    elsif ( $gibson ) {
+        push @args, 'gibson-design'
+    }
+    elsif ( $del ) {
         push @args, 'ins-del-design';
     }
+    else {
+        ERROR( 'Must pick a design type' );
+    }
+## use critic
 
     push @args, $debug ? '--debug' : '--verbose';
     push @args, '--alt-designs' if $alt_designs;
@@ -76,7 +87,12 @@ sub process_design {
     }
 
     try{
-        system( 'design-create', @args );
+        if ( $dry_run ) {
+            say 'design-create ' . join( ' ', @args );
+        }
+        else {
+            system( 'design-create', @args );
+        }
     }
     catch{
         print $_;
@@ -91,6 +107,7 @@ sub get_params {
     my @params;
     while ( my( $cmd, $arg ) = each %{ $data } ) {
         next unless $arg;
+        next unless $cmd;
         next if $cmd eq 'comment';
         # if multiple args we need to split it
         my @args = split /\|/, $arg;
@@ -105,15 +122,20 @@ sub get_params {
     $target_gene =~ s/://g;
 
     my $dir_name;
-    # deal with same gene being targeted in multiple designs
-    # cant name the work folder the same in these cases
-    if ( exists $targeted_genes{$target_gene} ) {
-        $dir_name = $target_gene . '-' . $targeted_genes{$target_gene}
+    if ( my $target_exon = _trim($data->{'target-exon'}) ) {
+        $target_exon =~ s/://g;
+        $dir_name = $target_gene . '#' . $target_exon;
+
     }
     else {
-        $dir_name = $target_gene;
+        if ( exists $targeted_genes{$target_gene} ) {
+            $dir_name = $target_gene . '-' . $targeted_genes{$target_gene}
+        }
+        else {
+            $dir_name = $target_gene;
+        }
+        $targeted_genes{$target_gene}++;
     }
-    $targeted_genes{$target_gene}++;
 
     my $dir = $base_dir->subdir($dir_name);
     push @params, '--dir', $dir->stringify;
@@ -144,12 +166,15 @@ create-multiple-designs.pl - Create multiple designs
       --persist         Persist newly created designs to LIMS2
       --alt-designs     Create alternate designs
       --dir             Directory where design-create output goes
+      --del             Specify deletion design, coordinate based
       --conditional     Specify conditional design, default deletion
+      --gibson          Specify gibson designs ( Human )
       --del-exon        Specify deletion designs where we target a given exon
       --gene            Only create this gene(s), picked from input file
       --param           Specify additional param(s) not in file
+      --dry-run         Just print out command that would be called, don't call it
+      --param           Specify additional parameter(s) to send to design creation program 
 
-    'param=s'     => \my %extra_params,
 =head1 DESCRIPTION
 
 Takes design information for multiple designs from file and tries to create these designs.

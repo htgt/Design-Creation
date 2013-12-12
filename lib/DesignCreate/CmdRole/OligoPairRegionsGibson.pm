@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::OligoPairRegionsGibson;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::OligoPairRegionsGibson::VERSION = '0.011';
+    $DesignCreate::CmdRole::OligoPairRegionsGibson::VERSION = '0.012';
 }
 ## use critic
 
@@ -200,10 +200,15 @@ has exon => (
 
 sub _build_exon {
     my $self = shift;
+    my $exon;
 
-    my $exon = try{ $self->exon_adaptor->fetch_by_stable_id( $self->target_exon ) };
+    try{
+        $exon = $self->exon_adaptor->fetch_by_stable_id( $self->target_exon );
+    };
+
     unless ( $exon ) {
-        DesignCreate::Exception->throw( 'Unable to retrieve exon ' . $self->target_exon);
+        DesignCreate::Exception->throw(
+            'Unable to retrieve exon: ' . $self->target_exon );
     }
 
     # check exon is on the chromosome coordinate system
@@ -421,6 +426,7 @@ sub get_oligo_pair_region_coordinates {
 
     # in Role::OligoRegionCoordinates
     $self->create_oligo_region_coordinate_file;
+    $self->update_design_attempt_record( { status => 'coordinates_calculated' } );
 
     return;
 }

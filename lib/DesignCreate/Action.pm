@@ -1,7 +1,7 @@
 package DesignCreate::Action;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::VERSION = '0.011';
+    $DesignCreate::Action::VERSION = '0.012';
 }
 ## use critic
 
@@ -53,8 +53,15 @@ has verbose => (
     default       => 0
 );
 
+
 sub BUILD {
     my $self = shift;
+
+    # clean out work dir
+    if ( $self->rm_dir ) {
+        $self->dir->rmtree();
+        $self->dir->mkpath();
+    }
 
     # Add command name as a design parameter
     $self->set_param( 'command-name', $self->command_names );

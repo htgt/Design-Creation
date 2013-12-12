@@ -1,7 +1,7 @@
 package DesignCreate::Exception::MissingFile;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Exception::MissingFile::VERSION = '0.011';
+    $DesignCreate::Exception::MissingFile::VERSION = '0.012';
 }
 ## use critic
 
@@ -37,6 +37,18 @@ override as_string => sub {
     }
 
     return $str;
+};
+
+around as_hash => sub {
+    my $orig = shift;
+    my $self = shift;
+
+    my $hash = $self->$orig;
+
+    $hash->{file} = $self->file->basename;
+    $hash->{dir} = $self->dir->stringify;
+
+    return $hash;
 };
 
 __PACKAGE__->meta->make_immutable( inline_constructor => 0 );

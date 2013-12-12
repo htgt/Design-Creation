@@ -36,7 +36,10 @@ my %WriteMakefileArgs = (
     "bin/design_data_csv.pl",
     "bin/farm-wrapper-script.sh",
     "bin/design_targets.pl",
-    "bin/human_gibson_design_targets.pl"
+    "bin/failed_design_redo.pl",
+    "bin/gibson_design_targets.pl",
+    "bin/check_or_output_design_targets.pl",
+    "bin/parse_failed_design_attempts.pl"
   ],
   "LICENSE" => "perl",
   "NAME" => "Design::Creation",
@@ -49,6 +52,7 @@ my %WriteMakefileArgs = (
     "Const::Fast" => 0,
     "DDP" => 0,
     "Data::Dump" => 0,
+    "Data::Printer" => 0,
     "DateTime" => 0,
     "Exporter" => 0,
     "Fcntl" => 0,
@@ -60,6 +64,7 @@ my %WriteMakefileArgs = (
     "IPC::System::Simple" => 0,
     "JSON" => 0,
     "LIMS2::Model" => 0,
+    "LIMS2::Model::Util::DesignTargets" => 0,
     "LIMS2::REST::Client" => 0,
     "LIMS2::Util::EnsEMBL" => 0,
     "List::MoreUtils" => 0,
@@ -76,18 +81,21 @@ my %WriteMakefileArgs = (
     "MooseX::Types::Moose" => 0,
     "MooseX::Types::Path::Class::MoreCoercions" => 0,
     "Path::Class" => 0,
+    "Perl6::Slurp" => 0,
     "Pod::Usage" => 0,
     "Scalar::Util" => 0,
+    "Smart::Comments" => 0,
     "Text::CSV" => 0,
     "Throwable::Error" => 0,
     "Try::Tiny" => 0,
     "YAML::Any" => 0,
     "base" => 0,
+    "feature" => 0,
     "namespace::autoclean" => 0,
     "strict" => 0,
     "warnings" => 0
   },
-  "VERSION" => "0.011",
+  "VERSION" => "0.012",
   "test" => {
     "TESTS" => "t/*.t"
   }

@@ -1,7 +1,7 @@
 package DesignCreate::Util::Primer3;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Util::Primer3::VERSION = '0.011';
+    $DesignCreate::Util::Primer3::VERSION = '0.012';
 }
 ## use critic
 
@@ -24,6 +24,7 @@ use Bio::Tools::Run::Primer3Redux;
 use DesignCreate::Types qw( PositiveInt );
 use Const::Fast;
 use Scalar::Util qw( blessed reftype );
+use DesignCreate::Constants qw( $PRIMER3_CMD );
 use namespace::autoclean;
 
 with qw( MooseX::Log::Log4perl MooseX::SimpleConfig );
@@ -41,14 +42,6 @@ const my @PRIMER3_GLOBAL_ARGUMENTS => (
     'primer_min_three_prime_distance',
     'primer_product_size_range',
     'primer_thermodynamic_parameters_path',
-);
-
-#TODO change path to primer3 sp12 Wed 17 Jul 2013 10:13:33 BST
-has primer3_path => (
-    is       => 'ro',
-    isa      => 'Str',
-    required => 1,
-    default  => '/nfs/users/nfs_s/sp12/workspace/primer3-2.3.5/src/primer3_core',
 );
 
 has [
@@ -130,7 +123,7 @@ sub run_primer3 {
 
     my $primer3 = Bio::Tools::Run::Primer3Redux->new(
         -outfile => $outfile->stringify,
-        -path    => $self->primer3_path
+        -path    => $PRIMER3_CMD,
     );
     DesignCreate::Exception->throw( "primer3 can not be found" )
         unless $primer3->executable;
@@ -145,7 +138,9 @@ sub run_primer3 {
 
     my $results = $primer3->pick_pcr_primers( $seq );
     # we are only sending in one sequence so we will only have one result
-    my $result =  $results->next_result;
+    my $result = $results->next_result;
+
+    my $primer3_explain = $self->parse_primer_explain_details( $outfile );
 
     if ( $result->warnings ) {
         $self->log->warn( "Primer3 warning: $_" ) for $result->warnings;
@@ -156,7 +151,26 @@ sub run_primer3 {
         return;
     };
 
-    return $result;
+    return ( $result, $primer3_explain );
+}
+
+=head2 parse_primer_explain_details
+
+Parse out the details of the left and right primer explain flags from primer3 log output.
+This gives details on how many potential primers there were and the numbers that were excluded.
+
+=cut
+sub parse_primer_explain_details {
+    my ( $self, $outfile  ) = @_;
+    my %primer3_explain;
+
+    my @output = $outfile->slurp;
+    chomp(@output);
+    my @explain_data = grep{ /^PRIMER_(LEFT|RIGHT)_EXPLAIN=|^SEQUENCE_TEMPLATE=/ } @output;
+
+    %primer3_explain = map{ split /=/ } @explain_data;
+
+    return \%primer3_explain;
 }
 
 1;

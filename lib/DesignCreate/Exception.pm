@@ -1,7 +1,7 @@
 package DesignCreate::Exception;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Exception::VERSION = '0.011';
+    $DesignCreate::Exception::VERSION = '0.012';
 }
 ## use critic
 
@@ -29,6 +29,15 @@ override as_string => sub {
 
     return $str;
 };
+
+sub as_hash {
+    my $self = shift;
+
+    return {
+        error => $self->message,
+        class => $self->meta->name,
+    };
+}
 
 __PACKAGE__->meta->make_immutable( inline_constructor => 0 );
 

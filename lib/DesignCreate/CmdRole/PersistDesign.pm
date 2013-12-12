@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::PersistDesign;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::PersistDesign::VERSION = '0.011';
+    $DesignCreate::CmdRole::PersistDesign::VERSION = '0.012';
 }
 ## use critic
 
@@ -19,24 +19,10 @@ Persist the design data held in a yaml file to LIMS2.
 use Moose::Role;
 use DesignCreate::Exception;
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
-use LIMS2::REST::Client;
 use Try::Tiny;
 use YAML::Any;
 use Data::Dump qw( pp );
 use namespace::autoclean;
-
-has lims2_api => (
-    is         => 'ro',
-    isa        => 'LIMS2::REST::Client',
-    traits     => [ 'NoGetopt' ],
-    lazy_build => 1
-);
-
-sub _build_lims2_api {
-    my $self = shift;
-
-    return LIMS2::REST::Client->new_with_config();
-}
 
 has design_data_file => (
     is            => 'ro',
@@ -101,6 +87,13 @@ sub _build_alternate_designs_data {
     return YAML::Any::LoadFile( $self->alternate_designs_data_file );
 }
 
+has design_ids => (
+    is      => 'rw',
+    isa     => 'ArrayRef',
+    traits  => [ 'NoGetopt' ],
+    default => sub{ [] },
+);
+
 sub persist_design {
     my ( $self, $opts, $args ) = @_;
 
@@ -130,6 +123,7 @@ sub _persist_design {
         $self->log->debug( pp( $design_data ) );
         my $design = $self->lims2_api->POST( 'design', $design_data );
         $self->log->info('Design persisted: ' . $design->{id} );
+        push @{ $self->design_ids }, $design->{id};
     }
     catch {
         DesignCreate::Exception->throw( 'Unable to persist design to LIMS2: ' . $_ );

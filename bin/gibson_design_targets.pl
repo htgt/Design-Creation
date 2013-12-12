@@ -25,13 +25,18 @@ GetOptions(
     'gene=s'               => \my $single_gene,
     'base-design-params=s' => \my $base_params_file,
     'strict'               => \my $strict,
+    'species=s'            => \my $species,
 ) or pod2usage(2);
 
 Log::Log4perl->easy_init( { level => $log_level, layout => '%p %x %m%n' } );
 LOGDIE( 'Specify file with gene names' ) unless $genes_file;
+$species ||= 'Human';
+LOGDIE( 'Must specify species' ) unless $species;
 
-const my $DEFAULT_ASSEMBLY => 'GRCh37';
+const my $DEFAULT_ASSEMBLY => $species eq 'Human' ? 'GRCh37' :  $species eq 'Mouse' ? 'GRCm38' : undef;
 const my $DEFAULT_BUILD => 73;
+
+LOGDIE( "Can not work out default assembly for species $species" ) unless $DEFAULT_ASSEMBLY;
 
 WARN( "ASSEMBLY: $DEFAULT_ASSEMBLY, BUILD: $DEFAULT_BUILD" );
 
@@ -60,6 +65,7 @@ const my @TARGET_COLUMN_HEADERS => (
 'chr_end',
 'chr_strand',
 'automatically_picked',
+'comment',
 );
 
 const my @FAILED_TARGETS_HEADERS => qw(
@@ -69,7 +75,7 @@ ensembl_id
 ensembl_id_b
 );
 
-my $ensembl_util = LIMS2::Util::EnsEMBL->new( species => 'Human' );
+my $ensembl_util = LIMS2::Util::EnsEMBL->new( species => $species );
 my $db = $ensembl_util->db_adaptor;
 my $db_details = $db->to_hash;
 WARN("Ensembl DB: " . $db_details->{DBNAME});
@@ -197,11 +203,16 @@ sub print_design_targets {
     }
 
     my %target_params = (
-        species  => 'Human',
-        assembly => $DEFAULT_ASSEMBLY,
-        build    => $DEFAULT_BUILD,
+        species              => $species,
+        assembly             => $DEFAULT_ASSEMBLY,
+        build                => $DEFAULT_BUILD,
         automatically_picked => 1,
     );
+
+    if ( $data->{exon_ids} ) {
+        $target_params{ 'comment' } = $data->{comment} if $data->{comment};
+        $target_params{ 'automatically_picked' } = 0;
+    }
 
     my $canonical_transcript = $gene->canonical_transcript;
     my $exon_rank = get_exon_rank( $exon, $canonical_transcript );
@@ -548,11 +559,11 @@ __END__
 
 =head1 NAME
 
-human_gibson_design_targets.pl - Create design targets list given list of gene names.
+gibson_design_targets.pl - Create design targets list given list of gene names.
 
 =head1 SYNOPSIS
 
-  human_gibson_design_targets.pl [options]
+  gibson_design_targets.pl [options]
 
       --help            Display a brief help message
       --man             Display the manual page
@@ -561,10 +572,11 @@ human_gibson_design_targets.pl - Create design targets list given list of gene n
       --trace           Trace output
       --genes-file      File with genes names.
       --gene            Specify only one gene from the file
+      --species         Species of targets ( default Human )
       --strict          More strict target criteria
 
       The genes file should be a csv file with 3 column headers: gene_id, marker_symbol and ensembl_id.
-      The gene_id column will use HGNC ids
+      The gene_id column will use HGNC ids or MGI ID's
       A fourth optionally column is exon_id if the critical exons have been pre-defined.
 
 =head1 DESCRIPTION

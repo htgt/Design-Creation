@@ -1,7 +1,7 @@
 package DesignCreate::Role::Action;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Role::Action::VERSION = '0.011';
+    $DesignCreate::Role::Action::VERSION = '0.012';
 }
 ## use critic
 
@@ -31,9 +31,12 @@ use DesignCreate::Constants qw(
     $DEFAULT_DESIGN_DATA_FILE_NAME
     $DEFAULT_ALT_DESIGN_DATA_FILE_NAME
 );
+use LIMS2::REST::Client;
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsDir AbsFile/;
 use YAML::Any qw( LoadFile DumpFile );
 use Const::Fast;
+use Try::Tiny;
+use JSON;
 use namespace::autoclean;
 
 has design_parameters => (
@@ -72,6 +75,23 @@ sub _build_design_parameters_file {
     return $file->absolute;
 }
 
+has design_fail_file => (
+    is         => 'ro',
+    isa        => AbsFile,
+    traits     => [ 'NoGetopt' ],
+    lazy_build => 1,
+);
+
+sub _build_design_fail_file {
+    my $self = shift;
+
+    my $file = $self->dir->file( 'fail.yaml' );
+    #create file if it does not exist
+    $file->touch unless $self->dir->contains( $file );
+
+    return $file->absolute;
+}
+
 has oligos => (
     is         => 'ro',
     isa        => 'ArrayRef',
@@ -101,6 +121,28 @@ sub _build_oligos {
 
     return;
 }
+
+has lims2_api => (
+    is         => 'ro',
+    isa        => 'LIMS2::REST::Client',
+    traits     => [ 'NoGetopt' ],
+    lazy_build => 1
+);
+
+sub _build_lims2_api {
+    my $self = shift;
+
+    return LIMS2::REST::Client->new_with_config();
+}
+
+#design attempt id
+has da_id => (
+    is            => 'rw',
+    isa           => 'Int',
+    traits        => [ 'Getopt' ],
+    documentation => 'ID of the associated design attempt',
+    cmd_flag      => 'da-id',
+);
 
 #
 # Directories common to multiple commands
@@ -157,6 +199,13 @@ sub _init_output_dir {
     $dir->mkpath();
     return;
 }
+
+has rm_dir => (
+    is      => 'ro',
+    isa     => 'Bool',
+    traits  => [ 'NoGetopt' ],
+    default => 0,
+);
 
 has validated_oligo_dir => (
     is            => 'ro',
@@ -263,6 +312,57 @@ sub design_param {
     }
 
     return $self->get_design_param( $param_name );
+}
+
+=head2 create_design_attempt_record
+
+Create a new design attempt record
+Only called if a da_id has not already been set and we are persisting data.
+
+=cut
+sub create_design_attempt_record {
+    my ( $self ) = shift;
+    return if !$self->meta->has_attribute('persist') || !$self->persist;
+    return if $self->da_id;
+
+    my $da_data = {
+        gene_id    => join( ' ', @{ $self->design_param( 'target_genes' ) } ),
+        status     => 'started',
+        created_by => $self->design_param( 'created_by' ),
+        species    => $self->design_param( 'species' ),
+    };
+
+    try{
+        my $design_attempt = $self->lims2_api->POST( 'design_attempt', $da_data );
+        $self->da_id( $design_attempt->{id} );
+    }
+    catch {
+        DesignCreate::Exception->throw( "Error creating design attempt record: $_" );
+    };
+
+    return;
+}
+
+=head2 update_design_attempt_record
+
+Update the associated design_attempt record to latest status.
+Only called if persist flag is set.
+
+=cut
+sub update_design_attempt_record {
+    my ( $self, $data ) = @_;
+    return if !$self->meta->has_attribute('persist') || !$self->persist;
+
+    $data->{id} = $self->da_id;
+    $data->{design_parameters} = encode_json( $self->design_parameters );
+    try{
+        my $design_attempt = $self->lims2_api->PUT( 'design_attempt', $data );
+    }
+    catch {
+        $self->log->error( "Error updating design attempt record: $_" );
+    };
+
+    return;
 }
 
 1;
