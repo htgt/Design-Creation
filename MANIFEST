@@ -4,16 +4,7 @@ MANIFEST
 META.yml
 Makefile.PL
 README
-bin/check_or_output_design_targets.pl
-bin/create-multiple-designs.pl
 bin/design-create
-bin/design_data_csv.pl
-bin/design_target_report.pl
-bin/design_targets.pl
-bin/failed_design_redo.pl
-bin/farm-wrapper-script.sh
-bin/gibson_design_targets.pl
-bin/parse_failed_design_attempts.pl
 lib/DesignCreate/Action.pm
 lib/DesignCreate/Action/ConditionalDesign.pm
 lib/DesignCreate/Action/ConsolidateDesignData.pm

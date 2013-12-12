@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::FilterOligos;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::FilterOligos::VERSION = '0.012';
+    $DesignCreate::CmdRole::FilterOligos::VERSION = '0.013';
 }
 ## use critic
 
