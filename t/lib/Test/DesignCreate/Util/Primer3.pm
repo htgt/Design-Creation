@@ -33,7 +33,7 @@ sub constructor : Test(startup => 2) {
     $test->{o} = $o;
 }
 
-sub run_primer : Test(9) {
+sub run_primer : Test(7) {
     my $test = shift;
     ok my $o = $test->{o}, 'can grab test object';
 
@@ -64,17 +64,6 @@ sub run_primer : Test(9) {
         $o->run_primer3( $log_file, $region_bio_seq, [] )
     } qr/\$target variable must be a hashref or undef/
         , 'third input to run_primer3 must be a hashref or under';
-
-    ok my $new_obj = $test->class->new_with_config(
-        configfile   => _get_test_data_file( 'primer3_config.yaml' ),
-        primer3_path => $temp_dir->stringify,
-
-    ), 'we got a object';
-
-    throws_ok{
-        $new_obj->run_primer3( $log_file->absolute, $region_bio_seq )
-    } qr/primer3 can not be found/
-        , 'throw error if incorrect path to primer3 set';
 
     ok my ( $result, $primer3_explain )
         = $o->run_primer3( $log_file->absolute, $region_bio_seq, { SEQUENCE_TARGET => '500,500' } ),
