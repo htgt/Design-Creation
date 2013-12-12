@@ -316,7 +316,7 @@ Only called if a da_id has not already been set and we are persisting data.
 =cut
 sub create_design_attempt_record {
     my ( $self ) = shift;
-    return unless $self->persist;
+    return if !$self->meta->has_attribute('persist') || !$self->persist;
     return if $self->da_id;
 
     my $da_data = {
@@ -345,7 +345,7 @@ Only called if persist flag is set.
 =cut
 sub update_design_attempt_record {
     my ( $self, $data ) = @_;
-    return unless $self->persist;
+    return if !$self->meta->has_attribute('persist') || !$self->persist;
 
     $data->{id} = $self->da_id;
     $data->{design_parameters} = encode_json( $self->design_parameters );
