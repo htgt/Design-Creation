@@ -1,5 +1,11 @@
 {{$NEXT}}
 
+0.011     2013-09-25 13:58:50 Europe/London
+
+    Add util module to wrap around bwa and samtools.
+    Use bwa instead of exonerate when checking genomic specificity of gibson oligos.
+    Add more checks for gibson oligos: not too close to other exons.
+
 0.010     2013-08-27 11:05:19 Europe/London
 
     Gibson design creation
