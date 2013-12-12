@@ -50,13 +50,13 @@ const our $DEFAULT_DESIGN_DATA_FILE_NAME     => 'design_data.yaml';
 const our $DEFAULT_ALT_DESIGN_DATA_FILE_NAME => 'alt_designs.yaml';
 
 const our $PRIMER3_CONFIG_FILE => $ENV{PRIMER3_CONFIG}
-    || '/nfs/team87/farm3_lims2_vms/conf/primer3_design_create_config.yaml'
+    || '/nfs/team87/farm3_lims2_vms/conf/primer3_design_create_config.yaml';
 
 const our $AOS_LOCATION => $ENV{AOS_LOCATION}
-    || '/nfs/team87/farm3_lims2_vms/software/AOS'
+    || '/nfs/team87/farm3_lims2_vms/software/AOS';
 
 const our $PRIMER3_CMD => $ENV{PRIMER3_CMD}
-    || '/nfs/users/nfs_s/sp12/workspace/primer3-2.3.5/src/primer3_core',
+    || '/nfs/users/nfs_s/sp12/workspace/primer3-2.3.5/src/primer3_core';
 #TODO switch to value below once vms upgraded sp12 Wed 11 Dec 2013 13:56:19 GMT
 # '/nfs/team87/farm3_lims2_vms/software/primer3/src/primer3_core'
 
