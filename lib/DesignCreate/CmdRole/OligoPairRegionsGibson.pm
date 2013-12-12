@@ -198,11 +198,12 @@ sub _build_exon {
 
     try{
         $exon = $self->exon_adaptor->fetch_by_stable_id( $self->target_exon );
-    }
-    catch {
-        DesignCreate::Exception->throw(
-            'Unable to retrieve exon "' . $self->target_exon . '": ' . $_ );
     };
+
+    unless ( $exon ) {
+        DesignCreate::Exception->throw(
+            'Unable to retrieve exon: ' . $self->target_exon );
+    }
 
     # check exon is on the chromosome coordinate system
     if ( $exon->coord_system_name ne 'chromosome' ) {
