@@ -158,7 +158,8 @@ sub parse_primer_explain_details {
     my ( $self, $outfile  ) = @_;
     my %primer3_explain;
 
-    my @output = map{ chomp; $_  } $outfile->slurp;
+    my @output = $outfile->slurp;
+    chomp(@output);
     my @explain_data = grep{ /^PRIMER_(LEFT|RIGHT)_EXPLAIN=|^SEQUENCE_TEMPLATE=/ } @output;
 
     %primer3_explain = map{ split /=/ } @explain_data;

@@ -348,7 +348,7 @@ sub update_design_attempt_record {
     return unless $self->persist;
 
     $data->{id} = $self->da_id;
-    $data->{design_parameters} = encode_json( $self->design_parameters ),
+    $data->{design_parameters} = encode_json( $self->design_parameters );
     try{
         my $design_attempt = $self->lims2_api->PUT( 'design_attempt', $data );
     }

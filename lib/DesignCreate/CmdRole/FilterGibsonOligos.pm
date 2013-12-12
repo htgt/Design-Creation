@@ -264,7 +264,7 @@ sub check_oligo_specificity {
         # a hit is above 90% similarity
         elsif ( exists $match_info->{hits} && $match_info->{hits} >= 1 ) {
             $self->log->debug( "Oligo $oligo_id is invalid, has multiple hits: " . $match_info->{hits} );
-            $$invalid_reason = "Multiple genomic hits: " . $match_info->{hits}; 
+            $$invalid_reason = "Multiple genomic hits: " . $match_info->{hits};
             return;
         }
     }
