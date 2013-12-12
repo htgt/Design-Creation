@@ -151,7 +151,7 @@ sub validate_oligos : Test(7) {
     ok $new_o->all_oligos->{U5} = [], 'delete U5 oligo data';
     throws_ok{
         $new_o->validate_oligos
-    } qr/No valid U5 oligos/, 'throws error when missing required valid oligos';
+    } 'DesignCreate::Exception::OligoValidation', 'throws error when missing required valid oligos';
 
 }
 

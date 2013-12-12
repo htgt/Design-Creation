@@ -141,7 +141,7 @@ sub validate_oligos : Test(6) {
     ok $new_o->all_oligos->{'5F'} = [], 'delete 5F oligo data';
     throws_ok{
         $new_o->validate_oligos
-    } qr/No valid 5F oligos/, 'throws error when missing required valid oligos';
+    } 'DesignCreate::Exception::OligoValidation', 'throws error when missing required valid oligos';
 
 }
 
