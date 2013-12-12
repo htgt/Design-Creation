@@ -1,5 +1,13 @@
 {{$NEXT}}
 
+0.012     2013-12-12 09:54:54 Europe/London
+
+    Throw better errors with more specific DesignCreate::Exception classes.
+    Create a fail.yaml file with detailed reasons a design failed.
+    Create and update design_attempt records if persisting design.
+    Clean up design directory before starting.
+    Add option to specify number of bwa threads to use.
+
 0.011     2013-09-25 13:58:50 Europe/London
 
     Add util module to wrap around bwa and samtools.
