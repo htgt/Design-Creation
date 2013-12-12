@@ -56,6 +56,7 @@ sub process_design {
     my ( $params, $dir ) = get_params( $data );
     my @args;
 
+## no critic(ProhibitCascadingIfElse)
     if ( $conditional ) {
         push @args, 'conditional-design';
     }
@@ -71,6 +72,7 @@ sub process_design {
     else {
         ERROR( 'Must pick a design type' );
     }
+## use critic
 
     push @args, $debug ? '--debug' : '--verbose';
     push @args, '--alt-designs' if $alt_designs;

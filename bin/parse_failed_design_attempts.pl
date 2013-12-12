@@ -53,6 +53,7 @@ my %design_params;
 while ( my $data = $csv->getline_hr( $fh ) ) {
     $design_params{ $data->{'target-exon'} } = $data;
 }
+close $fh;
 
 #
 # create new design parameter file
@@ -64,7 +65,8 @@ $target_output_csv->print( $target_output, \@DESIGN_COLUMN_HEADERS );
 #
 # parse log file for failed designs
 #
-my @log_data = map{ chomp; $_ } slurp $log_file;
+my @log_data = slurp $log_file;
+chomp( @log_data );
 my %failed_genes;
 for my $line ( @log_data ) {
     if ( $line =~ /ERROR\s(\S*)\s(\S*)\sDESIGN\sINCOMPLETE:\s(.*)$/  ) {
@@ -109,6 +111,7 @@ for my $gene_id ( keys %failed_genes ) {
 }
 
 # does a gene already have enough designs
+## no critic(ProhibitCascadingIfElse)
 sub enough_designs{
     my ( $gene_id, $dts ) = @_;
     my $dt_count = @{ $dts };
@@ -138,6 +141,7 @@ sub enough_designs{
         return;
     }
 }
+## use critic
 
 __END__
 

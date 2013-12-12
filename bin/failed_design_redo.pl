@@ -55,9 +55,9 @@ sub grab_failed_designs {
     my ( $log_file  ) = @_;
     my %failed_designs;
 
-    my @input = map{ chomp; $_ } slurp $log_file;
+    my @input = slurp $log_file;
+    chomp( @input );
 
-    my $current_exon;
     for my $line ( @input ) {
         if ( $line =~ /ERROR\s(\S*)\s(\S*)\sDESIGN\sINCOMPLETE:\s(.*)$/  ) {
             my $gene = $1;
@@ -79,7 +79,8 @@ sub new_design_parameters {
     my ( $exon, $gene ) = @_;
 
     my ( $params, $fail ) = grab_params_and_fail_data( $exon, $gene );
-    
+
+    return;
 }
 
 =head2 grab_params_and_fail_data
@@ -127,7 +128,7 @@ __END__
 
 =head1 NAME
 
-failed_design_redo.pl - 
+failed_design_redo.pl -
 
 =head1 SYNOPSIS
 

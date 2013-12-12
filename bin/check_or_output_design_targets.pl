@@ -31,7 +31,8 @@ WARN( "ASSEMBLY: $DEFAULT_ASSEMBLY, BUILD: $DEFAULT_BUILD" );
 
 my $schema = LIMS2::Model->new( user => 'webapp' )->schema;
 
-my @genes = map{ chomp; $_ } slurp \*STDIN;
+my @genes = slurp \*STDIN;
+chomp(@genes);
 
 my $base_params = {
     'exon-check-flank-length' => 100,
@@ -70,8 +71,8 @@ for my $gene ( @genes ) {
     Log::Log4perl::NDC->push( $gene );
 
     # grab all design targets for this gene
-    my @dts = @{ $sorted_dts{ $gene } } if $sorted_dts{ $gene }; 
-    if ( @dts ) {
+    if ( $sorted_dts{ $gene } ) {
+        my @dts = @{ $sorted_dts{ $gene } };
         Log::Log4perl::NDC->push( $dts[0]->gene_id );
 
         next if enough_designs( \@dts );
@@ -94,6 +95,7 @@ for my $gene ( @genes ) {
     }
 }
 
+## no critic(ProhibitCascadingIfElse)
 sub enough_designs{
     my ( $dts ) = @_;
     my $dt_count = @{ $dts };
@@ -123,3 +125,4 @@ sub enough_designs{
         return;
     }
 }
+## use critic
