@@ -1,7 +1,7 @@
 package DesignCreate::Util::PickBlockOligoPair;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Util::PickBlockOligoPair::VERSION = '0.013';
+    $DesignCreate::Util::PickBlockOligoPair::VERSION = '0.014';
 }
 ## use critic
 

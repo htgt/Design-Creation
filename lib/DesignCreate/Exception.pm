@@ -1,7 +1,7 @@
 package DesignCreate::Exception;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Exception::VERSION = '0.013';
+    $DesignCreate::Exception::VERSION = '0.014';
 }
 ## use critic
 

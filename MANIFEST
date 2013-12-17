@@ -4,6 +4,7 @@ MANIFEST
 META.yml
 Makefile.PL
 README
+bin/create-multiple-designs.pl
 bin/design-create
 lib/DesignCreate/Action.pm
 lib/DesignCreate/Action/ConditionalDesign.pm

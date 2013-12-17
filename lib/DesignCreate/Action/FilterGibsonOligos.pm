@@ -1,7 +1,7 @@
 package DesignCreate::Action::FilterGibsonOligos;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::FilterGibsonOligos::VERSION = '0.013';
+    $DesignCreate::Action::FilterGibsonOligos::VERSION = '0.014';
 }
 ## use critic
 

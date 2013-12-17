@@ -30,6 +30,7 @@ my %WriteMakefileArgs = (
   },
   "DISTNAME" => "Design-Creation",
   "EXE_FILES" => [
+    "bin/create-multiple-designs.pl",
     "bin/design-create"
   ],
   "LICENSE" => "perl",
@@ -45,6 +46,7 @@ my %WriteMakefileArgs = (
     "DateTime" => 0,
     "Exporter" => 0,
     "Fcntl" => 0,
+    "Getopt::Long" => 0,
     "IPC::Run" => 0,
     "IPC::System::Simple" => 0,
     "JSON" => 0,
@@ -64,16 +66,19 @@ my %WriteMakefileArgs = (
     "MooseX::Types::Moose" => 0,
     "MooseX::Types::Path::Class::MoreCoercions" => 0,
     "Path::Class" => 0,
+    "Pod::Usage" => 0,
     "Scalar::Util" => 0,
+    "Text::CSV" => 0,
     "Throwable::Error" => 0,
     "Try::Tiny" => 0,
     "YAML::Any" => 0,
     "base" => 0,
+    "feature" => 0,
     "namespace::autoclean" => 0,
     "strict" => 0,
     "warnings" => 0
   },
-  "VERSION" => "0.013",
+  "VERSION" => "0.014",
   "test" => {
     "TESTS" => "t/*.t"
   }

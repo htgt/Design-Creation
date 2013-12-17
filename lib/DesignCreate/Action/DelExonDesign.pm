@@ -1,7 +1,7 @@
 package DesignCreate::Action::DelExonDesign;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::DelExonDesign::VERSION = '0.013';
+    $DesignCreate::Action::DelExonDesign::VERSION = '0.014';
 }
 ## use critic
 
