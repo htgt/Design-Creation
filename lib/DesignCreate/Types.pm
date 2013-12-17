@@ -1,7 +1,7 @@
 package DesignCreate::Types;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Types::VERSION = '0.014';
+    $DesignCreate::Types::VERSION = '0.015';
 }
 ## use critic
 
