@@ -1,5 +1,9 @@
 {{$NEXT}}
 
+0.014     2013-12-17 09:14:56 Europe/London
+
+    Move create-multiple-designs.pl script back into /bin
+
 0.013     2013-12-12 10:25:26 Europe/London
 
     Moved scripts from /bin to /script
