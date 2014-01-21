@@ -104,10 +104,10 @@ const our %GIBSON_PRIMER_REGIONS => (
 
 const our %DEFAULT_CHROMOSOME_DIR => (
     Mouse => {
-        GRCm38 => '/lustre/scratch110/blastdb/Users/team87/Mouse/GRCm38',
+        GRCm38 => '/lustre/scratch109/blastdb/Users/team87/Mouse/GRCm38',
     },
     Human =>{
-        GRCh37 => '/lustre/scratch110/blastdb/Users/team87/Human/GRCh37',
+        GRCh37 => '/lustre/scratch109/blastdb/Users/team87/Human/GRCh37',
     },
 );
 
