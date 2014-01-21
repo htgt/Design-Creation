@@ -1,7 +1,7 @@
 package DesignCreate::Action::PickGapOligos;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::PickGapOligos::VERSION = '0.015';
+    $DesignCreate::Action::PickGapOligos::VERSION = '0.016';
 }
 ## use critic
 

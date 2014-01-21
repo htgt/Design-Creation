@@ -1,3 +1,7 @@
+0.016     2014-01-21 07:45:20 Europe/London
+
+    Switch ref genomes for bwa and blast to scratch109
+
 0.015     2013-12-17 10:32:57 Europe/London
 
     Bugfix: check for existance of optional design parameter

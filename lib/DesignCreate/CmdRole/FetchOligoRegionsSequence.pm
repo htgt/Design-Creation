@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::FetchOligoRegionsSequence;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::FetchOligoRegionsSequence::VERSION = '0.015';
+    $DesignCreate::CmdRole::FetchOligoRegionsSequence::VERSION = '0.016';
 }
 ## use critic
 

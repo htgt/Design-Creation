@@ -1,7 +1,7 @@
 package DesignCreate::Action::GibsonDesign;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::GibsonDesign::VERSION = '0.015';
+    $DesignCreate::Action::GibsonDesign::VERSION = '0.016';
 }
 ## use critic
 
