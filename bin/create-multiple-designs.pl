@@ -122,7 +122,8 @@ sub get_params {
     $target_gene =~ s/://g;
 
     my $dir_name;
-    if ( my $target_exon = _trim($data->{'target-exon'}) ) {
+    if ( exists $data->{'target-exon'} ) {
+        my $target_exon = _trim($data->{'target-exon'});
         $target_exon =~ s/://g;
         $dir_name = $target_gene . '#' . $target_exon;
 
