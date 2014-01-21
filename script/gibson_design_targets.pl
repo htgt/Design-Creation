@@ -577,7 +577,7 @@ gibson_design_targets.pl - Create design targets list given list of gene names.
 
       The genes file should be a csv file with 3 column headers: gene_id, marker_symbol and ensembl_id.
       The gene_id column will use HGNC ids or MGI ID's
-      A fourth optionally column is exon_id if the critical exons have been pre-defined.
+      A fourth optionally column is exon_ids if the critical exons have been pre-defined.
 
 =head1 DESCRIPTION
 
