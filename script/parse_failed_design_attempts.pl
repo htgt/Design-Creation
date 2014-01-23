@@ -97,6 +97,7 @@ my ( $design_data ) = bulk_designs_for_design_targets( $schema, \@design_targets
 #
 # Loop through failed genes / exons and output new design parameters if needed
 #
+#TODO add exon length sp12 Wed 15 Jan 2014 13:16:33 GMT
 for my $gene_id ( keys %failed_genes ) {
     # if a gene already has 'enough' designs then skip its other failed targets
     next if enough_designs( $gene_id, $sorted_dts{ $gene_id } );

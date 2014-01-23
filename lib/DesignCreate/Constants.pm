@@ -75,8 +75,8 @@ const our $EXONERATE_CMD => $ENV{EXONERATE_CMD}
 # '/software/ensembl/exonerate-2.2.0/bin/exonerate'
 
 const our %BWA_GENOME_FILES => (
-    Human => '/lustre/scratch110/srpipe/references/Human/GRCh37_53/all/bwa/Homo_sapiens.GRCh37.dna.all.fa',
-    Mouse => '/lustre/scratch110/srpipe/references/Mus_musculus/GRCm38/all/bwa/Mus_musculus.GRCm38.68.dna.toplevel.fa',
+    Human => '/lustre/scratch109/srpipe/references/Human/GRCh37_53/all/bwa/Homo_sapiens.GRCh37.dna.all.fa',
+    Mouse => '/lustre/scratch109/srpipe/references/Mus_musculus/GRCm38/all/bwa/Mus_musculus.GRCm38.68.dna.toplevel.fa',
 );
 
 const our %CURRENT_ASSEMBLY => (
@@ -104,10 +104,10 @@ const our %GIBSON_PRIMER_REGIONS => (
 
 const our %DEFAULT_CHROMOSOME_DIR => (
     Mouse => {
-        GRCm38 => '/lustre/scratch110/blastdb/Users/team87/Mouse/GRCm38',
+        GRCm38 => '/lustre/scratch109/blastdb/Users/team87/Mouse/GRCm38',
     },
     Human =>{
-        GRCh37 => '/lustre/scratch110/blastdb/Users/team87/Human/GRCh37',
+        GRCh37 => '/lustre/scratch109/blastdb/Users/team87/Human/GRCh37',
     },
 );
 
