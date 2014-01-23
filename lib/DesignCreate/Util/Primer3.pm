@@ -15,7 +15,7 @@ use Moose;
 use DesignCreate::Exception;
 use Bio::Tools::Primer3Redux;
 use Bio::Tools::Run::Primer3Redux;
-use DesignCreate::Types qw( PositiveInt );
+use DesignCreate::Types qw( PositiveInt NaturalNumber);
 use Const::Fast;
 use Scalar::Util qw( blessed reftype );
 use DesignCreate::Constants qw( $PRIMER3_CMD );
@@ -36,6 +36,7 @@ const my @PRIMER3_GLOBAL_ARGUMENTS => (
     'primer_min_three_prime_distance',
     'primer_product_size_range',
     'primer_thermodynamic_parameters_path',
+    'primer_gc_clamp',
 );
 
 has [
@@ -50,6 +51,13 @@ has [
     is       => 'ro',
     isa      => PositiveInt,
     required => 1,
+);
+
+has 'primer_gc_clamp' => (
+    is       => 'ro',
+    isa      => NaturalNumber,
+    default  => 0,
+    lazy     => 1,
 );
 
 has [
