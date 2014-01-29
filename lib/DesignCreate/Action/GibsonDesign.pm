@@ -62,7 +62,9 @@ has '+rm_dir' => (
 sub execute {
     my ( $self, $opts, $args ) = @_;
     Log::Log4perl::NDC->push( @{ $self->target_genes }[0] );
-    Log::Log4perl::NDC->push( $self->target_exon );
+    my $exon_string = $self->five_prime_exon;
+    $exon_string .= '-' . $self->three_prime_exon if $self->three_prime_exon;
+    Log::Log4perl::NDC->push( $exon_string );
 
     $self->log->info( 'Starting new gibson design create run: ' . join(',', @{ $self->target_genes } ) );
     $self->log->debug( 'Design run args: ' . pp($opts) );
