@@ -39,21 +39,18 @@ sub valid_run_cmd : Test(3) {
     ok !$result->error, 'no command errors';
 }
 
-sub exon : Test(2) {
+sub build_exon : Test(5) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
     my $metaclass = $test->get_test_object_metaclass();
 
-    my $new_obj = $metaclass->new_object(
-        dir             => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
-        species         => 'Human',
-        target_exon     => 'ENSE00002184',
-        target_genes    => [ 'test_gene' ],
-    );
-
     throws_ok {
-        $new_obj->exon
+        $o->build_exon( 'ENSE00002184' );
     } qr/Unable to retrieve exon/, 'throws error for invalid exon id';
+
+    ok my $exon = $o->build_exon( 'ENSE00002184393' ), 'can retrieve exon';
+    isa_ok $exon, 'Bio::EnsEMBL::Exon';
+    is $exon->coord_system_name, 'chromosome', 'coordinate system name for exon is chromosome';
 }
 
 sub region_length : Test(6) {
@@ -68,7 +65,7 @@ sub region_length : Test(6) {
     my $new_obj = $metaclass->new_object(
         dir             => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
         species         => 'Human',
-        target_exon     => 'ENSE00002184393',
+        five_prime_exon => 'ENSE00002184393',
         target_genes    => [ 'test_gene' ],
         region_length_ER_3F => 201,
     );
@@ -77,29 +74,112 @@ sub region_length : Test(6) {
     is $new_obj->region_length_3F, 100, 'correctly calculated 3F region length given odd number';
 }
 
+sub target_start_and_end : Tests(14) {
+    my $test = shift;
+    my $metaclass = $test->get_test_object_metaclass();
+
+    note( 'Single exon targets' );
+    ok my $o = $test->_get_test_object, 'can grab test object';
+    ok my $exon = $o->build_exon( $o->five_prime_exon ), 'can grab exon';
+
+    is $o->target_start, $exon->seq_region_start, 'target start is correct';
+    is $o->target_end, $exon->seq_region_end, 'target end is correct';
+
+    note( 'Multi exon targets, -ve strand' );
+    ok my $cbx1_obj = $metaclass->new_object(
+        dir              => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
+        species          => 'Human',
+        five_prime_exon  => 'ENSE00001515177',
+        three_prime_exon => 'ENSE00002771605',
+        target_genes     => [ 'cbx1' ],
+    ), 'can grab new object with multi exon targets on -ve strand';
+    ok my $exon_5p = $o->build_exon( $cbx1_obj->five_prime_exon ), 'can grab 5 prime exon';
+    ok my $exon_3p = $o->build_exon( $cbx1_obj->three_prime_exon ), 'can grab 3 prime exon';
+    is $cbx1_obj->target_start, $exon_3p->seq_region_start, 'target start is correct';
+    is $cbx1_obj->target_end, $exon_5p->seq_region_end, 'target end is correct';
+
+    note( 'Multi exon targets, +ve strand' );
+    ok my $brac2_obj = $metaclass->new_object(
+        dir              => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
+        species          => 'Human',
+        five_prime_exon  => 'ENSE00001484009',
+        three_prime_exon => 'ENSE00003659301 ',
+        target_genes     => [ 'brac2' ],
+    ), 'can grab new object with multi exon targets';
+    ok $exon_5p = $o->build_exon( $brac2_obj->five_prime_exon ), 'can grab 5 prime exon';
+    ok $exon_3p = $o->build_exon( $brac2_obj->three_prime_exon ), 'can grab 3 prime exon';
+    is $brac2_obj->target_start, $exon_5p->seq_region_start, 'target start is correct';
+    is $brac2_obj->target_end, $exon_3p->seq_region_end, 'target end is correct';
+}
+
+sub validate_exon_targets : Tests(11) {
+    my $test = shift;
+    my $metaclass = $test->get_test_object_metaclass();
+    ok my $o = $test->_get_test_object, 'can grab test object';
+
+    ok my $h2afx_exon = $o->build_exon( 'ENSE00002184393' ), 'can grab exon';
+    ok my $cbx1_exon_5p = $o->build_exon( 'ENSE00001515177' ), 'can grab exon';
+    ok my $cbx1_exon_3p = $o->build_exon( 'ENSE00002771605' ), 'can grab exon';
+
+    throws_ok{
+        $o->validate_exon_targets( $h2afx_exon, $cbx1_exon_5p )
+    } qr/Exon mismatch/, 'throws error if exons belong to different genes'; 
+
+    # -ve strand exons
+    # validate_exon_targets is called in BUILD method
+    ok my $cbx1_obj = $metaclass->new_object(
+        dir              => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
+        species          => 'Human',
+        five_prime_exon  => 'ENSE00001515177',
+        three_prime_exon => 'ENSE00002771605',
+        target_genes     => [ 'cbx1' ],
+    ), 'can grab new object with multi exon targets on -ve strand';
+
+    throws_ok{
+        $cbx1_obj->validate_exon_targets( $cbx1_exon_3p, $cbx1_exon_5p )
+    } qr/On -ve strand, five prime exon/, 'error if exons are in wrong order on -ve strand'; 
+
+    # brac2 exons on +ve strand
+    # validate_exon_targets is called in BUILD method
+    ok my $brac2_obj = $metaclass->new_object(
+        dir              => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
+        species          => 'Human',
+        five_prime_exon  => 'ENSE00001484009',
+        three_prime_exon => 'ENSE00003659301 ',
+        target_genes     => [ 'brac2' ],
+    ), 'can grab new object with multi exon targets';
+    ok my $brac2_exon_5p = $o->build_exon( 'ENSE00001484009' ), 'can grab exon';
+    ok my $brac2_exon_3p = $o->build_exon( 'ENSE00003659301 ' ), 'can grab exon';
+
+    throws_ok{
+        $brac2_obj->validate_exon_targets( $brac2_exon_3p, $brac2_exon_5p )
+    } qr/On \+ve strand, five prime exon/, 'error if exons are in wrong order on +ve strand'; 
+
+}
+
 sub exon_region_start_and_end : Test(7) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
     is $o->chr_strand, -1, 'strand is -1';
-    is $o->exon_region_start, $o->exon->seq_region_start - 200
+    is $o->exon_region_start, $o->target_start - 200
         , 'exon_region_start value correct -ve strand';
-    is $o->exon_region_end, $o->exon->seq_region_end + 300
+    is $o->exon_region_end, $o->target_end + 300
         , 'exon_region_end value correct -ve strand';
 
     my $metaclass = $test->get_test_object_metaclass();
     my $new_obj = $metaclass->new_object(
         dir             => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
         species         => 'Human',
-        target_exon     => 'ENSE00002184393',
+        five_prime_exon => 'ENSE00002184393',
         target_genes    => [ 'test_gene' ],
         chr_strand      => 1,
     );
 
     is $new_obj->chr_strand, 1, 'forced strand to be 1';
-    is $new_obj->exon_region_start, $o->exon->seq_region_start - 300
+    is $new_obj->exon_region_start, $o->target_start - 300
         , 'exon_region_start value correct +ve strand';
-    is $new_obj->exon_region_end, $o->exon->seq_region_end + 200
+    is $new_obj->exon_region_end, $o->target_end + 200
         , 'exon_region_end value correct +ve strand';
 }
 
@@ -108,24 +188,24 @@ sub five_prime_region_start_and_end : Test(7) {
     ok my $o = $test->_get_test_object, 'can grab test object';
 
     is $o->chr_strand, -1, 'strand is -1';
-    is $o->five_prime_region_start, $o->exon->seq_region_end + 301
+    is $o->five_prime_region_start, $o->target_end + 301
         , 'five_prime_region_start value correct -ve strand';
-    is $o->five_prime_region_end, $o->exon->seq_region_end + 300 + 1600
+    is $o->five_prime_region_end, $o->target_end + 300 + 1600
         , 'five_prime_region_end value correct -ve strand';
 
     my $metaclass = $test->get_test_object_metaclass();
     my $new_obj = $metaclass->new_object(
         dir             => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
         species         => 'Human',
-        target_exon     => 'ENSE00002184393',
+        five_prime_exon => 'ENSE00002184393',
         target_genes    => [ 'test_gene' ],
         chr_strand      => 1,
     );
 
     is $new_obj->chr_strand, 1, 'forced strand to be 1';
-    is $new_obj->five_prime_region_start, $o->exon->seq_region_start - ( 300 + 1600 )
+    is $new_obj->five_prime_region_start, $o->target_start - ( 300 + 1600 )
         , 'five_prime_region_start value correct +ve strand';
-    is $new_obj->five_prime_region_end, $o->exon->seq_region_start - 301
+    is $new_obj->five_prime_region_end, $o->target_start - 301
         , 'five_prime_region_end value correct +ve strand';
 }
 
@@ -134,24 +214,24 @@ sub three_prime_region_start_and_end : Test(7) {
     ok my $o = $test->_get_test_object, 'can grab test object';
 
     is $o->chr_strand, -1, 'strand is -1';
-    is $o->three_prime_region_start, $o->exon->seq_region_start - ( 200 + 1600 )
+    is $o->three_prime_region_start, $o->target_start - ( 200 + 1600 )
         , 'three_prime_region_start value correct -ve strand';
-    is $o->three_prime_region_end, $o->exon->seq_region_start - 201
+    is $o->three_prime_region_end, $o->target_start - 201
         , 'three_prime_region_end value correct -ve strand';
 
     my $metaclass = $test->get_test_object_metaclass();
     my $new_obj = $metaclass->new_object(
         dir             => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
         species         => 'Human',
-        target_exon     => 'ENSE00002184393',
+        five_prime_exon => 'ENSE00002184393',
         target_genes    => [ 'test_gene' ],
         chr_strand      => 1,
     );
 
     is $new_obj->chr_strand, 1, 'forced strand to be 1';
-    is $new_obj->three_prime_region_start, $o->exon->seq_region_end + 201
+    is $new_obj->three_prime_region_start, $o->target_end + 201
         , 'three_prime_region_start value correct +ve strand';
-    is $new_obj->three_prime_region_end, $o->exon->seq_region_end + 200 + 1600
+    is $new_obj->three_prime_region_end, $o->target_end + 200 + 1600
         , 'three_prime_region_end value correct +ve strand';
 }
 
@@ -167,7 +247,7 @@ sub check_oligo_region_sizes : Test(3) {
     my $new_obj2 = $metaclass->new_object(
         dir             => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
         species         => 'Human',
-        target_exon     => 'ENSE00002184393',
+        five_prime_exon => 'ENSE00002184393',
         target_genes    => [ 'test_gene' ],
         region_length_5F => 10,
     );
@@ -197,13 +277,12 @@ sub get_oligo_pair_region_coordinates : Test(5) {
 
 sub _get_test_object {
     my ( $test, $params ) = @_;
-    my $strand = $params->{strand} || 1;
 
     my $metaclass = $test->get_test_object_metaclass();
     return $metaclass->new_object(
         dir             => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
         species         => 'Human',
-        target_exon     => 'ENSE00002184393',
+        five_prime_exon => 'ENSE00002184393',
         target_genes    => [ 'test_gene' ],
     );
 }
