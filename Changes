@@ -1,5 +1,9 @@
 {{$NEXT}}
 
+0.017     2014-01-29 14:51:18 Europe/London
+
+    Allow multi exon targeting for gibson designs
+
 0.016     2014-01-21 07:45:20 Europe/London
 
     Switch ref genomes for bwa and blast to scratch109
