@@ -372,8 +372,8 @@ sub BUILD {
     $self->chr_name( $five_prime_exon->seq_region_name ) unless $self->chr_name;
     $self->chr_strand( $five_prime_exon->strand ) unless $self->chr_strand;
 
-    my $three_prime_exon = $self->build_exon( $self->three_prime_exon )
-        if $self->three_prime_exon;
+    my $three_prime_exon
+        = $self->three_prime_exon ? $self->build_exon( $self->three_prime_exon ) : undef;
 
     # if there is no three prime exon then just specify target start and end
     # as the start and end of the five prime exon
@@ -396,7 +396,6 @@ sub BUILD {
 
     return;
 }
-
 
 =head2 get_oligo_pair_region_coordinates
 
