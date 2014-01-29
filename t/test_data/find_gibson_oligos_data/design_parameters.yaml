@@ -19,7 +19,7 @@ region_offset_ER_3F: 100
 repeat_mask_class: []
 species: Human
 target_end: 32907524
-target_exon: ENSE00000939167
+five_prime_exon: ENSE00000939167
 target_genes:
 - BRCA2
 target_start: 32906409

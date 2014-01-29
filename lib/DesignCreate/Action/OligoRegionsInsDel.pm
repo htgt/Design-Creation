@@ -1,7 +1,7 @@
 package DesignCreate::Action::OligoRegionsInsDel;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::OligoRegionsInsDel::VERSION = '0.016';
+    $DesignCreate::Action::OligoRegionsInsDel::VERSION = '0.017';
 }
 ## use critic
 

@@ -1,7 +1,7 @@
 package DesignCreate::Role::EnsEMBL;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Role::EnsEMBL::VERSION = '0.016';
+    $DesignCreate::Role::EnsEMBL::VERSION = '0.017';
 }
 ## use critic
 
@@ -26,7 +26,7 @@ has ensembl_util => (
     isa        => 'LIMS2::Util::EnsEMBL',
     traits     => [ 'NoGetopt' ],
     lazy_build => 1,
-    handles    => [ qw( slice_adaptor exon_adaptor ) ],
+    handles    => [ qw( slice_adaptor exon_adaptor gene_adaptor ) ],
 );
 
 sub _build_ensembl_util {
