@@ -69,8 +69,8 @@ sub _build_oligo_classes {
     if ( $design_method eq 'conditional' ) {
         return [ qw( G U D ) ];
     }
-    elsif ( $design_method eq 'gibson' ) {
-        return [ sort keys %GIBSON_PRIMER_REGIONS ];
+    elsif ( $design_method =~ /gibson/ ) {
+        return [ sort keys %{ $GIBSON_PRIMER_REGIONS{$design_method} }];
     }
     else {
         return [ 'G' ];
