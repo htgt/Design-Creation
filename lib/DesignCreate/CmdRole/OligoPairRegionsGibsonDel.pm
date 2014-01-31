@@ -132,7 +132,7 @@ has region_length_3F => (
     is            => 'ro',
     isa           => PositiveInt,
     traits        => [ 'Getopt' ],
-    default       => 200,
+    default       => 100,
     documentation => 'Length of 3F oligo candidate region',
     cmd_flag      => 'region-length-3f'
 );
