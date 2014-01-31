@@ -2,7 +2,7 @@ package DesignCreate::Action::GibsonDesign;
 
 =head1 NAME
 
-DesignCreate::Action::GibsonDesign - Run design creation for gibosn design on a exon end to end
+DesignCreate::Action::GibsonDesign - Run design creation for gibson design on exon(s) 
 
 =head1 DESCRIPTION
 
