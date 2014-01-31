@@ -39,53 +39,6 @@ sub valid_run_cmd : Test(3) {
     ok !$result->error, 'no command errors';
 }
 
-sub target_start_and_end : Tests(17) {
-    my $test = shift;
-    my $metaclass = $test->get_test_object_metaclass();
-
-    note( 'Single exon targets' );
-    ok my $o = $test->_get_test_object, 'can grab test object';
-    ok my $exon = $o->build_exon( $o->five_prime_exon ), 'can grab exon';
-
-    lives_ok {
-        $o->calculate_target_region_coordinates
-    } 'can call calculate_target_region_coordinates';
-    is $o->target_start, $exon->seq_region_start, 'target start is correct';
-    is $o->target_end, $exon->seq_region_end, 'target end is correct';
-
-    note( 'Multi exon targets, -ve strand' );
-    ok my $cbx1_obj = $metaclass->new_object(
-        dir              => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
-        species          => 'Human',
-        five_prime_exon  => 'ENSE00001515177',
-        three_prime_exon => 'ENSE00002771605',
-        target_genes     => [ 'cbx1' ],
-    ), 'can grab new object with multi exon targets on -ve strand';
-    ok my $exon_5p = $o->build_exon( $cbx1_obj->five_prime_exon ), 'can grab 5 prime exon';
-    ok my $exon_3p = $o->build_exon( $cbx1_obj->three_prime_exon ), 'can grab 3 prime exon';
-    lives_ok {
-        $cbx1_obj->calculate_target_region_coordinates
-    } 'can call calculate_target_region_coordinates';
-    is $cbx1_obj->target_start, $exon_3p->seq_region_start, 'target start is correct';
-    is $cbx1_obj->target_end, $exon_5p->seq_region_end, 'target end is correct';
-
-    note( 'Multi exon targets, +ve strand' );
-    ok my $brac2_obj = $metaclass->new_object(
-        dir              => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
-        species          => 'Human',
-        five_prime_exon  => 'ENSE00001484009',
-        three_prime_exon => 'ENSE00003659301 ',
-        target_genes     => [ 'brac2' ],
-    ), 'can grab new object with multi exon targets';
-    ok $exon_5p = $o->build_exon( $brac2_obj->five_prime_exon ), 'can grab 5 prime exon';
-    ok $exon_3p = $o->build_exon( $brac2_obj->three_prime_exon ), 'can grab 3 prime exon';
-    lives_ok {
-        $brac2_obj->calculate_target_region_coordinates
-    } 'can call calculate_target_region_coordinates';
-    is $brac2_obj->target_start, $exon_5p->seq_region_start, 'target start is correct';
-    is $brac2_obj->target_end, $exon_3p->seq_region_end, 'target end is correct';
-}
-
 sub five_prime_region_start_and_end : Test(9) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
