@@ -109,6 +109,9 @@ sub _build_oligos {
     elsif ( $design_method eq 'gibson' ) {
         return [ qw( 5F 5R EF ER 3F 3R ) ];
     }
+    elsif ( $design_method eq 'gibson-deletion' ) {
+        return [ qw( 5F 5R 3F 3R ) ];
+    }
     else {
         DesignCreate::Exception->throw( 'Unknown design method ' . $design_method );
     }
