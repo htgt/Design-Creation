@@ -1,14 +1,14 @@
 package DesignCreate::Action::GibsonDesign;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::GibsonDesign::VERSION = '0.017';
+    $DesignCreate::Action::GibsonDesign::VERSION = '0.018';
 }
 ## use critic
 
 
 =head1 NAME
 
-DesignCreate::Action::GibsonDesign - Run design creation for gibosn design on a exon end to end
+DesignCreate::Action::GibsonDesign - Run design creation for gibson design on exon(s) 
 
 =head1 DESCRIPTION
 

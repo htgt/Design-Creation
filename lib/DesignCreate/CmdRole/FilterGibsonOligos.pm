@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::FilterGibsonOligos;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::FilterGibsonOligos::VERSION = '0.017';
+    $DesignCreate::CmdRole::FilterGibsonOligos::VERSION = '0.018';
 }
 ## use critic
 
@@ -23,7 +23,7 @@ use DesignCreate::Exception;
 use YAML::Any qw( LoadFile DumpFile );
 use DesignCreate::Types qw( NaturalNumber PositiveInt );
 use DesignCreate::Util::BWA;
-use DesignCreate::Constants qw( $DEFAULT_BWA_OLIGO_DIR_NAME );
+use DesignCreate::Constants qw( $DEFAULT_BWA_OLIGO_DIR_NAME %GIBSON_PRIMER_REGIONS );
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
 use Const::Fast;
 use Fcntl; # O_ constants
@@ -225,11 +225,11 @@ sub check_oligo_not_near_exon {
     return 0;
 }
 
-
 sub validate_oligo_pairs {
     my $self = shift;
 
-    for my $oligo_pair_region ( qw( exon five_prime three_prime ) ) {
+    my $design_method = $self->design_param( 'design_method' );
+    for my $oligo_pair_region ( keys %{ $GIBSON_PRIMER_REGIONS{$design_method} } ) {
         my $oligo_pair_file
             = $self->get_file( $oligo_pair_region . '_oligo_pairs.yaml', $self->oligo_finder_output_dir );
 
@@ -250,7 +250,8 @@ sub validate_oligo_pairs {
 sub output_valid_oligo_pairs {
     my $self = shift;
 
-    for my $oligo_pair_region ( qw( exon five_prime three_prime ) ) {
+    my $design_method = $self->design_param( 'design_method' );
+    for my $oligo_pair_region ( keys %{ $GIBSON_PRIMER_REGIONS{$design_method} } ) {
         DesignCreate::Exception->throw( "No valid oligo pairs for $oligo_pair_region oligo region" )
             unless $self->region_has_oligo_pairs( $oligo_pair_region );
 

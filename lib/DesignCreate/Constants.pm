@@ -1,7 +1,7 @@
 package DesignCreate::Constants;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Constants::VERSION = '0.017';
+    $DesignCreate::Constants::VERSION = '0.018';
 }
 ## use critic
 
@@ -91,20 +91,34 @@ const our %CURRENT_ASSEMBLY => (
 );
 
 const our %GIBSON_PRIMER_REGIONS => (
-    exon => {
-        forward => 'EF',
-        reverse => 'ER',
-        slice  => 'exon_region_slice'
+    'gibson' => {
+        exon => {
+            forward => 'EF',
+            reverse => 'ER',
+            slice   => 'exon_region_slice'
+        },
+        five_prime => {
+            forward => '5F',
+            reverse => '5R',
+            slice   => 'five_prime_region_slice'
+        },
+        three_prime => {
+            forward => '3F',
+            reverse => '3R',
+            slice   => 'three_prime_region_slice'
+        },
     },
-    five_prime => {
-        forward => '5F',
-        reverse => '5R',
-        slice  => 'five_prime_region_slice'
-    },
-    three_prime => {
-        forward => '3F',
-        reverse => '3R',
-        slice  => 'three_prime_region_slice'
+    'gibson-deletion' => {
+        five_prime => {
+            forward => '5F',
+            reverse => '5R',
+            slice   => 'five_prime_region_slice'
+        },
+        three_prime => {
+            forward => '3F',
+            reverse => '3R',
+            slice   => 'three_prime_region_slice'
+        },
     },
 );
 

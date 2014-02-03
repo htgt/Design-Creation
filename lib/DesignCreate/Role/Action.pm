@@ -1,7 +1,7 @@
 package DesignCreate::Role::Action;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Role::Action::VERSION = '0.017';
+    $DesignCreate::Role::Action::VERSION = '0.018';
 }
 ## use critic
 
@@ -102,6 +102,7 @@ has oligos => (
     }
 );
 
+## no critic(ProhibitCascadingIfElse)
 sub _build_oligos {
     my $self = shift;
 
@@ -115,12 +116,16 @@ sub _build_oligos {
     elsif ( $design_method eq 'gibson' ) {
         return [ qw( 5F 5R EF ER 3F 3R ) ];
     }
+    elsif ( $design_method eq 'gibson-deletion' ) {
+        return [ qw( 5F 5R 3F 3R ) ];
+    }
     else {
         DesignCreate::Exception->throw( 'Unknown design method ' . $design_method );
     }
 
     return;
 }
+## use critic
 
 has lims2_api => (
     is         => 'ro',

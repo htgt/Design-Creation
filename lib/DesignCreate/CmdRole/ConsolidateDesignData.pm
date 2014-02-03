@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::ConsolidateDesignData;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::ConsolidateDesignData::VERSION = '0.017';
+    $DesignCreate::CmdRole::ConsolidateDesignData::VERSION = '0.018';
 }
 ## use critic
 
@@ -75,8 +75,8 @@ sub _build_oligo_classes {
     if ( $design_method eq 'conditional' ) {
         return [ qw( G U D ) ];
     }
-    elsif ( $design_method eq 'gibson' ) {
-        return [ sort keys %GIBSON_PRIMER_REGIONS ];
+    elsif ( $design_method =~ /gibson/ ) {
+        return [ sort keys %{ $GIBSON_PRIMER_REGIONS{$design_method} }];
     }
     else {
         return [ 'G' ];

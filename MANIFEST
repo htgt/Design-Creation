@@ -15,9 +15,11 @@ lib/DesignCreate/Action/FilterGibsonOligos.pm
 lib/DesignCreate/Action/FilterOligos.pm
 lib/DesignCreate/Action/FindGibsonOligos.pm
 lib/DesignCreate/Action/FindOligos.pm
+lib/DesignCreate/Action/GibsonDeletionDesign.pm
 lib/DesignCreate/Action/GibsonDesign.pm
 lib/DesignCreate/Action/InsDelDesign.pm
 lib/DesignCreate/Action/OligoPairRegionsGibson.pm
+lib/DesignCreate/Action/OligoPairRegionsGibsonDel.pm
 lib/DesignCreate/Action/OligoRegionsConditional.pm
 lib/DesignCreate/Action/OligoRegionsDelExon.pm
 lib/DesignCreate/Action/OligoRegionsInsDel.pm
@@ -33,6 +35,7 @@ lib/DesignCreate/CmdRole/FilterOligos.pm
 lib/DesignCreate/CmdRole/FindGibsonOligos.pm
 lib/DesignCreate/CmdRole/FindOligos.pm
 lib/DesignCreate/CmdRole/OligoPairRegionsGibson.pm
+lib/DesignCreate/CmdRole/OligoPairRegionsGibsonDel.pm
 lib/DesignCreate/CmdRole/OligoRegionsConditional.pm
 lib/DesignCreate/CmdRole/OligoRegionsDelExon.pm
 lib/DesignCreate/CmdRole/OligoRegionsInsDel.pm
@@ -52,6 +55,7 @@ lib/DesignCreate/Role/EnsEMBL.pm
 lib/DesignCreate/Role/FilterOligos.pm
 lib/DesignCreate/Role/GapOligoCoordinates.pm
 lib/DesignCreate/Role/OligoRegionCoordinates.pm
+lib/DesignCreate/Role/OligoRegionCoordinatesGibson.pm
 lib/DesignCreate/Role/OligoRegionCoordinatesInsDel.pm
 lib/DesignCreate/Types.pm
 lib/DesignCreate/Util/BWA.pm
@@ -62,6 +66,7 @@ t/00-compile.t
 t/10-Action.t
 t/20-EnsEMBL.t
 t/20-OligoRegionCoordinates.t
+t/20-OligoRegionCoordinatesGibson.t
 t/30-ConsolidateDesignData.t
 t/30-FetchOligoRegionsSequence.t
 t/30-FilterGibsonOligos.t
@@ -69,6 +74,7 @@ t/30-FilterOligos.t
 t/30-FindGibsonOligos.t
 t/30-FindOligos.t
 t/30-OligoPairRegionsGibson.t
+t/30-OligoPairRegionsGibsonDel.t
 t/30-OligoRegionsConditional.t
 t/30-OligoRegionsInsDel.t
 t/30-PersistDesign.t
@@ -77,6 +83,7 @@ t/30-PickGapOligos.t
 t/30-RunAOS.t
 t/40-ConditionalDesign.t
 t/40-DelExonDesign.t
+t/40-GibsonDeletionDesign.t
 t/40-GibsonDesign.t
 t/40-InsDelDesign.t
 t/50-Exonerate.t
@@ -85,6 +92,7 @@ t/50-Primer3.t
 t/author-critic.t
 t/lib/Test/DesignCreate/Action/ConditionalDesign.pm
 t/lib/Test/DesignCreate/Action/DelExonDesign.pm
+t/lib/Test/DesignCreate/Action/GibsonDeletionDesign.pm
 t/lib/Test/DesignCreate/Action/GibsonDesign.pm
 t/lib/Test/DesignCreate/Action/InsDelDesign.pm
 t/lib/Test/DesignCreate/Class.pm
@@ -95,6 +103,7 @@ t/lib/Test/DesignCreate/CmdRole/FilterOligos.pm
 t/lib/Test/DesignCreate/CmdRole/FindGibsonOligos.pm
 t/lib/Test/DesignCreate/CmdRole/FindOligos.pm
 t/lib/Test/DesignCreate/CmdRole/OligoPairRegionsGibson.pm
+t/lib/Test/DesignCreate/CmdRole/OligoPairRegionsGibsonDel.pm
 t/lib/Test/DesignCreate/CmdRole/OligoRegionsConditional.pm
 t/lib/Test/DesignCreate/CmdRole/OligoRegionsInsDel.pm
 t/lib/Test/DesignCreate/CmdRole/PersistDesign.pm
@@ -104,6 +113,7 @@ t/lib/Test/DesignCreate/CmdRole/RunAOS.pm
 t/lib/Test/DesignCreate/Role/Action.pm
 t/lib/Test/DesignCreate/Role/EnsEMBL.pm
 t/lib/Test/DesignCreate/Role/OligoRegionCoordinates.pm
+t/lib/Test/DesignCreate/Role/OligoRegionCoordinatesGibson.pm
 t/lib/Test/DesignCreate/Util/Exonerate.pm
 t/lib/Test/DesignCreate/Util/PickBlockOligoPair.pm
 t/lib/Test/DesignCreate/Util/Primer3.pm

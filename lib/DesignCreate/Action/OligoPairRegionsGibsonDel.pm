@@ -1,19 +1,19 @@
-package DesignCreate::Action::OligoPairRegionsGibson;
+package DesignCreate::Action::OligoPairRegionsGibsonDel;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::OligoPairRegionsGibson::VERSION = '0.018';
+    $DesignCreate::Action::OligoPairRegionsGibsonDel::VERSION = '0.018';
 }
 ## use critic
 
 
 =head1 NAME
 
-DesignCreate::Action::OligoPairRegionsGibson - Work out coordinate for oligo regions in gibson designs
+DesignCreate::Action::OligoPairRegionsGibsonDel - Work out coordinate for oligo regions in gibson deletion designs
 
 =head1 DESCRIPTION
 
 Generate a yaml file giving the start and end coordiantes for the oligo pair
-regions in gibson designs: exon_region five_prime_region and three_prime_region
+regions in gibson deletion designs: five_prime_region and three_prime_region
 
 =cut
 
@@ -25,7 +25,7 @@ use Try::Tiny;
 use namespace::autoclean;
 
 extends qw( DesignCreate::Action );
-with 'DesignCreate::CmdRole::OligoPairRegionsGibson';
+with 'DesignCreate::CmdRole::OligoPairRegionsGibsonDel';
 
 sub execute {
     my ( $self, $opts, $args ) = @_;
@@ -34,7 +34,7 @@ sub execute {
         $self->get_oligo_pair_region_coordinates;
     }
     catch{
-        $self->log->error( "Failed to generate oligo pair region coordinates for gibson designs:\n" . $_ );
+        $self->log->error( "Failed to generate oligo pair region coordinates for gibson deletion designs:\n" . $_ );
     };
 
     return;

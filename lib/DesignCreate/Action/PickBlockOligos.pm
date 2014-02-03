@@ -1,7 +1,7 @@
 package DesignCreate::Action::PickBlockOligos;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::PickBlockOligos::VERSION = '0.017';
+    $DesignCreate::Action::PickBlockOligos::VERSION = '0.018';
 }
 ## use critic
 

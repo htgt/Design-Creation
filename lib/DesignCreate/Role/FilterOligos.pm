@@ -1,7 +1,7 @@
 package DesignCreate::Role::FilterOligos;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Role::FilterOligos::VERSION = '0.017';
+    $DesignCreate::Role::FilterOligos::VERSION = '0.018';
 }
 ## use critic
 
@@ -86,8 +86,8 @@ sub validate_oligos {
 
         for my $oligo_data ( @{ $self->all_oligos->{$oligo_type} } ) {
             # pass a string ref to $invalid_reason to the validate methods so we can get back the
-            # reason  oligo failed validation. We can not return this value directly from the
-            # validation subroutines because they are set up to trun true or false depending on
+            # reason oligo failed validation. We can not return this value directly from the
+            # validation subroutines because they are set up to return true or false depending on
             # if the oligo passes the validation check or not.
             my $invalid_reason;
             if ( $self->validate_oligo( $oligo_data, $oligo_type, \$invalid_reason ) ) {
