@@ -96,6 +96,7 @@ has oligos => (
     }
 );
 
+## no critic(ProhibitCascadingIfElse)
 sub _build_oligos {
     my $self = shift;
 
@@ -118,6 +119,7 @@ sub _build_oligos {
 
     return;
 }
+## use critic
 
 has lims2_api => (
     is         => 'ro',
