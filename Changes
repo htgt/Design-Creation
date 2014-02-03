@@ -1,5 +1,9 @@
 {{$NEXT}}
 
+0.018     2014-02-03 09:12:24 Europe/London
+    
+    Add deletion gibson design creation
+
 0.017     2014-01-29 14:51:18 Europe/London
 
     Allow multi exon targeting for gibson designs
