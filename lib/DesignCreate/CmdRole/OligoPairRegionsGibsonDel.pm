@@ -16,29 +16,16 @@ design types is found in DesignCreate::Role::OligoRegionCoodinates.
 
 use Moose::Role;
 use DesignCreate::Exception;
-use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
-use DesignCreate::Types qw( PositiveInt Strand DesignMethod Chromosome );
+use DesignCreate::Types qw( PositiveInt DesignMethod );
 use DesignCreate::Constants qw( %GIBSON_PRIMER_REGIONS );
 use Const::Fast;
 use Try::Tiny;
 use namespace::autoclean;
 
-with qw(
-DesignCreate::Role::OligoRegionCoordinates
-DesignCreate::Role::OligoRegionCoordinatesGibson
-);
+with qw( DesignCreate::Role::OligoRegionCoordinatesGibson );
 
 const my @DESIGN_PARAMETERS => qw(
 design_method
-species
-assembly
-target_genes
-five_prime_exon
-three_prime_exon
-target_start
-target_end
-chr_name
-chr_strand
 region_length_5F
 region_offset_5F
 region_length_5R
@@ -47,24 +34,6 @@ region_length_3F
 region_offset_3F
 region_length_3R
 region_offset_3R
-);
-
-has five_prime_exon => (
-    is            => 'ro',
-    isa           => 'Str',
-    traits        => [ 'Getopt' ],
-    documentation => 'EnsEMBL exon id for five prime exon, if targeting only one exon use this',
-    required      => 1,
-    cmd_flag      => 'five-prime-exon',
-    cmd_aliases   => 'target-exon', # keep old name as legacy
-);
-
-has three_prime_exon => (
-    is            => 'ro',
-    isa           => 'Str',
-    traits        => [ 'Getopt' ],
-    documentation => 'EnsEMBL exon id for last exon, only used if specifying range of exons to target',
-    cmd_flag      => 'three-prime-exon',
 );
 
 has design_method => (
@@ -146,124 +115,30 @@ has region_offset_3F => (
     cmd_flag      => 'region-offset-3f'
 );
 
-#
-# Following values can be deduced from already given design parameters
-#
-has target_start => (
-    is         => 'rw',
-    isa        => PositiveInt,
-    traits     => [ 'NoGetopt' ],
- );
-
-has target_end => (
-    is         => 'rw',
-    isa        => PositiveInt,
-    traits     => [ 'NoGetopt' ],
-);
-
-has chr_name => (
-    is         => 'rw',
-    isa        => Chromosome,
-    traits     => [ 'NoGetopt' ],
-);
-
-has chr_strand => (
-    is         => 'rw',
-    isa        => Strand,
-    traits     => [ 'NoGetopt' ],
-);
-
 has five_prime_region_start => (
-    is         => 'ro',
+    is         => 'rw',
     isa        => PositiveInt,
     traits     => [ 'NoGetopt' ],
-    lazy_build => 1,
 );
-
-sub _build_five_prime_region_start {
-    my $self = shift;
-    my $start;
-
-    if ( $self->chr_strand == 1 ) {
-        $start = $self->five_prime_region_end
-               - ( $self->region_offset_5F + $self->region_length_5F + $self->region_length_5R );
-    }
-    else {
-        $start = $self->target_end + $self->region_offset_5R;
-    }
-    $self->log->debug( "Five_prime region start: $start" );
-
-    return $start;
-}
 
 has five_prime_region_end => (
-    is         => 'ro',
+    is         => 'rw',
     isa        => PositiveInt,
     traits     => [ 'NoGetopt' ],
-    lazy_build => 1,
 );
-
-sub _build_five_prime_region_end {
-    my $self = shift;
-    my $end;
-
-    if ( $self->chr_strand == 1 ) {
-        $end = $self->target_start - $self->region_offset_5R;
-    }
-    else {
-        $end = $self->five_prime_region_start
-             + ( $self->region_offset_5F + $self->region_length_5F + $self->region_length_5R );
-    }
-    $self->log->debug( "Five prime region end: $end" );
-
-    return $end;
-}
 
 has three_prime_region_start => (
-    is         => 'ro',
+    is         => 'rw',
     isa        => PositiveInt,
     traits     => [ 'NoGetopt' ],
-    lazy_build => 1,
 );
-
-sub _build_three_prime_region_start {
-    my $self = shift;
-    my $start;
-
-    if ( $self->chr_strand == 1 ) {
-        $start = $self->target_end + $self->region_offset_3F;
-    }
-    else {
-        $start = $self->three_prime_region_end
-               - ( $self->region_offset_3R + $self->region_length_3R + $self->region_length_3F );
-    }
-    $self->log->debug( "Three prime region start: $start" );
-
-    return $start;
-}
 
 has three_prime_region_end => (
-    is         => 'ro',
+    is         => 'rw',
     isa        => PositiveInt,
     traits     => [ 'NoGetopt' ],
-    lazy_build => 1,
 );
 
-sub _build_three_prime_region_end {
-    my $self = shift;
-    my $end;
-
-    if ( $self->chr_strand == 1 ) {
-        $end = $self->three_prime_region_start
-             + ( $self->region_offset_3R + $self->region_length_3R + $self->region_length_3F );
-    }
-    else {
-        $end = $self->target_start - $self->region_offset_3F;
-    }
-    $self->log->debug( "Three prime region end: $end" );
-
-    return $end;
-}
 
 =head2 get_oligo_pair_region_coordinates
 
@@ -275,12 +150,16 @@ three_prime
 sub get_oligo_pair_region_coordinates {
     my ( $self, $opts, $args ) = @_;
 
-    # in Role::OligoRegionCoordinatesGibson
-    $self->calculate_target_region_coordinates;
-
     $self->add_design_parameters( \@DESIGN_PARAMETERS );
 
-    # in Role::OligoRegionCoordinatesGibson
+    # check target coordinate have been set, if not die
+    for my $data_type ( qw( target_start target_end chr_name chr_strand ) ) {
+        DesignCreate::Exception->throw( "No target value for: $data_type" )
+            unless $self->have_target_data( $data_type );
+    }
+
+    $self->calculate_pair_region_coordinates();
+    # In role DesignCreate::Role::OligoRegionCoodinatesGibson
     $self->check_oligo_region_sizes;
 
     my $design_method = $self->design_param( 'design_method' );
@@ -293,13 +172,50 @@ sub get_oligo_pair_region_coordinates {
         };
     }
 
-    # in Role::OligoRegionCoordinates
+    # In role DesignCreate::Role::OligoRegionCoodinatesGibson
     $self->create_oligo_region_coordinate_file;
     $self->update_design_attempt_record( { status => 'coordinates_calculated' } );
 
     return;
 }
 
+=head2 calculate_pair_region_coordinates
+
+Calculate start and end coordinates of the oligo pair regions
+
+=cut
+sub calculate_pair_region_coordinates {
+    my ( $self ) = @_;
+    
+    my $target_start = $self->get_target_data( 'target_start' );
+    my $target_end   = $self->get_target_data( 'target_end' );
+    my $strand       = $self->get_target_data( 'chr_strand' );
+    if ( $strand == 1 ) {
+        # five prime region
+        $self->five_prime_region_end( $target_start - $self->region_offset_5R );
+        $self->five_prime_region_start( $self->five_prime_region_end
+               - ( $self->region_offset_5F + $self->region_length_5F + $self->region_length_5R ) );
+
+        # three prime region
+        $self->three_prime_region_start( $target_end + $self->region_offset_3F );
+        $self->three_prime_region_end( $self->three_prime_region_start
+             + ( $self->region_offset_3R + $self->region_length_3R + $self->region_length_3F ) );
+    }
+    else {
+        # five prime region
+        $self->five_prime_region_end( $self->five_prime_region_start
+             + ( $self->region_offset_5F + $self->region_length_5F + $self->region_length_5R ) );
+        $self->five_prime_region_start( $target_end + $self->region_offset_5R );
+
+        # three prime region
+        $self->three_prime_region_end( $target_start - $self->region_offset_3F );
+        $self->three_prime_region_start( $self->three_prime_region_end
+               - ( $self->region_offset_3R + $self->region_length_3R + $self->region_length_3F ) );
+    }
+    $self->log->info('Calculated oligo region coordinates for design');
+
+    return;
+}
 
 1;
 
