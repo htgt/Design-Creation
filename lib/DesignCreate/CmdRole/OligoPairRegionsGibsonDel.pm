@@ -203,9 +203,9 @@ sub calculate_pair_region_coordinates {
     }
     else {
         # five prime region
+        $self->five_prime_region_start( $target_end + $self->region_offset_5R );
         $self->five_prime_region_end( $self->five_prime_region_start
              + ( $self->region_offset_5F + $self->region_length_5F + $self->region_length_5R ) );
-        $self->five_prime_region_start( $target_end + $self->region_offset_5R );
 
         # three prime region
         $self->three_prime_region_end( $target_start - $self->region_offset_3F );
