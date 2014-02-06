@@ -87,8 +87,43 @@ sub create_target_coordinate_file : Test(6) {
     is $target_data->{chr_name}, 9, '.. chr_name is correct';
 }
 
-sub _get_test_object {
+sub chr_name : Test(3) {
     my $test = shift;
+
+    throws_ok{
+        $test->_get_test_object( { chr_strand => -1, chr_name => 30 } )
+    } qr/Invalid chromosome name, 30/, 'throws error with invalid chromosome name';
+
+    throws_ok{
+        $test->_get_test_object( { chr_strand => -1, chr_name => 'Z'} )
+    } qr/Invalid chromosome name, Z/, 'throws error with invalid chromosome name';
+
+    lives_ok{
+        $test->_get_test_object( { chr_strand => -1, chr_name => 'y'} )
+    } 'valid chromosome okay';
+}
+
+sub chr_strand : Test(3) {
+    my $test = shift;
+
+    throws_ok{
+        $test->_get_test_object( { chr_strand => 2, chr_name => '3'} )
+    } qr/Invalid strand 2/, 'throws error with invalid chromosome strand';
+
+    throws_ok{
+        $test->_get_test_object( { chr_strand => -2, chr_name => 'X' } )
+    } qr/Invalid strand -2/, 'throws error with invalid chromosome strand';
+
+    lives_ok{
+        $test->_get_test_object( { chr_strand => -1, chr_name => 'X' } )
+    } 'valid strand okay';
+}
+
+sub _get_test_object {
+    my ( $test, $params ) = @_;
+
+    my $chr_name   = $params->{chr_name} ? $params->{chr_name} : 9;
+    my $chr_strand = $params->{chr_strand} ? $params->{chr_strand} : 1;
 
     my $metaclass = $test->get_test_object_metaclass();
     return $metaclass->new_object(
@@ -96,12 +131,11 @@ sub _get_test_object {
         species         => 'Human',
         target_start    => 5000,
         target_end      => 5500,
-        chr_strand      => 1,
-        chr_name        => 9,
+        chr_strand      => $chr_strand,
+        chr_name        => $chr_name,
         target_genes    => [ 'test_gene' ],
     );
 }
-
 
 1;
 
