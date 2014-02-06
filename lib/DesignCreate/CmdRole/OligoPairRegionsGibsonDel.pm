@@ -22,7 +22,7 @@ use Const::Fast;
 use Try::Tiny;
 use namespace::autoclean;
 
-with qw( DesignCreate::Role::OligoRegionCoordinatesGibson );
+with qw( DesignCreate::Role::OligoRegionCoordinates );
 
 const my @DESIGN_PARAMETERS => qw(
 design_method
