@@ -1,8 +1,8 @@
-package DesignCreate::Action::DelExonDesign;
+package DesignCreate::Action::DeletionDesignExon;
 
 =head1 NAME
 
-DesignCreate::Action::DelExonDesign - Run design creation for Deletion design on a exon end to end
+DesignCreate::Action::DeletionDesignExon - Run design creation for deletion design on a exon(s) end to end
 
 =head1 DESCRIPTION
 
@@ -22,7 +22,8 @@ use Data::Dump qw( pp );
 
 extends qw( DesignCreate::Action );
 with qw(
-DesignCreate::CmdRole::OligoRegionsDelExon
+DesignCreate::CmdRole::TargetExons
+DesignCreate::CmdRole::OligoRegionsInsDel
 DesignCreate::CmdRole::FetchOligoRegionsSequence
 DesignCreate::CmdRole::FindOligos
 DesignCreate::CmdRole::FilterOligos
@@ -73,6 +74,7 @@ sub execute {
     $self->create_design_attempt_record;
 
     try {
+        $self->target_coordinates;
         $self->get_oligo_region_coordinates;
         $self->create_oligo_region_sequence_files;
         $self->find_oligos;
