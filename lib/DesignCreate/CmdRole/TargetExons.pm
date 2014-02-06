@@ -83,7 +83,7 @@ has target_start => (
     is         => 'rw',
     isa        => PositiveInt,
     traits     => [ 'NoGetopt' ],
- );
+);
 
 has target_end => (
     is         => 'rw',
