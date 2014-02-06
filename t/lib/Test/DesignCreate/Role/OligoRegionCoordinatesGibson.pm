@@ -37,7 +37,7 @@ sub check_oligo_region_sizes : Test(3) {
 
     my $metaclass = $test->get_test_object_metaclass();
     my $new_obj2 = $metaclass->new_object(
-        dir              => $o->dir, 
+        dir              => $o->dir,
         region_length_5F => 10,
     );
 
