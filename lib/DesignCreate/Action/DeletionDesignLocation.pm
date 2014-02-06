@@ -1,12 +1,12 @@
-package DesignCreate::Action::InsDelDesign;
+package DesignCreate::Action::DeletionDesignLocation;
 
 =head1 NAME
 
-DesignCreate::Action::InsDelDesign - Run design creation for Ins / Del designs end to end
+DesignCreate::Action::DeletionDesignLocation - Run design creation for  a location specified deletion design end to end
 
 =head1 DESCRIPTION
 
-Runs all the seperate steps used to create a Insertion of Deletion design.
+Runs all the seperate steps used to create a location specified Deletion design.
 Persists the design to LIMS2 if persist option given.
 
 =cut
@@ -22,6 +22,7 @@ use Data::Dump qw( pp );
 
 extends qw( DesignCreate::Action );
 with qw(
+DesignCreate::CmdRole::TargetLocation
 DesignCreate::CmdRole::OligoRegionsInsDel
 DesignCreate::CmdRole::FetchOligoRegionsSequence
 DesignCreate::CmdRole::FindOligos
@@ -72,6 +73,7 @@ sub execute {
     $self->create_design_attempt_record;
 
     try {
+        $self->target_coordinates;
         $self->get_oligo_region_coordinates;
         $self->create_oligo_region_sequence_files;
         $self->find_oligos;
