@@ -2,7 +2,7 @@ package DesignCreate::Action::GibsonDesign;
 
 =head1 NAME
 
-DesignCreate::Action::GibsonDesign - Run design creation for gibson design on exon(s) 
+DesignCreate::Action::GibsonDesign - Run design creation for gibson design on exon(s)
 
 =head1 DESCRIPTION
 
@@ -25,6 +25,7 @@ use YAML::Any qw( DumpFile );
 
 extends qw( DesignCreate::Action );
 with qw(
+DesignCreate::CmdRole::TargetExons
 DesignCreate::CmdRole::OligoPairRegionsGibson
 DesignCreate::CmdRole::FindGibsonOligos
 DesignCreate::CmdRole::FilterGibsonOligos
@@ -71,6 +72,7 @@ sub execute {
     $self->create_design_attempt_record;
 
     try {
+        $self->target_coordinates;
         $self->get_oligo_pair_region_coordinates;
         $self->find_oligos;
         $self->filter_oligos;

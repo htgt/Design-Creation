@@ -25,6 +25,7 @@ use YAML::Any qw( DumpFile );
 
 extends qw( DesignCreate::Action );
 with qw(
+DesignCreate::CmdRole::TargetExons
 DesignCreate::CmdRole::OligoPairRegionsGibsonDel
 DesignCreate::CmdRole::FindGibsonOligos
 DesignCreate::CmdRole::FilterGibsonOligos
@@ -71,6 +72,7 @@ sub execute {
     $self->create_design_attempt_record;
 
     try {
+        $self->target_coordinates;
         $self->get_oligo_pair_region_coordinates;
         $self->find_oligos;
         $self->filter_oligos;
