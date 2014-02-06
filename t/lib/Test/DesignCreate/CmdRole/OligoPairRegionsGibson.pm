@@ -20,7 +20,6 @@ BEGIN {
 
 sub valid_run_cmd : Test(4) {
     my $test = shift;
-
     ok my $o = $test->_get_test_object, 'can grab test object';
 
     #note: small chance with new ensembl build that we will need
@@ -101,9 +100,7 @@ sub five_prime_region_start_and_end : Test(10) {
         , 'five_prime_region_end value correct -ve strand';
 
     my $metaclass = $test->get_test_object_metaclass();
-    my $new_obj = $metaclass->new_object(
-        dir => $o->dir,
-    );
+    my $new_obj = $metaclass->new_object( dir => $o->dir );
 
     ok $new_obj->target_data->{chr_strand} = 1, 'override strand 1';
     lives_ok {
@@ -119,11 +116,12 @@ sub five_prime_region_start_and_end : Test(10) {
 sub three_prime_region_start_and_end : Test(10) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
+    ok my $target_start = $o->target_data->{target_start}, 'can grab target_start';
+    ok my $target_end = $o->target_data->{target_end}, 'can grab target_end';
+
     lives_ok {
         $o->calculate_pair_region_coordinates
     } 'can call calculate_pair_region_coordinates';
-    ok my $target_start = $o->target_data->{target_start}, 'can grab target_start';
-    ok my $target_end = $o->target_data->{target_end}, 'can grab target_end';
 
     is $o->three_prime_region_start, $target_start - ( 200 + 1600 )
         , 'three_prime_region_start value correct -ve strand';
