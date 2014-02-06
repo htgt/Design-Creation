@@ -38,7 +38,7 @@ sub _build_target_coordinate_file {
     return $self->get_file( $DEFAULT_TARGET_COORD_FILE_NAME, $self->oligo_target_regions_dir );
 }
 
-has target_coordinates => (
+has target_data => (
     is         => 'ro',
     isa        => 'HashRef',
     traits     => [ 'NoGetopt', 'Hash' ],
@@ -49,7 +49,7 @@ has target_coordinates => (
     }
 );
 
-sub _build_target_coordinates {
+sub _build_target_data {
     my $self = shift;
 
     return LoadFile( $self->target_coordinate_file );
