@@ -19,10 +19,11 @@ GetOptions(
     'persist'     => \$persist,
     'alt-designs' => \$alt_designs,
     'dir=s'       => \$base_dir_name,
-    'conditional' => \my $conditional,
+    'cond-loc'    => \my $cond_loc,
     'del-exon'    => \my $del_exon,
-    'del'         => \my $del,
-    'gibson'      => \my $gibson,
+    'del-loc'     => \my $del_loc,
+    'gibson-exon' => \my $gibson_exon,
+    'gibson-loc'  => \my $gibson_loc,
     'debug'       => \my $debug,
     'gene=s'      => \my @genes,
     'param=s'     => \my %extra_params,
@@ -57,17 +58,20 @@ sub process_design {
     my @args;
 
 ## no critic(ProhibitCascadingIfElse)
-    if ( $conditional ) {
-        push @args, 'conditional-design';
+    if ( $cond_loc ) {
+        push @args, 'conditional-design-location';
     }
     elsif ( $del_exon ) {
-        push @args, 'del-exon-design';
+        push @args, 'deletion-design-exon';
     }
-    elsif ( $gibson ) {
-        push @args, 'gibson-design'
+    elsif ( $del_loc ) {
+        push @args, 'deletion-design-location';
     }
-    elsif ( $del ) {
-        push @args, 'ins-del-design';
+    elsif ( $gibson_exon ) {
+        push @args, 'gibson-design-exon'
+    }
+    elsif ( $gibson_loc ) {
+        push @args, 'gibson-design-location'
     }
     else {
         ERROR( 'Must pick a design type' );
@@ -167,14 +171,15 @@ create-multiple-designs.pl - Create multiple designs
       --persist         Persist newly created designs to LIMS2
       --alt-designs     Create alternate designs
       --dir             Directory where design-create output goes
-      --del             Specify deletion design, coordinate based
-      --conditional     Specify conditional design, default deletion
-      --gibson          Specify gibson designs ( Human )
-      --del-exon        Specify deletion designs where we target a given exon
+      --del-loc         Specify deletion design, coordinate based target
+      --del-exon        Specify deletion designs, targeting exon(s)
+      --cond-loc        Specify conditional design, coordinate based target
+      --gibson-exon     Specify gibson designs, targeting exon(s)
+      --gibson-loc      Specify gibson designs, coordinate based target
       --gene            Only create this gene(s), picked from input file
       --param           Specify additional param(s) not in file
       --dry-run         Just print out command that would be called, don't call it
-      --param           Specify additional parameter(s) to send to design creation program 
+      --param           Specify additional parameter(s) to send to design creation program
 
 =head1 DESCRIPTION
 
