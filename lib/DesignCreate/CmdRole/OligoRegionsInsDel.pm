@@ -104,9 +104,8 @@ sub get_oligo_region_coordinates {
     return;
 }
 
-## no critic(Subroutines::ProhibitUnusedPrivateSubroutine)
-## use critic
-
+#TODO all oligos coordinates are based from target start and end, unlike
+# all the other DesignCreate::CmdRole::Oligo* modules, change this
 sub coordinates_for_oligo {
     my ( $self, $oligo ) = @_;
     my ( $start, $end );
