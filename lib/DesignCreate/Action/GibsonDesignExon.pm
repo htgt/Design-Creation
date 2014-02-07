@@ -1,12 +1,12 @@
-package DesignCreate::Action::GibsonDesign;
+package DesignCreate::Action::GibsonDesignExon;
 
 =head1 NAME
 
-DesignCreate::Action::GibsonDesign - Run design creation for gibson design on exon(s)
+DesignCreate::Action::GibsonDesignExon - Run design creation for gibson design on exon(s)
 
 =head1 DESCRIPTION
 
-Runs all the seperate steps used to create a gibson design on a specified exon.
+Runs all the seperate steps used to create a gibson design on a specified exon(s).
 Persists the design to LIMS2 if persist option given.
 
 =cut
