@@ -1,8 +1,8 @@
-package DesignCreate::Action::GibsonDeletionDesign;
+package DesignCreate::Action::GibsonDeletionDesignExon;
 
 =head1 NAME
 
-DesignCreate::Action::GibsonDeletionDesign - Run design creation for gibson deletion design on exon(s)
+DesignCreate::Action::GibsonDeletionDesignExon - Run design creation for gibson deletion design on exon(s)
 
 =head1 DESCRIPTION
 

@@ -1,4 +1,4 @@
-package Test::DesignCreate::Action::GibsonDeletionDesign;
+package Test::DesignCreate::Action::GibsonDeletionDesignExon;
 
 use strict;
 use warnings FATAL => 'all';
@@ -9,7 +9,7 @@ use Path::Class qw( tempdir );
 use base qw( Test::DesignCreate::Class Class::Data::Inheritable );
 
 # Testing
-# DesignCreate::Action::GibsonDeletionDesign ( through command line )
+# DesignCreate::Action::GibsonDeletionDesignExon ( through command line )
 
 sub gibson_design_cmd : Test(4) {
     my $test = shift;
@@ -17,7 +17,7 @@ sub gibson_design_cmd : Test(4) {
     my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute;
 
     my @argv_contents = (
-        'gibson-deletion-design'         ,
+        'gibson-deletion-design-exon'         ,
         '--dir'                 , $dir->stringify,
         '--species'             , 'Human',
         '--target-gene'         , 'GIBSON',
