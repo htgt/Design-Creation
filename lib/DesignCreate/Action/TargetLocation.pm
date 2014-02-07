@@ -2,7 +2,7 @@ package DesignCreate::Action::TargetLocation;
 
 =head1 NAME
 
-DesignCreate::Action::TargetExons - Work out target region coordiantes
+DesignCreate::Action::TargetLocation - Work out target region coordiantes
 
 =head1 DESCRIPTION
 
