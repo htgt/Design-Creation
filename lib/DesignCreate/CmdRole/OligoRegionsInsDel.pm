@@ -85,6 +85,12 @@ sub get_oligo_region_coordinates {
     my $self = shift;
     $self->add_design_parameters( \@DESIGN_PARAMETERS );
 
+    # check target coordinate have been set, if not die
+    for my $data_type ( qw( target_start target_end chr_name chr_strand ) ) {
+        DesignCreate::Exception->throw( "No target value for: $data_type" )
+            unless $self->have_target_data( $data_type );
+    }
+
     for my $oligo ( $self->expected_oligos ) {
         $self->log->info( "Getting target region for $oligo oligo" );
         my ( $start, $end ) = $self->coordinates_for_oligo( $oligo );
