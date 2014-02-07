@@ -1,4 +1,4 @@
-package Test::DesignCreate::Action::ConditionalDesign;
+package Test::DesignCreate::Action::ConditionalDesignLocation;
 
 use strict;
 use warnings FATAL => 'all';
@@ -9,7 +9,7 @@ use Path::Class qw( tempdir );
 use base qw( Test::DesignCreate::Class Class::Data::Inheritable );
 
 # Testing
-# DesignCreate::Action::ConditionalDesign ( through command line )
+# DesignCreate::Action::ConditionalDesignLocation ( through command line )
 
 sub conditional_design_cmd : Test(4) {
     my $test = shift;
@@ -17,7 +17,7 @@ sub conditional_design_cmd : Test(4) {
     my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute;
 
     my @argv_contents = (
-        'conditional-design'  ,
+        'conditional-design-location'  ,
         '--dir'               , $dir->stringify,
         '--species'           , 'Mouse',
         '--chromosome'        , 11,

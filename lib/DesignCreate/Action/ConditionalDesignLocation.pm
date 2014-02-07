@@ -1,12 +1,12 @@
-package DesignCreate::Action::ConditionalDesign;
+package DesignCreate::Action::ConditionalDesignLocation;
 
 =head1 NAME
 
-DesignCreate::Action::ConditionalDesign - Run design creation for condition designs, end to end
+DesignCreate::Action::ConditionalDesignLocation - Run design creation for location specified condition designs, end to end
 
 =head1 DESCRIPTION
 
-Runs all the seperate steps used to create a conditional design.
+Runs all the seperate steps used to create a location specified conditional design.
 Persists the design to LIMS2 if persist option given.
 
 =cut
