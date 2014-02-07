@@ -186,7 +186,7 @@ Calculate start and end coordinates of the oligo pair regions
 =cut
 sub calculate_pair_region_coordinates {
     my ( $self ) = @_;
-    
+
     my $target_start = $self->get_target_data( 'target_start' );
     my $target_end   = $self->get_target_data( 'target_end' );
     my $strand       = $self->get_target_data( 'chr_strand' );
