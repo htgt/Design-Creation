@@ -22,12 +22,16 @@ sub conditional_design_cmd : Test(4) {
         '--species'           , 'Mouse',
         '--chromosome'        , 11,
         '--strand'            , 1,
-        '--u-block-start'     , 10000100,
-        '--u-block-end'       , 10000300,
-        '--u-block-overlap'   , 10,
-        '--d-block-start'     , 10000500,
-        '--d-block-end'       , 10000700,
-        '--d-block-overlap'   , 10,
+        '--target-start'      , 10000400,
+        '--target-end'        , 10000450,
+
+        '--region-length-u-block'  , 200,
+        '--region-offset-u-block'  , 200,
+        '--region-overlap-u-block' , 10,
+        '--region-length-d-block'  , 200,
+        '--region-offset-d-block'  , 100,
+        '--region-overlap-d-block' , 10,
+
         '--target-gene'       , 'CONDITIONAL-TEST',
         '--mask-by-lower-case', 'no',
     );

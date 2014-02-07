@@ -23,6 +23,7 @@ use Data::Dump qw( pp );
 
 extends qw( DesignCreate::Action );
 with qw(
+DesignCreate::CmdRole::TargetLocation
 DesignCreate::CmdRole::OligoRegionsConditional
 DesignCreate::CmdRole::FetchOligoRegionsSequence
 DesignCreate::CmdRole::FindOligos
@@ -68,6 +69,7 @@ sub execute {
     $self->log->debug( 'Design run args: ' . pp($opts) );
 
     try {
+        $self->target_coordinates;
         $self->get_oligo_region_coordinates;
         $self->create_oligo_region_sequence_files;
         $self->find_oligos;
