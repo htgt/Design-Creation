@@ -1,3 +1,8 @@
+0.019     2014-02-13 08:48:42 Europe/London
+
+    Refactor to add a initial target step.
+    Create location specified gibson design commands.
+
 0.018     2014-02-03 09:12:24 Europe/London
     
     Add deletion gibson design creation

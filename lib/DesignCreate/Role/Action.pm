@@ -1,7 +1,7 @@
 package DesignCreate::Role::Action;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Role::Action::VERSION = '0.018';
+    $DesignCreate::Role::Action::VERSION = '0.019';
 }
 ## use critic
 

@@ -1,25 +1,132 @@
-package DesignCreate::Role::OligoRegionCoordinatesGibson;
+package DesignCreate::CmdRole::TargetExons;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Role::OligoRegionCoordinatesGibson::VERSION = '0.018';
+    $DesignCreate::CmdRole::TargetExons::VERSION = '0.019';
 }
 ## use critic
 
 
 =head1 NAME
 
-DesignCreate::Role::OligoRegionCoordinatesGibson
+DesignCreate::Action::TargetExons - target region coordinates for exon(s)
 
 =head1 DESCRIPTION
 
-Common code for finding oligo region coordinates for gibson designs.
+For given exon id(s) calculate target region coordinates for design.
 
 =cut
 
 use Moose::Role;
 use DesignCreate::Exception;
+use DesignCreate::Types qw( PositiveInt Strand Chromosome Species );
+use DesignCreate::Constants qw( $DEFAULT_TARGET_COORD_FILE_NAME %CURRENT_ASSEMBLY );
+use YAML::Any qw( DumpFile );
+use Const::Fast;
 use Try::Tiny;
 use namespace::autoclean;
+
+const my @DESIGN_PARAMETERS => qw(
+species
+assembly
+target_genes
+five_prime_exon
+three_prime_exon
+target_start
+target_end
+chr_name
+chr_strand
+);
+
+has five_prime_exon => (
+    is            => 'ro',
+    isa           => 'Str',
+    traits        => [ 'Getopt' ],
+    documentation => 'EnsEMBL exon id for five prime exon, if targeting only one exon use this',
+    required      => 1,
+    cmd_flag      => 'five-prime-exon',
+    cmd_aliases   => 'target-exon', # keep old name as legacy
+);
+
+has three_prime_exon => (
+    is            => 'ro',
+    isa           => 'Str',
+    traits        => [ 'Getopt' ],
+    documentation => 'EnsEMBL exon id for last exon, only used if specifying range of exons to target',
+    cmd_flag      => 'three-prime-exon',
+);
+
+has target_genes => (
+    is            => 'ro',
+    isa           => 'ArrayRef',
+    traits        => [ 'Getopt' ],
+    documentation => 'Name of target gene(s) of design',
+    required      => 1,
+    cmd_flag      => 'target-gene',
+);
+
+has species => (
+    is            => 'ro',
+    isa           => Species,
+    traits        => [ 'Getopt' ],
+    documentation => 'The species of the design target ( Mouse or Human )',
+    required      => 1,
+);
+
+has assembly => (
+    is         => 'ro',
+    isa        => 'Str',
+    traits     => [ 'NoGetopt' ],
+    lazy_build => 1,
+);
+
+sub _build_assembly {
+    my $self = shift;
+
+    return $CURRENT_ASSEMBLY{ $self->species };
+}
+
+has target_start => (
+    is         => 'rw',
+    isa        => PositiveInt,
+    traits     => [ 'NoGetopt' ],
+);
+
+has target_end => (
+    is         => 'rw',
+    isa        => PositiveInt,
+    traits     => [ 'NoGetopt' ],
+);
+
+has chr_name => (
+    is         => 'rw',
+    isa        => Chromosome,
+    traits     => [ 'NoGetopt' ],
+);
+
+has chr_strand => (
+    is         => 'rw',
+    isa        => Strand,
+    traits     => [ 'NoGetopt' ],
+);
+
+=head2 target_coordinates
+
+Output target yaml file, with following information:
+chromosome
+strand
+start
+end
+
+=cut
+sub target_coordinates {
+    my ( $self, $opts, $args ) = @_;
+
+    $self->calculate_target_region_coordinates;
+    $self->add_design_parameters( \@DESIGN_PARAMETERS );
+    $self->create_target_coordinate_file;
+
+    return;
+}
 
 =head2 calculate_target_region_coordinates
 
@@ -33,6 +140,7 @@ chr_name
 sub calculate_target_region_coordinates {
     my $self = shift;
 
+    $self->log->info( 'Calculating target coordinates for exon(s)' );
     my $five_prime_exon = $self->build_exon( $self->five_prime_exon );
     $self->chr_name( $five_prime_exon->seq_region_name ) unless $self->chr_name;
     $self->chr_strand( $five_prime_exon->strand ) unless $self->chr_strand;
@@ -99,6 +207,8 @@ sub validate_exon_targets {
         ) if $five_prime_exon->seq_region_start < $three_prime_exon->seq_region_start;
     }
 
+    $self->log->debug('We have valid exon targets');
+
     return;
 }
 
@@ -129,25 +239,28 @@ sub build_exon {
     return $exon;
 }
 
-=head2 check_oligo_region_sizes
+=head2 create_target_coordinate_file
 
-Check size of region we search for oligos in is big enough
+Create yaml file with target information
 
 =cut
-sub check_oligo_region_sizes {
-    my ( $self ) = @_;
+sub create_target_coordinate_file {
+    my $self = shift;
 
-    for my $oligo_type ( $self->expected_oligos ) {
-        my $length_attr =  'region_length_' . $oligo_type;
-        my $length = $self->$length_attr;
-
-        # currently 22 is the smallest oligo we allow from primer
-        DesignCreate::Exception->throw( "$oligo_type region too small: $length" )
-            if $length < 22;
-    }
+    my $file = $self->oligo_target_regions_dir->file( $DEFAULT_TARGET_COORD_FILE_NAME );
+    DumpFile(
+        $file,
+        {   target_start => $self->target_start,
+            target_end   => $self->target_end,
+            chr_name     => $self->chr_name,
+            chr_strand   => $self->chr_strand,
+        }
+    );
+    $self->log->debug('Created target coordinates file');
 
     return;
 }
+
 
 1;
 

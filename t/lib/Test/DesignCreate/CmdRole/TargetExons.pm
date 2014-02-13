@@ -1,23 +1,47 @@
-package Test::DesignCreate::Role::OligoRegionCoordinatesGibson;
+package Test::DesignCreate::CmdRole::TargetExons;
 
 use strict;
 use warnings FATAL => 'all';
 
 use Test::Most;
+use App::Cmd::Tester;
 use Path::Class qw( tempdir dir );
 use Bio::SeqIO;
 use base qw( Test::DesignCreate::Class Class::Data::Inheritable );
 
 # Testing
-# DesignCreate::Role::OligoRegionCoordinatesGibson
+# DesignCreate::CmdRole::TargetExons
+# DesignCreate::Action::TargetExons ( through command line )
 
 BEGIN {
-    __PACKAGE__->mk_classdata( 'test_role' => 'DesignCreate::Role::OligoRegionCoordinatesGibson' );
+    __PACKAGE__->mk_classdata( 'test_role' => 'DesignCreate::CmdRole::TargetExons' );
+}
+
+sub valid_run_cmd : Test(3) {
+    my $test = shift;
+
+    #create temp dir in standard location for temp files
+    my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 );
+
+    #note: small chance with new ensembl build that we will need
+    #      to update the exon id
+    my @argv_contents = (
+        'target-exons',
+        '--dir'           ,$dir->stringify,
+        '--target-gene'   ,'test_gene',
+        '--species'       ,'Human',
+        '--target-exon'   ,'ENSE00002184393'
+    );
+
+    ok my $result = test_app($test->cmd_class => \@argv_contents), 'can run command';
+
+    is $result->stderr, '', 'no errors';
+    ok !$result->error, 'no command errors';
 }
 
 sub calculate_target_region_coordinates : Tests(17) {
     my $test = shift;
-    my $metaclass = $test->get_test_object_metaclass( [ 'DesignCreate::CmdRole::OligoPairRegionsGibson' ] );
+    my $metaclass = $test->get_test_object_metaclass();
 
     note( 'Single exon targets' );
     ok my $o = $test->_get_test_object, 'can grab test object';
@@ -60,6 +84,19 @@ sub calculate_target_region_coordinates : Tests(17) {
     } 'can call calculate_target_region_coordinates';
     is $brac2_obj->target_start, $exon_5p->seq_region_start, 'target start is correct';
     is $brac2_obj->target_end, $exon_3p->seq_region_end, 'target end is correct';
+}
+
+sub create_target_coordinate_file : Test(3) {
+    my $test = shift;
+    ok my $o = $test->_get_test_object, 'can grab test object';
+
+    lives_ok {
+        $o->target_coordinates
+    } 'can get_oligo_pair_region_coordinates';
+
+    my $target_file = $o->oligo_target_regions_dir->file( 'target_coords.yaml' );
+    ok $o->oligo_target_regions_dir->contains( $target_file )
+        , "$target_file file exists";
 }
 
 sub validate_exon_targets : Tests(13) {
@@ -122,42 +159,18 @@ sub build_exon : Test(5) {
     is $exon->coord_system_name, 'chromosome', 'coordinate system name for exon is chromosome';
 }
 
-sub check_oligo_region_sizes : Test(3) {
+sub _get_test_object {
     my $test = shift;
-    ok my $o = $test->_get_test_object, 'can grab test object';
-
-    lives_ok{
-        $o->check_oligo_region_sizes
-    } 'checks pass for valid input';
 
     my $metaclass = $test->get_test_object_metaclass();
-    my $new_obj2 = $metaclass->new_object(
-        dir             => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
-        species         => 'Human',
-        five_prime_exon => 'ENSE00002184393',
-        target_genes    => [ 'test_gene' ],
-        region_length_5F => 10,
-    );
-
-    throws_ok{
-        $new_obj2->get_oligo_pair_region_coordinates
-    } qr/5F region too small/
-        , 'throws error if a oligo region is too small';
-}
-
-sub _get_test_object {
-    my ( $test, $params ) = @_;
-
-    my $metaclass = $test->get_test_object_metaclass( [ 'DesignCreate::CmdRole::OligoPairRegionsGibson' ] );
-    my $o = $metaclass->new_object(
+    return $metaclass->new_object(
         dir             => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
         species         => 'Human',
         five_prime_exon => 'ENSE00002184393',
         target_genes    => [ 'test_gene' ],
     );
-
-    return $o;
 }
+
 
 1;
 

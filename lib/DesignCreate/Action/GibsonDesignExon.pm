@@ -1,18 +1,18 @@
-package DesignCreate::Action::GibsonDeletionDesign;
+package DesignCreate::Action::GibsonDesignExon;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::GibsonDeletionDesign::VERSION = '0.018';
+    $DesignCreate::Action::GibsonDesignExon::VERSION = '0.019';
 }
 ## use critic
 
 
 =head1 NAME
 
-DesignCreate::Action::GibsonDeletionDesign - Run design creation for gibson deletion design on exon(s)
+DesignCreate::Action::GibsonDesignExon - Run design creation for gibson design on exon(s)
 
 =head1 DESCRIPTION
 
-Runs all the seperate steps used to create a gibson deletion design on specified exon(s).
+Runs all the seperate steps used to create a gibson design on a specified exon(s).
 Persists the design to LIMS2 if persist option given.
 
 =cut
@@ -31,7 +31,8 @@ use YAML::Any qw( DumpFile );
 
 extends qw( DesignCreate::Action );
 with qw(
-DesignCreate::CmdRole::OligoPairRegionsGibsonDel
+DesignCreate::CmdRole::TargetExons
+DesignCreate::CmdRole::OligoPairRegionsGibson
 DesignCreate::CmdRole::FindGibsonOligos
 DesignCreate::CmdRole::FilterGibsonOligos
 DesignCreate::CmdRole::ConsolidateDesignData
@@ -72,11 +73,12 @@ sub execute {
     $exon_string .= '-' . $self->three_prime_exon if $self->three_prime_exon;
     Log::Log4perl::NDC->push( $exon_string );
 
-    $self->log->info( 'Starting new gibson deletion design create run: ' . join(',', @{ $self->target_genes } ) );
+    $self->log->info( 'Starting new gibson design create run: ' . join(',', @{ $self->target_genes } ) );
     $self->log->debug( 'Design run args: ' . pp($opts) );
     $self->create_design_attempt_record;
 
     try {
+        $self->target_coordinates;
         $self->get_oligo_pair_region_coordinates;
         $self->find_oligos;
         $self->filter_oligos;

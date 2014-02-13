@@ -6,34 +6,27 @@ use warnings FATAL => 'all';
 use Test::Most;
 use App::Cmd::Tester;
 use Path::Class qw( tempdir dir );
+use File::Copy::Recursive qw( dircopy );
 use Bio::SeqIO;
 use base qw( Test::DesignCreate::Class Class::Data::Inheritable );
 
 # Testing
 # DesignCreate::CmdRole::OligoRegionsInsDel
-# DesignCreate::Role::OligoRegionCoordinatesInsDel
 # DesignCreate::Action::OligoRegionsInsDel ( through command line )
 
 BEGIN {
     __PACKAGE__->mk_classdata( 'test_role' => 'DesignCreate::CmdRole::OligoRegionsInsDel' );
 }
 
-sub valid_run_cmd : Test(3) {
+sub valid_run_cmd : Test(4) {
     my $test = shift;
-
-    #create temp dir in standard location for temp files
-    my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 );
+    ok my $o = $test->_get_test_object, 'can grab test object';
 
     my @argv_contents = (
         'oligo-regions-ins-del',
-        '--dir', $dir->stringify,
-        '--target-start', 101176328,
-        '--target-end', 101176428,
-        '--chromosome', 11,
+        '--dir', $o->dir->stringify,
         '--strand', 1,
         '--design-method', 'deletion',
-        '--target-gene'  ,'test_gene',
-        '--species'      ,'Mouse',
     );
 
     ok my $result = test_app($test->cmd_class => \@argv_contents), 'can run command';
@@ -42,27 +35,30 @@ sub valid_run_cmd : Test(3) {
     ok !$result->error, 'no command errors';
 }
 
-sub coordinates_for_oligo : Tests(16) {
+sub coordinates_for_oligo : Tests(18) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
     ok my( $u5_start, $u5_end ) = $o->coordinates_for_oligo( 'U5' )
         , 'can call coordinates_for_oligo';
 
-    my $u5_real_start = ( $o->target_start - ( $o->region_offset_U5 + $o->region_length_U5 ) );
-    my $u5_real_end = ( $o->target_start - ( $o->region_offset_U5 + 1 ) );
+    my $target_start = $o->get_target_data( 'target_start' );
+    my $target_end   = $o->get_target_data( 'target_end' );
+
+    my $u5_real_start = ( $target_start - ( $o->region_offset_U5 + $o->region_length_U5 ) );
+    my $u5_real_end = ( $target_start - ( $o->region_offset_U5 + 1 ) );
     is $u5_start, $u5_real_start, 'correct start value';
     is $u5_end, $u5_real_end, 'correct end value';
 
     ok my( $g3_start, $g3_end ) = $o->coordinates_for_oligo( 'G3' )
         , 'can call coordinates_for_oligo';
-    my $g3_real_start = ( $o->target_end + ( $o->region_offset_G3 + 1 ) );
-    my $g3_real_end = ( $o->target_end + ( $o->region_offset_G3 + $o->region_length_G3 ) );
+    my $g3_real_start = ( $target_end + ( $o->region_offset_G3 + 1 ) );
+    my $g3_real_end = ( $target_end + ( $o->region_offset_G3 + $o->region_length_G3 ) );
     is $g3_start, $g3_real_start, 'correct start value';
     is $g3_end, $g3_real_end, 'correct end value';
 
     # -ve stranded design
-    ok $o = $test->_get_test_object( { chr_strand => -1 } ), 'can grab test object';
+    ok $o->target_data->{chr_strand} = -1, 'set strand -1';
 
     ok my( $d3_start, $d3_end ) = $o->coordinates_for_oligo( 'D3' )
         , 'can call coordinates_for_oligo';
@@ -80,20 +76,20 @@ sub coordinates_for_oligo : Tests(16) {
     is $g5_start, $g3_real_start, 'correct start value';
     is $g5_end, $g3_real_end, 'correct end value';
 
-    ok $o = $test->_get_test_object(
+    ok my $new_obj = $test->_get_test_object(
         {
-            target_start      => 101176328,
-            target_end        => 101176428,
             region_length_U5  => 1,
         }
     ), 'we got another test object';
+    ok $new_obj->target_data->{target_start} = 101176328, 'can set target_start';
+    ok $new_obj->target_data->{target_end}   = 101176428, 'can set target_end';
 
     throws_ok {
-        !$o->coordinates_for_oligo( 'U5' )
+        !$new_obj->coordinates_for_oligo( 'U5' )
     } qr/Start \d+, greater than or equal to end \d+/, 'throws start greater than end error';
 }
 
-sub get_oligo_region_coordinates :  Test(5) {
+sub get_oligo_region_coordinates :  Test(3) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
@@ -104,72 +100,24 @@ sub get_oligo_region_coordinates :  Test(5) {
     my $oligo_region_file = $o->oligo_target_regions_dir->file( 'oligo_region_coords.yaml' );
     ok $o->oligo_target_regions_dir->contains( $oligo_region_file )
         , "$oligo_region_file oligo file exists";
-
-    ok $o = $test->_get_test_object(
-        {
-            target_start => 101176428,
-            target_end   => 101176328,
-        }
-    ), 'can create another test object';
-
-    throws_ok {
-        $o->get_oligo_region_coordinates
-    } qr/Target start \d+, greater than target end \d+/
-        ,'throws error when target start greater than target end';
-}
-
-sub chr_name : Test(3) {
-    my $test = shift;
-
-    throws_ok{
-        $test->_get_test_object( { chr_strand => -1, chr_name => 30 } )
-    } qr/Invalid chromosome name, 30/, 'throws error with invalid chromosome name';
-
-    throws_ok{
-        $test->_get_test_object( { chr_strand => -1, chr_name => 'Z'} )
-    } qr/Invalid chromosome name, Z/, 'throws error with invalid chromosome name';
-
-    lives_ok{
-        $test->_get_test_object( { chr_strand => -1, chr_name => 'y'} )
-    } 'valid chromosome okay';
-}
-
-sub chr_strand : Test(3) {
-    my $test = shift;
-
-    throws_ok{
-        $test->_get_test_object( { chr_strand => 2, chr_name => '3'} )
-    } qr/Invalid strand 2/, 'throws error with invalid chromosome strand';
-
-    throws_ok{
-        $test->_get_test_object( { chr_strand => -2, chr_name => 'X' } )
-    } qr/Invalid strand -2/, 'throws error with invalid chromosome strand';
-
-    lives_ok{
-        $test->_get_test_object( { chr_strand => -1, chr_name => 'X' } )
-    } 'valid strand okay';
 }
 
 sub _get_test_object {
     my ( $test, $params ) = @_;
 
-    my $chr_name = $params->{chr_name} || 11;
-    my $strand = $params->{chr_strand} || 1;
-    my $start = $params->{target_start} || 101176328;
-    my $end = $params->{target_end} || 101176428;
     my $u5_length = $params->{region_length_U5} || 200;
+
+    my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute;
+    my $data_dir = dir($FindBin::Bin)->absolute->subdir('test_data/oligo_regions_ins_del');
+
+    # need oligo target region files to test against, in oligo_target_regions dir
+    dircopy( $data_dir->stringify, $dir->stringify );
 
     my $metaclass = $test->get_test_object_metaclass();
     return $metaclass->new_object(
-        dir              => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
-        species          => 'Mouse',
-        target_start     => $start,
-        target_end       => $end,
-        chr_name         => $chr_name,
-        chr_strand       => $strand,
+        dir              => $dir,
         region_length_U5 => $u5_length,
         design_method    => 'deletion',
-        target_genes     => [ 'test_gene' ],
     );
 }
 

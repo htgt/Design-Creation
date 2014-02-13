@@ -1,18 +1,18 @@
-package DesignCreate::Action::InsDelDesign;
+package DesignCreate::Action::DeletionDesignExon;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::InsDelDesign::VERSION = '0.018';
+    $DesignCreate::Action::DeletionDesignExon::VERSION = '0.019';
 }
 ## use critic
 
 
 =head1 NAME
 
-DesignCreate::Action::InsDelDesign - Run design creation for Ins / Del designs end to end
+DesignCreate::Action::DeletionDesignExon - Run design creation for deletion design on a exon(s) end to end
 
 =head1 DESCRIPTION
 
-Runs all the seperate steps used to create a Insertion of Deletion design.
+Runs all the seperate steps used to create a Deletion design on a specified exon.
 Persists the design to LIMS2 if persist option given.
 
 =cut
@@ -28,6 +28,7 @@ use Data::Dump qw( pp );
 
 extends qw( DesignCreate::Action );
 with qw(
+DesignCreate::CmdRole::TargetExons
 DesignCreate::CmdRole::OligoRegionsInsDel
 DesignCreate::CmdRole::FetchOligoRegionsSequence
 DesignCreate::CmdRole::FindOligos
@@ -72,12 +73,16 @@ has '+rm_dir' => (
 sub execute {
     my ( $self, $opts, $args ) = @_;
     Log::Log4perl::NDC->push( @{ $self->target_genes }[0] );
+    my $exon_string = $self->five_prime_exon;
+    $exon_string .= '-' . $self->three_prime_exon if $self->three_prime_exon;
+    Log::Log4perl::NDC->push( $exon_string );
 
-    $self->log->info( 'Starting new ins-del design create run: ' . join(',', @{ $self->target_genes } ) );
+    $self->log->info( 'Starting new del-exon design create run: ' . join(',', @{ $self->target_genes } ) );
     $self->log->debug( 'Design run args: ' . pp($opts) );
     $self->create_design_attempt_record;
 
     try {
+        $self->target_coordinates;
         $self->get_oligo_region_coordinates;
         $self->create_oligo_region_sequence_files;
         $self->find_oligos;

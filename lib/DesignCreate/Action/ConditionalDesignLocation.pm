@@ -1,18 +1,18 @@
-package DesignCreate::Action::GibsonDesign;
+package DesignCreate::Action::ConditionalDesignLocation;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::GibsonDesign::VERSION = '0.018';
+    $DesignCreate::Action::ConditionalDesignLocation::VERSION = '0.019';
 }
 ## use critic
 
 
 =head1 NAME
 
-DesignCreate::Action::GibsonDesign - Run design creation for gibson design on exon(s) 
+DesignCreate::Action::ConditionalDesignLocation - Run design creation for location specified condition designs, end to end
 
 =head1 DESCRIPTION
 
-Runs all the seperate steps used to create a gibson design on a specified exon.
+Runs all the seperate steps used to create a location specified conditional design.
 Persists the design to LIMS2 if persist option given.
 
 =cut
@@ -25,15 +25,17 @@ use Const::Fast;
 use Try::Tiny;
 use Fcntl; # O_ constants
 use Data::Dump qw( pp );
-use Scalar::Util 'blessed';
-use JSON;
-use YAML::Any qw( DumpFile );
+
 
 extends qw( DesignCreate::Action );
 with qw(
-DesignCreate::CmdRole::OligoPairRegionsGibson
-DesignCreate::CmdRole::FindGibsonOligos
-DesignCreate::CmdRole::FilterGibsonOligos
+DesignCreate::CmdRole::TargetLocation
+DesignCreate::CmdRole::OligoRegionsConditional
+DesignCreate::CmdRole::FetchOligoRegionsSequence
+DesignCreate::CmdRole::FindOligos
+DesignCreate::CmdRole::FilterOligos
+DesignCreate::CmdRole::PickBlockOligos
+DesignCreate::CmdRole::PickGapOligos
 DesignCreate::CmdRole::ConsolidateDesignData
 DesignCreate::CmdRole::PersistDesign
 );
@@ -50,62 +52,41 @@ has persist => (
 # these values should be set when running the design creation process
 # end to end
 const my @ATTRIBUTES_NO_CMD_OPTION => qw(
+target_file
+exonerate_target_file
 design_data_file
 validated_oligo_dir
 oligo_finder_output_dir
 oligo_target_regions_dir
+aos_location
+base_chromosome_dir
+genomic_search_method
 );
 
 for my $attribute ( @ATTRIBUTES_NO_CMD_OPTION ) {
     has '+' . $attribute => ( traits => [ 'NoGetopt' ] );
 }
 
-# wipe work directory before starting
-has '+rm_dir' => (
-    default => 1,
-);
-
 sub execute {
     my ( $self, $opts, $args ) = @_;
     Log::Log4perl::NDC->push( @{ $self->target_genes }[0] );
-    my $exon_string = $self->five_prime_exon;
-    $exon_string .= '-' . $self->three_prime_exon if $self->three_prime_exon;
-    Log::Log4perl::NDC->push( $exon_string );
 
-    $self->log->info( 'Starting new gibson design create run: ' . join(',', @{ $self->target_genes } ) );
+    $self->log->info( 'Starting new design create run: ' . join(',', @{ $self->target_genes } ) );
     $self->log->debug( 'Design run args: ' . pp($opts) );
-    $self->create_design_attempt_record;
 
     try {
-        $self->get_oligo_pair_region_coordinates;
+        $self->target_coordinates;
+        $self->get_oligo_region_coordinates;
+        $self->create_oligo_region_sequence_files;
         $self->find_oligos;
         $self->filter_oligos;
+        $self->pick_gap_oligos;
+        $self->pick_block_oligos;
         $self->consolidate_design_data;
         $self->persist_design if $self->persist;
         $self->log->info( 'DESIGN DONE: ' . join(',', @{ $self->target_genes } ) );
-
-        $self->update_design_attempt_record(
-            {   status => 'success',
-                design_ids => join( ' ', @{ $self->design_ids } ),
-            }
-        );
     }
     catch {
-        if (blessed($_) and $_->isa('DesignCreate::Exception')) {
-            DumpFile( $self->design_fail_file, $_->as_hash );
-            $self->update_design_attempt_record(
-                {   status => 'fail',
-                    fail   => encode_json( $_->as_hash ),
-                }
-            );
-        }
-        else {
-            $self->update_design_attempt_record(
-                {   status => 'error',
-                    error => $_,
-                }
-            );
-        }
         $self->log->error( 'DESIGN INCOMPLETE: ' . $_ );
     };
 

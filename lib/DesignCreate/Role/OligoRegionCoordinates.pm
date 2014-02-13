@@ -1,7 +1,7 @@
 package DesignCreate::Role::OligoRegionCoordinates;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Role::OligoRegionCoordinates::VERSION = '0.018';
+    $DesignCreate::Role::OligoRegionCoordinates::VERSION = '0.019';
 }
 ## use critic
 
@@ -19,19 +19,47 @@ Common code for oligo target ( candidate ) region coordinate finding commands.
 use Moose::Role;
 use DesignCreate::Exception;
 use DesignCreate::Exception::NonExistantAttribute;
-use DesignCreate::Types qw( Species );
-use DesignCreate::Constants qw( $DEFAULT_OLIGO_COORD_FILE_NAME %CURRENT_ASSEMBLY );
-use YAML::Any qw( DumpFile );
+use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
+use DesignCreate::Constants qw(
+    $DEFAULT_OLIGO_COORD_FILE_NAME
+    $DEFAULT_TARGET_COORD_FILE_NAME
+);
+use YAML::Any qw( DumpFile LoadFile );
 use namespace::autoclean;
 
-has target_genes => (
+has target_coordinate_file => (
     is            => 'ro',
-    isa           => 'ArrayRef',
+    isa           => AbsFile,
     traits        => [ 'Getopt' ],
-    documentation => 'Name of target gene(s) of design',
-    required      => 1,
-    cmd_flag      => 'target-gene',
+    documentation => 'File containing target coordinates ( default '
+                     . "[design_dir]/oligo_target_regions/$DEFAULT_TARGET_COORD_FILE_NAME )",
+    cmd_flag      => 'target-coord-file',
+    coerce        => 1,
+    lazy_build    => 1,
 );
+
+sub _build_target_coordinate_file {
+    my $self = shift;
+
+    return $self->get_file( $DEFAULT_TARGET_COORD_FILE_NAME, $self->oligo_target_regions_dir );
+}
+
+has target_data => (
+    is         => 'ro',
+    isa        => 'HashRef',
+    traits     => [ 'NoGetopt', 'Hash' ],
+    lazy_build => 1,
+    handles    => {
+        get_target_data  => 'get',
+        have_target_data => 'exists',
+    }
+);
+
+sub _build_target_data {
+    my $self = shift;
+
+    return LoadFile( $self->target_coordinate_file );
+}
 
 has oligo_region_coordinates => (
     is      => 'rw',
@@ -40,26 +68,6 @@ has oligo_region_coordinates => (
     default => sub { {} },
 );
 
-has species => (
-    is            => 'ro',
-    isa           => Species,
-    traits        => [ 'Getopt' ],
-    documentation => 'The species of the design target ( Mouse or Human )',
-    required      => 1,
-);
-
-has assembly => (
-    is         => 'ro',
-    isa        => 'Str',
-    traits     => [ 'NoGetopt' ],
-    lazy_build => 1,
-);
-
-sub _build_assembly {
-    my $self = shift;
-
-    return $CURRENT_ASSEMBLY{ $self->species };
-}
 
 sub create_oligo_region_coordinate_file {
     my $self = shift;
@@ -92,6 +100,26 @@ sub get_oligo_region_length {
     ) unless $self->meta->has_attribute($attribute_name);
 
     return $self->$attribute_name;
+}
+
+=head2 check_oligo_region_sizes
+
+Check size of region we search for oligos in is big enough
+
+=cut
+sub check_oligo_region_sizes {
+    my ( $self ) = @_;
+
+    for my $oligo_type ( $self->expected_oligos ) {
+        my $length_attr =  'region_length_' . $oligo_type;
+        my $length = $self->$length_attr;
+
+        # currently 22 is the smallest oligo we allow from primer
+        DesignCreate::Exception->throw( "$oligo_type region too small: $length" )
+            if $length < 22;
+    }
+
+    return;
 }
 
 1;

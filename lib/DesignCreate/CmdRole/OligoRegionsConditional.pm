@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::OligoRegionsConditional;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::OligoRegionsConditional::VERSION = '0.018';
+    $DesignCreate::CmdRole::OligoRegionsConditional::VERSION = '0.019';
 }
 ## use critic
 
@@ -34,22 +34,17 @@ DesignCreate::Role::GapOligoCoordinates
 
 const my $MIN_BLOCK_LENGTH => 102;
 const my @DESIGN_PARAMETERS => qw(
-U_block_start
-U_block_end
-D_block_start
-D_block_end
-U_block_overlap
-D_block_overlap
-chr_name
-chr_strand
-species
-assembly
+region_length_U_block
+region_offset_U_block
+region_overlap_U_block
+region_length_D_block
+region_offset_D_block
+region_overlap_D_block
 region_length_G5
 region_offset_G5
 region_length_G3
 region_offset_G3
 design_method
-target_genes
 );
 
 has design_method => (
@@ -59,245 +54,216 @@ has design_method => (
     default => 'conditional'
 );
 
-has chr_name => (
-    is            => 'ro',
-    isa           => Chromosome,
-    traits        => [ 'Getopt' ],
-    documentation => 'Name of chromosome the design target lies within',
-    required      => 1,
-    cmd_flag      => 'chromosome'
-);
-
-has chr_strand => (
-    is            => 'ro',
-    isa           => Strand,
-    traits        => [ 'Getopt' ],
-    documentation => 'The strand the design target lies on',
-    required      => 1,
-    cmd_flag      => 'strand'
-);
-
 #
 # Oligo Region Parameters
 # Gap Oligo Parameter attributes in DesignCreate::Role::OligoTargetRegions
 #
 
-has U_block_start => (
+has region_length_U_block => (
     is            => 'ro',
     isa           => PositiveInt,
     traits        => [ 'Getopt' ],
-    documentation => 'Start coordinate for U region',
+    documentation => 'Length of U block',
     required      => 1,
-    cmd_flag      => 'u-block-start'
+    cmd_flag      => 'region-length-u-block'
 );
 
-has U_block_end => (
+has region_offset_U_block => (
     is            => 'ro',
     isa           => PositiveInt,
     traits        => [ 'Getopt' ],
-    documentation => 'End coordinate for U region',
+    documentation => 'Offset from target region of U block',
     required      => 1,
-    cmd_flag      => 'u-block-end'
+    cmd_flag      => 'region-offset-u-block'
 );
 
-has U_block_length => (
-    is         => 'ro',
-    isa        => PositiveInt,
-    traits     => [ 'NoGetopt' ],
-    lazy_build => 1,
-);
-
-sub _build_U_block_length {
-    my $self = shift;
-    return ( $self->U_block_end - $self->U_block_start ) + 1;
-}
-
-has U_block_overlap => (
+has region_overlap_U_block => (
     is            => 'ro',
     isa           => NaturalNumber,
     traits        => [ 'Getopt' ],
-    documentation => 'Block overlap for U region',
+    documentation => 'Size of block overlap for U region',
     default       => 0,
-    cmd_flag      => 'u-block-overlap'
+    cmd_flag      => 'region-overlap-u-block'
 );
 
-has D_block_start => (
+has region_length_D_block => (
     is            => 'ro',
     isa           => PositiveInt,
     traits        => [ 'Getopt' ],
-    documentation => 'Start coordinate for D region',
+    documentation => 'Length of D block',
     required      => 1,
-    cmd_flag      => 'd-block-start'
+    cmd_flag      => 'region-length-d-block'
 );
 
-has D_block_end => (
+has region_offset_D_block => (
     is            => 'ro',
     isa           => PositiveInt,
     traits        => [ 'Getopt' ],
-    documentation => 'End coordinate for D region',
+    documentation => 'Offset from target region of D block',
     required      => 1,
-    cmd_flag      => 'd-block-end'
+    cmd_flag      => 'region-offset-d-block'
 );
 
-has D_block_length => (
-    is         => 'ro',
-    isa        => PositiveInt,
-    traits     => [ 'NoGetopt' ],
-    lazy_build => 1,
-);
-
-sub _build_D_block_length {
-    my $self = shift;
-    return ( $self->D_block_end - $self->D_block_start ) + 1;
-}
-
-has D_block_overlap => (
+has region_overlap_D_block => (
     is            => 'ro',
     isa           => NaturalNumber,
     traits        => [ 'Getopt' ],
-    documentation => 'Block overlap for D region',
+    documentation => 'Size of block overlap for D region',
     default       => 0,
-    cmd_flag      => 'd-block-overlap'
+    cmd_flag      => 'region-overlap-d-block'
+);
+
+has [
+    'region_start_G5',
+    'region_end_G5',
+    'region_start_G3',
+    'region_end_G3',
+    'region_start_U5',
+    'region_end_U5',
+    'region_start_U3',
+    'region_end_U3',
+    'region_start_D5',
+    'region_end_D5',
+    'region_start_D3',
+    'region_end_D3',
+] => (
+    is     => 'rw',
+    isa    => PositiveInt,
+    traits => [ 'NoGetopt' ],
 );
 
 sub get_oligo_region_coordinates {
     my $self = shift;
     $self->add_design_parameters( \@DESIGN_PARAMETERS );
-    $self->check_oligo_block_coordinates;
+
+    # check target coordinate have been set, if not die
+    for my $data_type ( qw( target_start target_end chr_name chr_strand ) ) {
+        DesignCreate::Exception->throw( "No target value for: $data_type" )
+            unless $self->have_target_data( $data_type );
+    }
+
+    $self->check_oligo_blocks;
+    $self->calculate_oligo_region_coordinates;
 
     for my $oligo ( $self->expected_oligos ) {
         $self->log->info( "Getting target region for $oligo oligo" );
-        # coordinates_for_oligo sub will be defined within consuming role;
-        my ( $start, $end ) = $self->coordinates_for_oligo( $oligo );
-        next if !defined $start || !defined $end;
+        my $start_attr_name = 'region_start_' . $oligo;
+        my $end_attr_name = 'region_end_' . $oligo;
 
-        $self->oligo_region_coordinates->{$oligo} = { start => $start, end => $end };
+        $self->oligo_region_coordinates->{ $oligo } = {
+            start => $self->$start_attr_name,
+            end   => $self->$end_attr_name,
+        };
     }
 
     $self->create_oligo_region_coordinate_file;
     return;
 }
 
-sub check_oligo_block_coordinates {
+sub check_oligo_blocks {
     my $self = shift;
 
     for my $block_type ( qw( U D ) ) {
-        my $start_attribute = $block_type . '_block_start';
-        my $end_attribute = $block_type . '_block_end';
-
-        my $start = $self->$start_attribute;
-        my $end = $self->$end_attribute;
+        my $block_length = $self->get_oligo_block_attribute( $block_type, 'length' );
         DesignCreate::Exception->throw(
-            "$block_type block start, $start, is greater than its end, $end"
-        ) if $start > $end;
-
-        my $length = ( $end - $start ) + 1;
-        DesignCreate::Exception->throw(
-            "$block_type block has only $length bases, must have minimum of $MIN_BLOCK_LENGTH bases"
-        ) if $length < $MIN_BLOCK_LENGTH;
-    }
-
-    if ( $self->chr_strand == 1 ) {
-        DesignCreate::Exception->throw(
-            'U block end: ' . $self->U_block_end . ' can not be greater than D block start: '
-            . $self->D_block_start . ' on designs on the +ve strand'
-        ) if $self->U_block_end > $self->D_block_start;
-    }
-    else {
-        DesignCreate::Exception->throw(
-            'D block end: ' . $self->D_block_end . ' can not be greater than U block start: '
-            . $self->U_block_start . ' on designs on the -ve strand'
-        ) if $self->D_block_end > $self->U_block_start;
+            "$block_type block has only $block_length bases, must have minimum of $MIN_BLOCK_LENGTH bases"
+        ) if $block_length < $MIN_BLOCK_LENGTH;
     }
 
     return;
 }
 
-# work out coordinates for block specified conditional designs
-sub coordinates_for_oligo {
-    my ( $self, $oligo ) = @_;
+sub calculate_oligo_region_coordinates {
+    my ( $self ) = @_;
 
-    if ( $oligo =~ /^G/ ) {
-        return $self->get_oligo_region_gap_oligo( $oligo );
+    my $target_start = $self->get_target_data( 'target_start' );
+    my $target_end   = $self->get_target_data( 'target_end' );
+    my $strand       = $self->get_target_data( 'chr_strand' );
+
+    if ( $strand == 1 ) {
+        $self->_coordinates_for_plus_strand( $target_start, $target_end );
     }
     else {
-        return $self->get_oligo_region_u_or_d_oligo( $oligo );
+        $self->_coordinates_for_minus_strand( $target_start, $target_end );
     }
 
     return;
 }
 
-sub get_oligo_region_gap_oligo {
-    my ( $self, $oligo ) = @_;
-    my ( $start, $end );
+sub _coordinates_for_plus_strand {
+    my ( $self, $target_start, $target_end ) = @_;
 
-    my $offset = $self->get_oligo_region_offset( $oligo );
-    my $length = $self->get_oligo_region_length( $oligo );
+    # U Block
+    my $u_block_start = $target_start - ( $self->region_offset_U_block + $self->region_length_U_block );
+    my $u_block_end   = $target_start - $self->region_offset_U_block;
+    my ( $u5_start, $u5_end ) = $self->get_oligo_block_left_half_coords( 'U', $u_block_start );
+    $self->region_start_U5( $u5_start );
+    $self->region_end_U5( $u5_end );
 
-    if ( $self->chr_strand == 1 ) {
-        if ( $oligo eq 'G5' ) {
-            $start = $self->U_block_start - ( $offset + $length );
-            $end   = $self->U_block_start - ( $offset + 1 );
-        }
-        elsif ( $oligo eq 'G3' ) {
-            $start = $self->D_block_end + ( $offset + 1 );
-            $end   = $self->D_block_end + ( $offset + $length );
-        }
-    }
-    else {
-        if ( $oligo eq 'G5' ) {
-            $start = $self->U_block_end + ( $offset + 1 );
-            $end   = $self->U_block_end + ( $offset + $length );
-        }
-        elsif ( $oligo eq 'G3' ) {
-            $start = $self->D_block_start - ( $offset + $length );
-            $end   = $self->D_block_start - ( $offset + 1 );
-        }
-    }
+    my ( $u3_start, $u3_end ) = $self->get_oligo_block_right_half_coords( 'U', $u_block_start, $u_block_end );
+    $self->region_start_U3( $u3_start );
+    $self->region_end_U3( $u3_end  );
 
-    DesignCreate::Exception->throw( "Start $start, greater than or equal to end $end for oligo $oligo" )
-        if $start >= $end;
+    # D Block
+    my $d_block_start = $target_end + $self->region_offset_D_block;
+    my $d_block_end   = $target_end + $self->region_offset_D_block + $self->region_length_D_block;
+    my ( $d5_start, $d5_end ) = $self->get_oligo_block_left_half_coords( 'D', $d_block_start );
+    $self->region_start_D5( $d5_start );
+    $self->region_end_D5( $d5_end );
 
-    return( $start, $end );
+    my ( $d3_start, $d3_end ) = $self->get_oligo_block_right_half_coords( 'D', $d_block_start, $d_block_end );
+    $self->region_start_D3( $d3_start );
+    $self->region_end_D3( $d3_end  );
 
+    # G oligos
+    $self->region_start_G5( $self->region_start_U5 - ( $self->region_offset_G5 + $self->region_length_G5 ));
+    $self->region_end_G5( $self->region_start_U5 - $self->region_offset_G5  );
+    $self->region_start_G3( $self->region_end_D3 + $self->region_offset_G3 );
+    $self->region_end_G3( $self->region_end_D3 + $self->region_offset_G3 + $self->region_length_G3 );
+
+    return;
 }
 
-sub get_oligo_region_u_or_d_oligo {
-    my ( $self, $oligo ) = @_;
-    my ( $start, $end );
-    my $oligo_class = substr( $oligo, 0,1 );
-    DesignCreate::Exception->throw( "Block oligo type must be U or D, not $oligo" )
-        unless  $oligo_class =~ /^U|D$/;
+sub _coordinates_for_minus_strand {
+    my ( $self, $target_start, $target_end ) = @_;
 
-    if ( $self->chr_strand == 1 ) {
-        if ( $oligo =~ /5$/ ) {
-            ( $start, $end ) = $self->get_oligo_block_left_half_coords( $oligo_class );
-        }
-        elsif ( $oligo =~ /3$/ ) {
-            ( $start, $end ) = $self->get_oligo_block_right_half_coords( $oligo_class );
-        }
-    }
-    else {
-        if ( $oligo =~ /5$/ ) {
-            ( $start, $end ) = $self->get_oligo_block_right_half_coords( $oligo_class );
-        }
-        elsif ( $oligo =~ /3$/ ) {
-            ( $start, $end ) = $self->get_oligo_block_left_half_coords( $oligo_class );
-        }
-    }
+    # U Block
+    my $u_block_start = $target_end + $self->region_offset_U_block;
+    my $u_block_end   = $target_end + $self->region_offset_U_block + $self->region_length_U_block;
+    my ( $u5_start, $u5_end ) = $self->get_oligo_block_right_half_coords( 'U', $u_block_start, $u_block_end );
+    $self->region_start_U5( $u5_start );
+    $self->region_end_U5( $u5_end );
 
-    DesignCreate::Exception->throw( "Start $start, greater than or equal to end $end for oligo $oligo" )
-        if $start >= $end;
+    my ( $u3_start, $u3_end ) = $self->get_oligo_block_left_half_coords( 'U', $u_block_start );
+    $self->region_start_U3( $u3_start );
+    $self->region_end_U3( $u3_end  );
 
-    return( $start, $end );
+    # D Block
+    my $d_block_start = $target_start - ( $self->region_offset_D_block + $self->region_length_D_block );
+    my $d_block_end   = $target_start - $self->region_offset_D_block;
+    my ( $d5_start, $d5_end ) = $self->get_oligo_block_right_half_coords( 'D', $d_block_start, $d_block_end );
+    $self->region_start_D5( $d5_start );
+    $self->region_end_D5( $d5_end );
+
+    my ( $d3_start, $d3_end ) = $self->get_oligo_block_left_half_coords( 'D', $d_block_start );
+    $self->region_start_D3( $d3_start );
+    $self->region_end_D3( $d3_end  );
+
+    # G oligos
+    $self->region_start_G5( $self->region_end_U5 + $self->region_offset_G5  );
+    $self->region_end_G5( $self->region_end_U5 + $self->region_offset_G5 + $self->region_length_G5 );
+    $self->region_start_G3( $self->region_start_D3 - ( $self->region_offset_G3 + $self->region_length_G3 ));
+    $self->region_end_G3( $self->region_start_D3 - $self->region_offset_G3 );
+
+    return;
 }
 
 sub get_oligo_block_left_half_coords {
-    my ( $self, $oligo_class ) = @_;
+    my ( $self, $oligo_class, $block_start ) = @_;
     my $block_length = $self->get_oligo_block_attribute( $oligo_class, 'length' );
     my $block_overlap = $self->get_oligo_block_attribute( $oligo_class, 'overlap' );
 
-    my $start = $self->get_oligo_block_attribute( $oligo_class, 'start' );
+    my $start = $block_start;
     my $end;
     if ( $block_length % 2 ) { # not divisible by 2
         $end = $start + ( ( $block_length - 1 ) / 2 );
@@ -311,12 +277,11 @@ sub get_oligo_block_left_half_coords {
 }
 
 sub get_oligo_block_right_half_coords {
-    my ( $self, $oligo_class ) = @_;
+    my ( $self, $oligo_class, $block_start, $block_end ) = @_;
     my $block_length = $self->get_oligo_block_attribute( $oligo_class, 'length' );
     my $block_overlap = $self->get_oligo_block_attribute( $oligo_class, 'overlap' );
-    my $block_start  = $self->get_oligo_block_attribute( $oligo_class, 'start' );
 
-    my $end = $self->get_oligo_block_attribute( $oligo_class, 'end' );
+    my $end = $block_end;
     my $start;
     if ( $block_length % 2 ) { # not divisible by 2
         $start = $block_start + ( ( $block_length + 1 ) / 2 );
@@ -331,8 +296,7 @@ sub get_oligo_block_right_half_coords {
 
 sub get_oligo_block_attribute {
     my ( $self, $oligo_class, $attribute_type ) = @_;
-    my $attribute_name = $oligo_class . '_block_';
-    $attribute_name .= $attribute_type if $attribute_type;
+    my $attribute_name = 'region_' . $attribute_type . '_' . $oligo_class . '_block';
 
     DesignCreate::Exception::NonExistantAttribute->throw(
         attribute_name => $attribute_name,

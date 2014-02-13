@@ -1,4 +1,4 @@
-package Test::DesignCreate::Action::ConditionalDesign;
+package Test::DesignCreate::Action::DeletionDesignExon;
 
 use strict;
 use warnings FATAL => 'all';
@@ -9,27 +9,20 @@ use Path::Class qw( tempdir );
 use base qw( Test::DesignCreate::Class Class::Data::Inheritable );
 
 # Testing
-# DesignCreate::Action::ConditionalDesign ( through command line )
+# DesignCreate::Action::DeletionDesignExon ( through command line )
 
-sub conditional_design_cmd : Test(4) {
+sub del_exon_design_cmd : Test(4) {
     my $test = shift;
 
     my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute;
 
     my @argv_contents = (
-        'conditional-design'  ,
-        '--dir'               , $dir->stringify,
-        '--species'           , 'Mouse',
-        '--chromosome'        , 11,
-        '--strand'            , 1,
-        '--u-block-start'     , 10000100,
-        '--u-block-end'       , 10000300,
-        '--u-block-overlap'   , 10,
-        '--d-block-start'     , 10000500,
-        '--d-block-end'       , 10000700,
-        '--d-block-overlap'   , 10,
-        '--target-gene'       , 'CONDITIONAL-TEST',
-        '--mask-by-lower-case', 'no',
+        'deletion-design-exon'  ,
+        '--dir'           , $dir->stringify,
+        '--species'       , 'Human',
+        '--target-exon'   , 'ENSE00001764544',
+        '--target-gene'   , 'ATP2BF',
+        '--design-method' , 'deletion',
     );
 
     note('############################################');
