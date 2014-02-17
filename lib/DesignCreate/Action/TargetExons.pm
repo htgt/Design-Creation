@@ -1,7 +1,7 @@
 package DesignCreate::Action::TargetExons;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::TargetExons::VERSION = '0.019';
+    $DesignCreate::Action::TargetExons::VERSION = '0.020';
 }
 ## use critic
 

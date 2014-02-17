@@ -1,7 +1,7 @@
 package DesignCreate::Action::GibsonDesignLocation;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::GibsonDesignLocation::VERSION = '0.019';
+    $DesignCreate::Action::GibsonDesignLocation::VERSION = '0.020';
 }
 ## use critic
 

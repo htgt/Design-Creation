@@ -1,7 +1,7 @@
 package DesignCreate::Util::Primer3;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Util::Primer3::VERSION = '0.019';
+    $DesignCreate::Util::Primer3::VERSION = '0.020';
 }
 ## use critic
 
@@ -37,6 +37,9 @@ const my @PRIMER3_GLOBAL_ARGUMENTS => (
     'primer_opt_gc_percent',
     'primer_max_gc',
     'primer_min_gc',
+    'primer_opt_tm',
+    'primer_max_tm',
+    'primer_min_tm',
     'primer_lowercase_masking',
     'primer_explain_flag',
     'primer_min_three_prime_distance',
@@ -52,6 +55,9 @@ has [
     'primer_opt_gc_percent',
     'primer_max_gc',
     'primer_min_gc',
+    'primer_opt_tm',
+    'primer_max_tm',
+    'primer_min_tm',
 ] => (
     is       => 'ro',
     isa      => PositiveInt,
