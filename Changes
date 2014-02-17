@@ -1,5 +1,12 @@
 {{$NEXT}}
 
+0.020     2014-02-17 14:19:24 Europe/London
+
+    Added option to set Primer3 config values by command line for: 
+        - melting temp
+        - gc percentage
+        - primer size
+
 0.019     2014-02-13 08:48:42 Europe/London
 
     Refactor to add a initial target step.
