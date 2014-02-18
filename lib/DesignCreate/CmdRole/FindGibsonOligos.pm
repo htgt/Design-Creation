@@ -31,6 +31,15 @@ use namespace::autoclean;
 const my @FIND_GIBSON_OLIGOS_PARAMETERS => qw(
 primer_lowercase_masking
 repeat_mask_class
+primer_min_size
+primer_max_size
+primer_opt_size
+primer_opt_gc_percent
+primer_max_gc
+primer_min_gc
+primer_opt_tm
+primer_max_tm
+primer_min_tm
 );
 
 const my @PRIMER3_OPTIONS => qw(
@@ -55,6 +64,23 @@ has primer3_config_file => (
     coerce        => 1,
     default       => sub{ Path::Class::File->new( $PRIMER3_CONFIG_FILE )->absolute },
 );
+
+has default_primer3_config => (
+    is         => 'ro',
+    isa        => 'HashRef',
+    traits     => [ 'NoGetopt', 'Hash' ],
+    lazy_build => 1,
+    handles => {
+        has_primer3_default => 'exists',
+        get_primer3_default => 'get',
+    }
+);
+
+sub _build_default_primer3_config {
+    my $self = shift;
+
+    return LoadFile( $self->primer3_config_file->stringify );
+}
 
 # default of masking all sequence ensembl considers to be a repeat region
 # means passing in undef as a mask method, otherwise pass in array ref of
@@ -147,6 +173,7 @@ has primer_lowercase_masking => (
     predicate     => 'has_primer_lowercase_masking',
 );
 
+# setup primer3 config attributes
 for my $name (
     qw(
     primer_min_size
@@ -169,6 +196,12 @@ for my $name (
         traits    => ['Getopt'],
         cmd_flag  => $cmd_name,
         predicate => 'has_' . $name,
+        default   => sub {
+            my $self = shift;
+            die ("No Primer3 config for $name set") unless $self->has_primer3_default( $name );
+
+            return $self->get_primer3_default( $name );
+        }
     );
 }
 
@@ -226,9 +259,9 @@ Find the oligos for the 3 target regions using primer3
 sub find_oligos {
     my ( $self, $opts, $args ) = @_;
 
+    $self->set_param( 'ensembl-version', $self->ensembl_util->db_adaptor->dbc->dbname );
     $self->add_design_parameters( \@FIND_GIBSON_OLIGOS_PARAMETERS );
     # Add current EnsEMBL DB version used
-    $self->set_param( 'ensembl-version', $self->ensembl_util->db_adaptor->dbc->dbname );
     $self->run_primer3;
     $self->parse_primer3_results;
     $self->create_oligo_files;
@@ -250,10 +283,7 @@ sub run_primer3 {
     );
 
     for my $name ( @PRIMER3_OPTIONS ) {
-        my $predicate = 'has_' . $name;
-        if ( $self->$predicate ) {
-            $primer3_params{$name} = $self->$name;
-        }
+        $primer3_params{$name} = $self->$name;
     }
 
     my $p3 = DesignCreate::Util::Primer3->new_with_config( %primer3_params );
@@ -270,7 +300,7 @@ sub run_primer3 {
         my $region_bio_seq = Bio::Seq->new( -display_id => $region, -seq => $region_slice->seq );
 
         my ( $result, $primer3_explain ) = $p3->run_primer3( $log_file->absolute, $region_bio_seq,
-            { SEQUENCE_TARGET => $target_string } );
+            { SEQUENCE_TARGET => $target_string }, $region );
 
         DesignCreate::Exception->throw( "Errors running primer3 on $region region" )
             unless $result;
