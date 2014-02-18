@@ -13,10 +13,12 @@ Actually it uses Bio::Tools::Primer3Redux, which itself calls Primer3
 
 use Moose;
 use DesignCreate::Exception;
+use DesignCreate::Exception::Primer3RunFail;
 use Bio::Tools::Primer3Redux;
 use Bio::Tools::Run::Primer3Redux;
 use DesignCreate::Types qw( PositiveInt );
 use Const::Fast;
+use Try::Tiny;
 use Scalar::Util qw( blessed reftype );
 use DesignCreate::Constants qw( $PRIMER3_CMD );
 use namespace::autoclean;
@@ -108,7 +110,7 @@ sub _build_primer3_global_arguments {
 #
 
 sub run_primer3 {
-    my ( $self, $outfile, $seq, $target ) = @_;
+    my ( $self, $outfile, $seq, $target, $region ) = @_;
     $self->log->debug( 'Running Primer3' );
 
     if ( ! blessed( $outfile ) || ! $outfile->isa( 'Path::Class::File' ) ) {
@@ -136,7 +138,18 @@ sub run_primer3 {
         $primer3->set_parameters( SEQUENCE_TARGET => $target->{SEQUENCE_TARGET} );
     }
 
-    my $results = $primer3->pick_pcr_primers( $seq );
+    my $results;
+    try{
+        $results = $primer3->pick_pcr_primers( $seq );
+    }
+    catch {
+        $self->log->debug( "Error running primer3: $_" );
+        my $primer3_explain = $self->parse_primer_explain_details( $outfile );
+        DesignCreate::Exception::Primer3RunFail->throw(
+            region        => $region,
+            primer3_error => $primer3_explain->{PRIMER_ERROR},
+        );
+    };
     # we are only sending in one sequence so we will only have one result
     my $result = $results->next_result;
 
@@ -166,7 +179,7 @@ sub parse_primer_explain_details {
 
     my @output = $outfile->slurp;
     chomp(@output);
-    my @explain_data = grep{ /^PRIMER_(LEFT|RIGHT)_EXPLAIN=|^SEQUENCE_TEMPLATE=/ } @output;
+    my @explain_data = grep{ /^PRIMER_(LEFT|RIGHT)_EXPLAIN=|^SEQUENCE_TEMPLATE=|^PRIMER_ERROR=/ } @output;
 
     %primer3_explain = map{ split /=/ } @explain_data;
 
