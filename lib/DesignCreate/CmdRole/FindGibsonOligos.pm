@@ -92,7 +92,7 @@ has repeat_mask_class => (
     default       => sub{ [] },
     cmd_flag      => 'repeat-mask-class',
     documentation => "Optional repeat type class(s) we can get masked in genomic sequence",
-    handles => {
+    handles       => {
         no_repeat_mask_classes => 'is_empty'
     },
 );
@@ -196,6 +196,7 @@ for my $name (
         traits    => ['Getopt'],
         cmd_flag  => $cmd_name,
         predicate => 'has_' . $name,
+        lazy      => 1,
         default   => sub {
             my $self = shift;
             die ("No Primer3 config for $name set") unless $self->has_primer3_default( $name );
