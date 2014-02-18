@@ -1,13 +1,13 @@
-package DesignCreate::Action::OligoRegionsInsDel;
+package DesignCreate::Action::OligoPairRegionsGibsonDel;
 
 =head1 NAME
 
-DesignCreate::Action::OligoRegionsInsDel - Create seq files for oligo region, insertion or deletion designs 
+DesignCreate::Action::OligoPairRegionsGibsonDel - Work out coordinate for oligo regions in gibson deletion designs
 
 =head1 DESCRIPTION
 
-For given target coordinates and oligo region parameters produce target region coordinates file
-for each oligo we must find for deletion or insertion designs.
+Generate a yaml file giving the start and end coordiantes for the oligo pair
+regions in gibson deletion designs: five_prime_region and three_prime_region
 
 =cut
 
@@ -19,16 +19,16 @@ use Try::Tiny;
 use namespace::autoclean;
 
 extends qw( DesignCreate::Action );
-with 'DesignCreate::CmdRole::OligoRegionsInsDel';
+with 'DesignCreate::CmdRole::OligoPairRegionsGibsonDel';
 
 sub execute {
     my ( $self, $opts, $args ) = @_;
 
     try{
-        $self->get_oligo_region_coordinates;
+        $self->get_oligo_pair_region_coordinates;
     }
     catch{
-        $self->log->error( "Failed to generate oligo target regions:\n" . $_ );
+        $self->log->error( "Failed to generate oligo pair region coordinates for gibson deletion designs:\n" . $_ );
     };
 
     return;
@@ -47,6 +47,7 @@ override _build_oligo_target_regions_dir => sub {
 
     return $oligo_target_regions_dir->absolute;
 };
+
 
 __PACKAGE__->meta->make_immutable;
 

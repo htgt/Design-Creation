@@ -15,33 +15,25 @@ design types is found in DesignCreate::Role::OligoRegionCoodinates.
 =cut
 
 use Moose::Role;
-use DesignCreate::Types qw( DesignMethod PositiveInt Chromosome Strand );
+use DesignCreate::Types qw( DesignMethod PositiveInt NaturalNumber Chromosome Strand );
 use Const::Fast;
 use namespace::autoclean;
 
 with qw(
 DesignCreate::Role::OligoRegionCoordinates
-DesignCreate::Role::OligoRegionCoordinatesInsDel
 DesignCreate::Role::GapOligoCoordinates
 );
 
 const my @DESIGN_PARAMETERS => qw(
-target_start
-target_end
 region_length_U5
 region_offset_U5
 region_length_D3
 region_offset_D3
-chr_name
-chr_strand
-species
-assembly
 region_length_G5
 region_offset_G5
 region_length_G3
 region_offset_G3
 design_method
-target_genes
 );
 
 has design_method => (
@@ -53,50 +45,103 @@ has design_method => (
     cmd_flag      => 'design-method',
 );
 
-has chr_name => (
-    is            => 'ro',
-    isa           => Chromosome,
-    traits        => [ 'Getopt' ],
-    documentation => 'Name of chromosome the design target lies within',
-    required      => 1,
-    cmd_flag      => 'chromosome'
-);
-
-has chr_strand => (
-    is            => 'ro',
-    isa           => Strand,
-    traits        => [ 'Getopt' ],
-    documentation => 'The strand the design target lies on',
-    required      => 1,
-    cmd_flag      => 'strand'
-);
-
-has target_start => (
+has region_length_U5 => (
     is            => 'ro',
     isa           => PositiveInt,
     traits        => [ 'Getopt' ],
-    documentation => 'Start coordinate of target region',
-    required      => 1,
-    cmd_flag      => 'target-start'
+    default       => 200,
+    documentation => 'Length of U5 oligo candidate region',
+    cmd_flag      => 'region-length-u5'
 );
 
-has target_end => (
+has region_offset_U5 => (
+    is            => 'ro',
+    isa           => NaturalNumber,
+    traits        => [ 'Getopt' ],
+    default       => 0,
+    documentation => 'Offset from target region of U5 oligo candidate region',
+    cmd_flag      => 'region-offset-u5'
+);
+
+has region_length_D3 => (
     is            => 'ro',
     isa           => PositiveInt,
     traits        => [ 'Getopt' ],
-    documentation => 'End coordinate of target region',
-    required      => 1,
-    cmd_flag      => 'target-end'
+    default       => 200,
+    documentation => 'Length of D3 oligo candidate region',
+    cmd_flag      => 'region-length-d3'
+);
+
+has region_offset_D3 => (
+    is            => 'ro',
+    isa           => NaturalNumber,
+    traits        => [ 'Getopt' ],
+    default       => 0,
+    documentation => 'Offset from target region of D3 oligo candidate region',
+    cmd_flag      => 'region-offset-d3'
 );
 
 sub get_oligo_region_coordinates {
     my $self = shift;
     $self->add_design_parameters( \@DESIGN_PARAMETERS );
 
-    # In DesignCreate::Role::OligoRegionCoordinatesInsDel
-    $self->_get_oligo_region_coordinates;
+    # check target coordinate have been set, if not die
+    for my $data_type ( qw( target_start target_end chr_name chr_strand ) ) {
+        DesignCreate::Exception->throw( "No target value for: $data_type" )
+            unless $self->have_target_data( $data_type );
+    }
+
+    for my $oligo ( $self->expected_oligos ) {
+        $self->log->info( "Getting target region for $oligo oligo" );
+        my ( $start, $end ) = $self->coordinates_for_oligo( $oligo );
+        next if !defined $start || !defined $end;
+
+        $self->oligo_region_coordinates->{$oligo} = { start => $start, end => $end };
+    }
+
+    $self->create_oligo_region_coordinate_file;
 
     return;
+}
+
+#TODO all oligos coordinates are based from target start and end, unlike
+# all the other DesignCreate::CmdRole::Oligo* modules, change this
+sub coordinates_for_oligo {
+    my ( $self, $oligo ) = @_;
+    my ( $start, $end );
+
+    my $target_start = $self->get_target_data( 'target_start' );
+    my $target_end   = $self->get_target_data( 'target_end' );
+    my $strand       = $self->get_target_data( 'chr_strand' );
+
+    my $offset = $self->get_oligo_region_offset( $oligo );
+    my $length = $self->get_oligo_region_length( $oligo );
+
+    if ( $strand == 1 ) {
+        if ( $oligo =~ /5$/ ) {
+            $start = $target_start - ( $offset + $length );
+            $end   = $target_start - ( $offset + 1 );
+        }
+        elsif ( $oligo =~ /3$/ ) {
+            $start = $target_end + ( $offset + 1 );
+            $end   = $target_end + ( $offset + $length );
+        }
+    }
+    else {
+        if ( $oligo =~ /5$/ ) {
+            $start = $target_end + ( $offset + 1 );
+            $end   = $target_end + ( $offset + $length );
+        }
+        elsif ( $oligo =~ /3$/ ) {
+            $start = $target_start - ( $offset + $length );
+            $end   = $target_start - ( $offset + 1 );
+        }
+    }
+
+    DesignCreate::Exception->throw( "Start $start, greater than or equal to end $end for oligo $oligo" )
+        if $start >= $end;
+
+    return( $start, $end );
 }
 
 1;

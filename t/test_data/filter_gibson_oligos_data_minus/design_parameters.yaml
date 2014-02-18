@@ -22,7 +22,8 @@ repeat_mask_class: []
 software_version: dev_30-07-2013
 species: Human
 target_end: 118966177
-target_exon: ENSE00002184393
+five_prime_exon: ENSE00002184393
+three_prime_exon: ~
 target_genes:
 - H2AFX
 target_start: 118964564

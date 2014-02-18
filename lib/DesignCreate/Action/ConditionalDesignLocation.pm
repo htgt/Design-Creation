@@ -1,12 +1,12 @@
-package DesignCreate::Action::ConditionalDesign;
+package DesignCreate::Action::ConditionalDesignLocation;
 
 =head1 NAME
 
-DesignCreate::Action::ConditionalDesign - Run design creation for condition designs, end to end
+DesignCreate::Action::ConditionalDesignLocation - Run design creation for location specified condition designs, end to end
 
 =head1 DESCRIPTION
 
-Runs all the seperate steps used to create a conditional design.
+Runs all the seperate steps used to create a location specified conditional design.
 Persists the design to LIMS2 if persist option given.
 
 =cut
@@ -23,6 +23,7 @@ use Data::Dump qw( pp );
 
 extends qw( DesignCreate::Action );
 with qw(
+DesignCreate::CmdRole::TargetLocation
 DesignCreate::CmdRole::OligoRegionsConditional
 DesignCreate::CmdRole::FetchOligoRegionsSequence
 DesignCreate::CmdRole::FindOligos
@@ -68,6 +69,7 @@ sub execute {
     $self->log->debug( 'Design run args: ' . pp($opts) );
 
     try {
+        $self->target_coordinates;
         $self->get_oligo_region_coordinates;
         $self->create_oligo_region_sequence_files;
         $self->find_oligos;

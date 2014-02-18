@@ -16,26 +16,16 @@ design types is found in DesignCreate::Role::OligoRegionCoodinates.
 
 use Moose::Role;
 use DesignCreate::Exception;
-use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
-use DesignCreate::Types qw( PositiveInt Strand DesignMethod Chromosome );
+use DesignCreate::Types qw( PositiveInt DesignMethod );
+use DesignCreate::Constants qw( %GIBSON_PRIMER_REGIONS );
 use Const::Fast;
 use Try::Tiny;
 use namespace::autoclean;
 
-with qw(
-DesignCreate::Role::OligoRegionCoordinates
-);
+with qw( DesignCreate::Role::OligoRegionCoordinates );
 
 const my @DESIGN_PARAMETERS => qw(
 design_method
-species
-assembly
-target_genes
-target_exon
-target_start
-target_end
-chr_name
-chr_strand
 region_length_5F
 region_offset_5F
 region_length_3R
@@ -48,15 +38,6 @@ region_length_5R
 region_length_EF
 region_length_ER
 region_length_3F
-);
-
-has target_exon => (
-    is            => 'ro',
-    isa           => 'Str',
-    traits        => [ 'Getopt' ],
-    documentation => 'EnsEMBL exon id we are targeting',
-    required      => 1,
-    cmd_flag      => 'target-exon'
 );
 
 has design_method => (
@@ -185,214 +166,41 @@ sub _build_region_length_EF {
     return int( shift->region_length_5R_EF / 2 );
 }
 
-has exon => (
-    is         => 'ro',
-    isa        => 'Bio::EnsEMBL::Exon',
-    traits     => [ 'NoGetopt' ],
-    lazy_build => 1,
-);
-
-sub _build_exon {
-    my $self = shift;
-    my $exon;
-
-    try{
-        $exon = $self->exon_adaptor->fetch_by_stable_id( $self->target_exon );
-    };
-
-    unless ( $exon ) {
-        DesignCreate::Exception->throw(
-            'Unable to retrieve exon: ' . $self->target_exon );
-    }
-
-    # check exon is on the chromosome coordinate system
-    if ( $exon->coord_system_name ne 'chromosome' ) {
-        $exon = $exon->transform( 'chromosome' );
-    }
-
-    return $exon;
-}
-
-has target_start => (
-    is         => 'ro',
-    isa        => PositiveInt,
-    traits     => [ 'NoGetopt' ],
-    lazy_build => 1,
- );
-
-sub _build_target_start {
-    return shift->exon->seq_region_start;
-}
-
-has target_end => (
-    is         => 'ro',
-    isa        => PositiveInt,
-    traits     => [ 'NoGetopt' ],
-    lazy_build => 1,
-);
-
-sub _build_target_end {
-    return shift->exon->seq_region_end;
-}
-
-has chr_name => (
-    is         => 'ro',
-    isa        => Chromosome,
-    traits     => [ 'NoGetopt' ],
-    lazy_build => 1,
-);
-
-sub _build_chr_name {
-    return shift->exon->seq_region_name;
-}
-
-has chr_strand => (
-    is         => 'ro',
-    isa        => Strand,
-    traits     => [ 'NoGetopt' ],
-    lazy_build => 1,
-);
-
-sub _build_chr_strand {
-    return shift->exon->strand;
-}
-
 has exon_region_start => (
-    is         => 'ro',
+    is         => 'rw',
     isa        => PositiveInt,
     traits     => [ 'NoGetopt' ],
-    lazy_build => 1,
 );
-
-sub _build_exon_region_start {
-    my $self = shift;
-    my $start;
-
-    if ( $self->chr_strand == 1 ) {
-        $start = $self->target_start
-            - ( $self->region_offset_5R_EF + int( $self->region_length_5R_EF / 2 ) );
-    }
-    else {
-        $start = $self->target_start
-            - ( $self->region_offset_ER_3F + int( $self->region_length_ER_3F / 2 ) );
-    }
-    $self->log->debug( "Exon region start: $start" );
-
-    return $start;
-}
 
 has exon_region_end => (
-    is         => 'ro',
+    is         => 'rw',
     isa        => PositiveInt,
     traits     => [ 'NoGetopt' ],
-    lazy_build => 1,
 );
-
-sub _build_exon_region_end {
-    my $self = shift;
-    my $end;
-
-    if ( $self->chr_strand == 1 ) {
-        $end = $self->target_end + ( $self->region_offset_ER_3F + int( $self->region_length_ER_3F / 2 ) );
-    }
-    else {
-        $end = $self->target_end + ( $self->region_offset_5R_EF + int( $self->region_length_5R_EF / 2 ) );
-    }
-    $self->log->debug( "Exon region end: $end" );
-
-    return $end;
-}
 
 has five_prime_region_start => (
-    is         => 'ro',
+    is         => 'rw',
     isa        => PositiveInt,
     traits     => [ 'NoGetopt' ],
-    lazy_build => 1,
 );
-
-sub _build_five_prime_region_start {
-    my $self = shift;
-    my $start;
-
-    if ( $self->chr_strand == 1 ) {
-        $start = $self->exon_region_start
-            - ( $self->region_offset_5F + $self->region_length_5F + $self->region_length_5R );
-    }
-    else {
-        $start = $self->exon_region_end + 1;
-    }
-    $self->log->debug( "Five_prime region start: $start" );
-
-    return $start;
-}
 
 has five_prime_region_end => (
-    is         => 'ro',
+    is         => 'rw',
     isa        => PositiveInt,
     traits     => [ 'NoGetopt' ],
-    lazy_build => 1,
 );
-
-sub _build_five_prime_region_end {
-    my $self = shift;
-    my $end;
-
-    if ( $self->chr_strand == 1 ) {
-        $end = $self->exon_region_start - 1;
-    }
-    else {
-        $end = $self->exon_region_end
-            + ( $self->region_offset_5F + $self->region_length_5F + $self->region_length_5R );
-    }
-    $self->log->debug( "Five prime region end: $end" );
-
-    return $end;
-}
 
 has three_prime_region_start => (
-    is         => 'ro',
+    is         => 'rw',
     isa        => PositiveInt,
     traits     => [ 'NoGetopt' ],
-    lazy_build => 1,
 );
-
-sub _build_three_prime_region_start {
-    my $self = shift;
-    my $start;
-
-    if ( $self->chr_strand == 1 ) {
-        $start = $self->exon_region_end + 1;
-    }
-    else {
-        $start = $self->exon_region_start
-            - ( $self->region_offset_3R + $self->region_length_3R + $self->region_length_3F );
-    }
-    $self->log->debug( "Three prime region start: $start" );
-
-    return $start;
-}
 
 has three_prime_region_end => (
-    is         => 'ro',
+    is         => 'rw',
     isa        => PositiveInt,
     traits     => [ 'NoGetopt' ],
-    lazy_build => 1,
 );
-
-sub _build_three_prime_region_end {
-    my $self = shift;
-    my $end;
-
-    if ( $self->chr_strand == 1 ) {
-        $end = $self->exon_region_end + ( $self->region_offset_3R + $self->region_length_3R + $self->region_length_3F );
-    }
-    else {
-        $end = $self->exon_region_start - 1;
-    }
-    $self->log->debug( "Three prime region end: $end" );
-
-    return $end;
-}
 
 =head2 get_oligo_pair_region_coordinates
 
@@ -407,9 +215,18 @@ sub get_oligo_pair_region_coordinates {
 
     $self->add_design_parameters( \@DESIGN_PARAMETERS );
 
+    # check target coordinate have been set, if not die
+    for my $data_type ( qw( target_start target_end chr_name chr_strand ) ) {
+        DesignCreate::Exception->throw( "No target value for: $data_type" )
+            unless $self->have_target_data( $data_type );
+    }
+
+    $self->calculate_pair_region_coordinates();
+    # In role DesignCreate::Role::OligoRegionCoodinatesGibson
     $self->check_oligo_region_sizes;
 
-    for my $region ( qw( exon five_prime three_prime ) ) {
+    my $design_method = $self->design_param( 'design_method' );
+    for my $region ( keys %{ $GIBSON_PRIMER_REGIONS{$design_method} } ) {
         my $start_attr_name = $region . '_region_start';
         my $end_attr_name = $region . '_region_end';
         $self->oligo_region_coordinates->{ $region } = {
@@ -418,29 +235,59 @@ sub get_oligo_pair_region_coordinates {
         };
     }
 
-    # in Role::OligoRegionCoordinates
+    # In role DesignCreate::Role::OligoRegionCoodinatesGibson
     $self->create_oligo_region_coordinate_file;
     $self->update_design_attempt_record( { status => 'coordinates_calculated' } );
 
     return;
 }
 
-=head2 check_oligo_region_sizes
+=head2 calculate_pair_region_coordinates
 
-Check size of region we search for oligos in is big enough
+Calculate start and end coordinates of the oligo pair regions
 
 =cut
-sub check_oligo_region_sizes {
+sub calculate_pair_region_coordinates {
     my ( $self ) = @_;
 
-    for my $oligo_type ( $self->expected_oligos ) {
-        my $length_attr =  'region_length_' . $oligo_type;
-        my $length = $self->$length_attr;
+    my $target_start = $self->get_target_data( 'target_start' );
+    my $target_end   = $self->get_target_data( 'target_end' );
+    my $strand       = $self->get_target_data( 'chr_strand' );
+    if ( $strand == 1 ) {
+        # exon region
+        $self->exon_region_start( $target_start
+                - ( $self->region_offset_5R_EF + int( $self->region_length_5R_EF / 2 ) ) );
+        $self->exon_region_end( $target_end
+                + ( $self->region_offset_ER_3F + int( $self->region_length_ER_3F / 2 ) ) );
 
-        # currently 22 is the smaller oligo we allow from primer
-        DesignCreate::Exception->throw( "$oligo_type region too small: $length" )
-            if $length < 22;
+        # five prime region
+        $self->five_prime_region_start( $self->exon_region_start
+                - ( $self->region_offset_5F + $self->region_length_5F + $self->region_length_5R ) );
+        $self->five_prime_region_end( $self->exon_region_start - 1);
+
+        # three prime region
+        $self->three_prime_region_start( $self->exon_region_end + 1);
+        $self->three_prime_region_end( $self->exon_region_end
+                + ( $self->region_offset_3R + $self->region_length_3R + $self->region_length_3F ) );
     }
+    else {
+        # exon region
+        $self->exon_region_start( $target_start
+                - ( $self->region_offset_ER_3F + int( $self->region_length_ER_3F / 2 ) ) );
+        $self->exon_region_end( $target_end
+                + ( $self->region_offset_5R_EF + int( $self->region_length_5R_EF / 2 ) ) );
+
+        # five prime region
+        $self->five_prime_region_start( $self->exon_region_end + 1 );
+        $self->five_prime_region_end( $self->exon_region_end
+                + ( $self->region_offset_5F + $self->region_length_5F + $self->region_length_5R ) );
+
+        # three prime region
+        $self->three_prime_region_start( $self->exon_region_start
+                - ( $self->region_offset_3R + $self->region_length_3R + $self->region_length_3F ) );
+        $self->three_prime_region_end( $self->exon_region_start - 1 );
+    }
+    $self->log->info('Calculated oligo region coordinates for design');
 
     return;
 }

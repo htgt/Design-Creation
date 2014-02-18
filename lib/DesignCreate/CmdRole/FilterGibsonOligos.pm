@@ -17,7 +17,7 @@ use DesignCreate::Exception;
 use YAML::Any qw( LoadFile DumpFile );
 use DesignCreate::Types qw( NaturalNumber PositiveInt );
 use DesignCreate::Util::BWA;
-use DesignCreate::Constants qw( $DEFAULT_BWA_OLIGO_DIR_NAME );
+use DesignCreate::Constants qw( $DEFAULT_BWA_OLIGO_DIR_NAME %GIBSON_PRIMER_REGIONS );
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
 use Const::Fast;
 use Fcntl; # O_ constants
@@ -93,6 +93,36 @@ has bwa_matches => (
     default => sub { {  } },
 );
 
+has critical_exons => (
+    is         => 'ro',
+    isa        => 'HashRef',
+    traits     => [ 'NoGetopt', 'Hash' ],
+    lazy_build => 1,
+    handles    => {
+        is_critical_exon => 'exists',
+    }
+);
+
+=head2 _build_critical_exons
+
+Build a hash of the critical exons that are targeted by the design.
+
+=cut
+sub _build_critical_exons {
+    my $self = shift;
+    my %critical_exons;
+
+    if ( my $three_prime_exon = $self->design_param( 'three_prime_exon' ) ) {
+        # have both a 5' and 3' exon
+        #TODO should really work out all exons inbetween 5' and 3' exon sp12 Wed 29 Jan 2014 11:41:19 GMT
+        #     but that could be tricky and check can easily be turned off
+        $critical_exons{ $three_prime_exon } = 1;
+    }
+    $critical_exons{ $self->design_param( 'five_prime_exon' ) } = 1;
+
+    return \%critical_exons;
+}
+
 has validated_oligo_pairs => (
     is      => 'rw',
     isa     => 'HashRef',
@@ -155,7 +185,6 @@ Check that the oligo is not within a certain number of bases of a exon
 =cut
 sub check_oligo_not_near_exon {
     my ( $self, $oligo_data, $oligo_slice, $invalid_reason ) = @_;
-    my $critical_exon_id = $self->design_param( 'target_exon' );
     return 1 if $self->exon_check_flank_length == 0;
 
     my $expanded_slice
@@ -171,12 +200,10 @@ sub check_oligo_not_near_exon {
         my $canonical_transcript = $gene->canonical_transcript;
 
         for my $exon ( @{ $canonical_transcript->get_all_Exons } ) {
-            next if $exon->stable_id eq $critical_exon_id;
+            next if $self->is_critical_exon( $exon->stable_id );
             if (   ( $expanded_slice_start < $exon->start && $expanded_slice_end > $exon->start )
                 || ( $expanded_slice_start < $exon->end && $expanded_slice_end > $exon->end ) )
             {
-                $self->log->debug( "Critical exon $critical_exon_id is flanked too closely by exon "
-                        . $exon->stable_id );
                 push @flanking_exons, $exon;
             }
         }
@@ -195,7 +222,8 @@ sub check_oligo_not_near_exon {
 sub validate_oligo_pairs {
     my $self = shift;
 
-    for my $oligo_pair_region ( qw( exon five_prime three_prime ) ) {
+    my $design_method = $self->design_param( 'design_method' );
+    for my $oligo_pair_region ( keys %{ $GIBSON_PRIMER_REGIONS{$design_method} } ) {
         my $oligo_pair_file
             = $self->get_file( $oligo_pair_region . '_oligo_pairs.yaml', $self->oligo_finder_output_dir );
 
@@ -216,7 +244,8 @@ sub validate_oligo_pairs {
 sub output_valid_oligo_pairs {
     my $self = shift;
 
-    for my $oligo_pair_region ( qw( exon five_prime three_prime ) ) {
+    my $design_method = $self->design_param( 'design_method' );
+    for my $oligo_pair_region ( keys %{ $GIBSON_PRIMER_REGIONS{$design_method} } ) {
         DesignCreate::Exception->throw( "No valid oligo pairs for $oligo_pair_region oligo region" )
             unless $self->region_has_oligo_pairs( $oligo_pair_region );
 

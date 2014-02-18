@@ -1,5 +1,25 @@
 {{$NEXT}}
 
+0.020     2014-02-17 14:19:24 Europe/London
+
+    Added option to set Primer3 config values by command line for: 
+        - melting temp
+        - gc percentage
+        - primer size
+
+0.019     2014-02-13 08:48:42 Europe/London
+
+    Refactor to add a initial target step.
+    Create location specified gibson design commands.
+
+0.018     2014-02-03 09:12:24 Europe/London
+    
+    Add deletion gibson design creation
+
+0.017     2014-01-29 14:51:18 Europe/London
+
+    Allow multi exon targeting for gibson designs
+
 0.016     2014-01-21 07:45:20 Europe/London
 
     Switch ref genomes for bwa and blast to scratch109

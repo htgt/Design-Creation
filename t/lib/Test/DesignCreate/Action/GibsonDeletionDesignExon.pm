@@ -1,4 +1,4 @@
-package Test::DesignCreate::Action::InsDelDesign;
+package Test::DesignCreate::Action::GibsonDeletionDesignExon;
 
 use strict;
 use warnings FATAL => 'all';
@@ -9,28 +9,22 @@ use Path::Class qw( tempdir );
 use base qw( Test::DesignCreate::Class Class::Data::Inheritable );
 
 # Testing
-# DesignCreate::Action::InsDelDesign ( through command line )
+# DesignCreate::Action::GibsonDeletionDesignExon ( through command line )
 
-sub ins_del_design_cmd : Test(4) {
+sub gibson_design_cmd : Test(4) {
     my $test = shift;
 
     my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute;
 
     my @argv_contents = (
-        'ins-del-design'  ,
-        '--dir'           , $dir->stringify,
-        '--species'       , 'Mouse',
-        '--target-start'  , 101176328,
-        '--target-end'    , 101176428,
-        '--chromosome'    , 11,
-        '--strand'        , 1,
-        '--target-gene'   , 'LBL-TEST',
-        '--design-method' , 'deletion',
+        'gibson-deletion-design-exon'         ,
+        '--dir'                 , $dir->stringify,
+        '--species'             , 'Human',
+        '--target-gene'         , 'GIBSON',
+        '--target-exon'         , 'ENSE00002184393',
+        '--region-offset-er-3f' , 50,
     );
 
-    note('############################################');
-    note('Following test may take a while to finish...');
-    note('############################################');
     ok my $result = test_app($test->cmd_class => \@argv_contents), 'can run command';
 
     is $result->stderr, '', 'no errors';
