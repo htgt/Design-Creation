@@ -179,7 +179,9 @@ sub parse_primer_explain_details {
 
     my @output = $outfile->slurp;
     chomp(@output);
+    ## no critic(RegularExpressions::ProhibitComplexRegexes)
     my @explain_data = grep{ /^PRIMER_(LEFT|RIGHT)_EXPLAIN=|^SEQUENCE_TEMPLATE=|^PRIMER_ERROR=/ } @output;
+    ## use critic
 
     %primer3_explain = map{ split /=/ } @explain_data;
 
