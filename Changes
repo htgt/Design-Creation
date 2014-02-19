@@ -1,5 +1,11 @@
 {{$NEXT}}
 
+0.021     2014-02-19 08:21:47 Europe/London
+
+    Write new Primer3 config values into parameters file.
+    Throw a more meaningful error when Primer3 dies.
+    Can set Primer3 gc_clamp value.
+
 0.020     2014-02-17 14:19:24 Europe/London
 
     Added option to set Primer3 config values by command line for: 
