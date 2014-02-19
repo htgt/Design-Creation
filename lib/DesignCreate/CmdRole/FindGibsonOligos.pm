@@ -66,7 +66,7 @@ has primer3_config_file => (
 );
 
 has default_primer3_config => (
-    is         => 'ro',
+    is         => 'rw',
     isa        => 'HashRef',
     traits     => [ 'NoGetopt', 'Hash' ],
     lazy_build => 1,

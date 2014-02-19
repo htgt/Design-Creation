@@ -218,6 +218,20 @@ sub parse_primer3_results : Test(6) {
     }
 }
 
+sub primer3_config_defaults : Tests(5) {
+    my $test = shift;
+    ok my $o = $test->_get_test_object, 'can grab test object';
+
+    ok $o->has_primer3_default('primer_max_gc'), 'we have default primer3 config for max gc';
+    is $o->get_primer3_default('primer_max_gc'), 60, 'value is correct, 60%';
+
+    ok delete $o->default_primer3_config->{primer_max_gc}, 'can delete max gc value';
+
+    throws_ok {
+        $o->primer_max_gc
+    } qr/No Primer3 config for primer_max_gc set/, 'throws error if no default set';
+}
+
 sub _get_test_object {
     my ( $test, $fail_data ) = @_;
 
