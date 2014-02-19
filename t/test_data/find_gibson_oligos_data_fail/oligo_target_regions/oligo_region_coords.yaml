@@ -1,0 +1,10 @@
+---
+exon:
+  end: 32907724
+  start: 32906109
+five_prime:
+  end: 6000
+  start: 5000
+three_prime:
+  end: 32909324
+  start: 32907725
