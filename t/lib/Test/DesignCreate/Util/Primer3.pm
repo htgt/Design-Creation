@@ -33,7 +33,7 @@ sub constructor : Test(startup => 2) {
     $test->{o} = $o;
 }
 
-sub run_primer : Test(7) {
+sub run_primer : Test(9) {
     my $test = shift;
     ok my $o = $test->{o}, 'can grab test object';
 
@@ -65,15 +65,22 @@ sub run_primer : Test(7) {
     } qr/\$target variable must be a hashref or undef/
         , 'third input to run_primer3 must be a hashref or under';
 
-    ok my ( $result, $primer3_explain )
-        = $o->run_primer3( $log_file->absolute, $region_bio_seq, { SEQUENCE_TARGET => '500,500' } ),
-        'can call run_primer3';
+    ok my ( $result, $primer3_explain ) = $o->run_primer3(
+        $log_file->absolute, $region_bio_seq, { SEQUENCE_TARGET => '500,500' },
+        'test_region'
+    ), 'can call run_primer3';
 
     isa_ok $result, 'Bio::Tools::Primer3Redux::Result', '.. and got the correct object returned';
 
     # this will have errors
     ok! $o->run_primer3( $log_file->absolute, Bio::Seq->new( -seq => 'ATCG' ) )
         ,'fails to return result if primer3 encounters any errors';
+
+    ok $o->primer3_global_arguments->{PRIMER_MAX_SIZE} = 50, 'can set primer max size to 50';
+    throws_ok{
+        $o->run_primer3( $log_file, $region_bio_seq, { SEQUENCE_TARGET => '500,500' }, 'foo' )
+    } 'DesignCreate::Exception::Primer3RunFail'
+        , 'Running primer3 with invalid parameter causes a error';
 
 }
 

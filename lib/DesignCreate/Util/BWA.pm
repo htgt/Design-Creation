@@ -1,7 +1,7 @@
 package DesignCreate::Util::BWA;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Util::BWA::VERSION = '0.020';
+    $DesignCreate::Util::BWA::VERSION = '0.021';
 }
 ## use critic
 

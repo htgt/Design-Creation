@@ -1,7 +1,7 @@
 package DesignCreate::Action::DeletionDesignExon;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::DeletionDesignExon::VERSION = '0.020';
+    $DesignCreate::Action::DeletionDesignExon::VERSION = '0.021';
 }
 ## use critic
 

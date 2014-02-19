@@ -54,6 +54,7 @@ lib/DesignCreate/Exception/MissingFile.pm
 lib/DesignCreate/Exception/NonExistantAttribute.pm
 lib/DesignCreate/Exception/OligoValidation.pm
 lib/DesignCreate/Exception/Primer3FailedFindOligos.pm
+lib/DesignCreate/Exception/Primer3RunFail.pm
 lib/DesignCreate/Role/AOS.pm
 lib/DesignCreate/Role/Action.pm
 lib/DesignCreate/Role/EnsEMBL.pm
@@ -166,6 +167,8 @@ t/test_data/filter_oligos_data_plus/oligo_finder_output/G5.yaml
 t/test_data/filter_oligos_data_plus/oligo_finder_output/U5.yaml
 t/test_data/find_gibson_oligos_data/design_parameters.yaml
 t/test_data/find_gibson_oligos_data/oligo_target_regions/oligo_region_coords.yaml
+t/test_data/find_gibson_oligos_data_fail/design_parameters.yaml
+t/test_data/find_gibson_oligos_data_fail/oligo_target_regions/oligo_region_coords.yaml
 t/test_data/find_oligos_data/design_parameters.yaml
 t/test_data/find_oligos_data/oligo_target_regions/D3.fasta
 t/test_data/find_oligos_data/oligo_target_regions/G3.fasta

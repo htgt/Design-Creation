@@ -1,7 +1,7 @@
 package DesignCreate::Util::Primer3;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Util::Primer3::VERSION = '0.020';
+    $DesignCreate::Util::Primer3::VERSION = '0.021';
 }
 ## use critic
 
@@ -19,10 +19,12 @@ Actually it uses Bio::Tools::Primer3Redux, which itself calls Primer3
 
 use Moose;
 use DesignCreate::Exception;
+use DesignCreate::Exception::Primer3RunFail;
 use Bio::Tools::Primer3Redux;
 use Bio::Tools::Run::Primer3Redux;
-use DesignCreate::Types qw( PositiveInt );
+use DesignCreate::Types qw( PositiveInt NaturalNumber);
 use Const::Fast;
+use Try::Tiny;
 use Scalar::Util qw( blessed reftype );
 use DesignCreate::Constants qw( $PRIMER3_CMD );
 use namespace::autoclean;
@@ -45,6 +47,7 @@ const my @PRIMER3_GLOBAL_ARGUMENTS => (
     'primer_min_three_prime_distance',
     'primer_product_size_range',
     'primer_thermodynamic_parameters_path',
+    'primer_gc_clamp',
 );
 
 has [
@@ -62,6 +65,13 @@ has [
     is       => 'ro',
     isa      => PositiveInt,
     required => 1,
+);
+
+has 'primer_gc_clamp' => (
+    is       => 'ro',
+    isa      => NaturalNumber,
+    default  => 0,
+    lazy     => 1,
 );
 
 has [
@@ -114,7 +124,7 @@ sub _build_primer3_global_arguments {
 #
 
 sub run_primer3 {
-    my ( $self, $outfile, $seq, $target ) = @_;
+    my ( $self, $outfile, $seq, $target, $region ) = @_;
     $self->log->debug( 'Running Primer3' );
 
     if ( ! blessed( $outfile ) || ! $outfile->isa( 'Path::Class::File' ) ) {
@@ -142,7 +152,18 @@ sub run_primer3 {
         $primer3->set_parameters( SEQUENCE_TARGET => $target->{SEQUENCE_TARGET} );
     }
 
-    my $results = $primer3->pick_pcr_primers( $seq );
+    my $results;
+    try{
+        $results = $primer3->pick_pcr_primers( $seq );
+    }
+    catch {
+        $self->log->debug( "Error running primer3: $_" );
+        my $primer3_explain = $self->parse_primer_explain_details( $outfile );
+        DesignCreate::Exception::Primer3RunFail->throw(
+            region        => $region,
+            primer3_error => $primer3_explain->{PRIMER_ERROR},
+        );
+    };
     # we are only sending in one sequence so we will only have one result
     my $result = $results->next_result;
 
@@ -172,7 +193,9 @@ sub parse_primer_explain_details {
 
     my @output = $outfile->slurp;
     chomp(@output);
-    my @explain_data = grep{ /^PRIMER_(LEFT|RIGHT)_EXPLAIN=|^SEQUENCE_TEMPLATE=/ } @output;
+    ## no critic(RegularExpressions::ProhibitComplexRegexes)
+    my @explain_data = grep{ /^PRIMER_(LEFT|RIGHT)_EXPLAIN=|^SEQUENCE_TEMPLATE=|^PRIMER_ERROR=/ } @output;
+    ## use critic
 
     %primer3_explain = map{ split /=/ } @explain_data;
 

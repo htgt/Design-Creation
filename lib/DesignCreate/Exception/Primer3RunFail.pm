@@ -1,7 +1,7 @@
-package DesignCreate::Exception::OligoValidation;
+package DesignCreate::Exception::Primer3RunFail;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Exception::OligoValidation::VERSION = '0.021';
+    $DesignCreate::Exception::Primer3RunFail::VERSION = '0.021';
 }
 ## use critic
 
@@ -12,26 +12,25 @@ use namespace::autoclean;
 extends qw( DesignCreate::Exception );
 
 has '+message' => (
-    default => 'Failed to find any valid oligos for one or more oligo types'
+    default => 'Primer3 failed to run'
 );
 
-has oligo_types => (
+has region => (
     is       => 'ro',
-    isa      => 'ArrayRef',
+    isa      => 'Str',
     required => 1,
 );
 
-# $reason{'region'}{'left'}
-has invalid_reasons => (
+has primer3_error => (
     is       => 'ro',
-    isa      => 'HashRef',
+    isa      => 'Str',
     required => 1,
 );
 
 override as_string => sub {
     my $self = shift;
 
-    my $str = 'Failed to find any valid oligos of types: ' . join(',', @{ $self->oligo_types } );
+    my $str = "Primer3 failed to run, error: " . $self->primer3_error;
 
     if ( $self->show_stack_trace ) {
         $str .= "\n\n" . $self->stack_trace->as_string;
@@ -46,8 +45,8 @@ around as_hash => sub {
 
     my $hash = $self->$orig;
 
-    $hash->{oligo_Types} = $self->oligo_types;
-    $hash->{reasons} = $self->invalid_reasons;
+    $hash->{reasons} = $self->primer3_error;
+    $hash->{region} = $self->region;
 
     return $hash;
 };

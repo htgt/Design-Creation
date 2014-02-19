@@ -218,12 +218,31 @@ sub parse_primer3_results : Test(6) {
     }
 }
 
+sub primer3_config_defaults : Tests(5) {
+    my $test = shift;
+    ok my $o = $test->_get_test_object, 'can grab test object';
+
+    ok $o->has_primer3_default('primer_max_gc'), 'we have default primer3 config for max gc';
+    is $o->get_primer3_default('primer_max_gc'), 60, 'value is correct, 60%';
+
+    ok delete $o->default_primer3_config->{primer_max_gc}, 'can delete max gc value';
+
+    throws_ok {
+        $o->primer_max_gc
+    } qr/No Primer3 config for primer_max_gc set/, 'throws error if no default set';
+}
+
 sub _get_test_object {
-    my ( $test, $no_repeat_mask ) = @_;
-    my $repeat_mask_classes = $no_repeat_mask ? [] : [ 'dust', 'trf' ];
+    my ( $test, $fail_data ) = @_;
 
     my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute;
-    my $data_dir = dir($FindBin::Bin)->absolute->subdir('test_data/find_gibson_oligos_data');
+    my $data_dir;
+    if ( $fail_data ) {
+        $data_dir = dir($FindBin::Bin)->absolute->subdir('test_data/find_gibson_oligos_data_fail');
+    }
+    else {
+        $data_dir = dir($FindBin::Bin)->absolute->subdir('test_data/find_gibson_oligos_data');
+    }
 
     # need oligo target region files to test against, in oligo_target_regions dir
     dircopy( $data_dir->stringify, $dir->stringify );
@@ -231,7 +250,7 @@ sub _get_test_object {
     my $metaclass = $test->get_test_object_metaclass();
     return $metaclass->new_object(
         dir               => $dir,
-        repeat_mask_class => $repeat_mask_classes,
+        repeat_mask_class => [ 'trf', 'dust' ],
     );
 }
 

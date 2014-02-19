@@ -1,7 +1,7 @@
 package DesignCreate::Action::OligoPairRegionsGibson;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::OligoPairRegionsGibson::VERSION = '0.020';
+    $DesignCreate::Action::OligoPairRegionsGibson::VERSION = '0.021';
 }
 ## use critic
 
