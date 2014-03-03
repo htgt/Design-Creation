@@ -13,21 +13,23 @@ use feature qw( say );
 
 my ( $file, $persist, $base_dir_name, $alt_designs );
 GetOptions(
-    'help'        => sub { pod2usage( -verbose => 1 ) },
-    'man'         => sub { pod2usage( -verbose => 2 ) },
-    'file=s'      => \$file,
-    'persist'     => \$persist,
-    'alt-designs' => \$alt_designs,
-    'dir=s'       => \$base_dir_name,
-    'cond-loc'    => \my $cond_loc,
-    'del-exon'    => \my $del_exon,
-    'del-loc'     => \my $del_loc,
-    'gibson-exon' => \my $gibson_exon,
-    'gibson-loc'  => \my $gibson_loc,
-    'debug'       => \my $debug,
-    'gene=s'      => \my @genes,
-    'param=s'     => \my %extra_params,
-    'dry-run'     => \my $dry_run,
+    'help'            => sub { pod2usage( -verbose => 1 ) },
+    'man'             => sub { pod2usage( -verbose => 2 ) },
+    'file=s'          => \$file,
+    'persist'         => \$persist,
+    'alt-designs'     => \$alt_designs,
+    'dir=s'           => \$base_dir_name,
+    'cond-loc'        => \my $cond_loc,
+    'del-exon'        => \my $del_exon,
+    'del-loc'         => \my $del_loc,
+    'gibson-exon'     => \my $gibson_exon,
+    'gibson-del-exon' => \my $gibson_del_exon,
+    'gibson-loc'      => \my $gibson_loc,
+    'gibson-del-loc'  => \my $gibson_del_loc,
+    'debug'           => \my $debug,
+    'gene=s'          => \my @genes,
+    'param=s'         => \my %extra_params,
+    'dry-run'         => \my $dry_run,
 ) or pod2usage(2);
 
 die( 'Specify base work dir' ) unless $base_dir_name;
@@ -72,6 +74,12 @@ sub process_design {
     }
     elsif ( $gibson_loc ) {
         push @args, 'gibson-design-location'
+    }
+    elsif ( $gibson_del_loc ) {
+        push @args, 'gibson-deletion-design-location'
+    }
+    elsif ( $gibson_del_exon ) {
+        push @args, 'gibson-deletion-design-exon'
     }
     else {
         ERROR( 'Must pick a design type' );
