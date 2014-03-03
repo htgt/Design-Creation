@@ -74,7 +74,7 @@ has region_offset_5R => (
     is            => 'ro',
     isa           => PositiveInt,
     traits        => [ 'Getopt' ],
-    default       => 200,
+    default       => 1,
     documentation => 'Offset from exon of 5R oligo candidate region',
     cmd_flag      => 'region-offset-5r'
 );
@@ -110,7 +110,7 @@ has region_offset_3F => (
     is            => 'ro',
     isa           => PositiveInt,
     traits        => [ 'Getopt' ],
-    default       => 100,
+    default       => 1,
     documentation => 'Offset from exon of 3F oligo candidate region',
     cmd_flag      => 'region-offset-3f'
 );
