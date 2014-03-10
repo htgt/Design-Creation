@@ -29,16 +29,22 @@ my $schema = LIMS2::Model->new( user => 'webapp' )->schema;
 const my $DEFAULT_BUILD => 73;
 const my $DEFAULT_ASSEMBLY => $species eq 'Human' ? 'GRCh37' :  $species eq 'Mouse' ? 'GRCm38' : undef;
 
+#'region-offset-5r-ef' ,
+#'region-offset-er-3f',
 const my @DESIGN_COLUMN_HEADERS => (
 'target-gene',
 'target-exon',
 'exon-check-flank-length',
 'species',
 'repeat-mask-class',
-'region-offset-5r-ef' ,
+'region-offset-5r' ,
+'region-length-5r' ,
 'region-offset-5f',
-'region-offset-er-3f',
+'region-length-5f',
+'region-offset-3f',
+'region-length-3f',
 'region-offset-3r',
+'region-length-3r',
 'comment',
 );
 
@@ -80,19 +86,19 @@ for my $line ( @log_data ) {
 #
 # find design targets and current designs for failed gene targets
 #
-my @design_targets = $schema->resultset('DesignTarget')->search(
-    {
-        species_id => $species,
-        gene_id    => { 'IN' => [ keys %failed_genes ] },
-        build_id   => $DEFAULT_BUILD,
-    }
-);
-my %sorted_dts;
-for my $dt ( @design_targets ) {
-    push @{ $sorted_dts{ $dt->gene_id } }, $dt;
-}
+#my @design_targets = $schema->resultset('DesignTarget')->search(
+    #{
+        #species_id => $species,
+        #gene_id    => { 'IN' => [ keys %failed_genes ] },
+        #build_id   => $DEFAULT_BUILD,
+    #}
+#);
+#my %sorted_dts;
+#for my $dt ( @design_targets ) {
+    #push @{ $sorted_dts{ $dt->gene_id } }, $dt;
+#}
 
-my ( $design_data ) = bulk_designs_for_design_targets( $schema, \@design_targets, $species, $DEFAULT_ASSEMBLY );
+#my ( $design_data ) = bulk_designs_for_design_targets( $schema, \@design_targets, $species, $DEFAULT_ASSEMBLY );
 
 #
 # Loop through failed genes / exons and output new design parameters if needed
@@ -100,55 +106,94 @@ my ( $design_data ) = bulk_designs_for_design_targets( $schema, \@design_targets
 #TODO add exon length sp12 Wed 15 Jan 2014 13:16:33 GMT
 for my $gene_id ( keys %failed_genes ) {
     # if a gene already has 'enough' designs then skip its other failed targets
-    next if enough_designs( $gene_id, $sorted_dts{ $gene_id } );
+    #next if enough_designs( $gene_id, $sorted_dts{ $gene_id } );
 
     for my $datum ( @{ $failed_genes{ $gene_id } } ) {
         my $fail_reason = $datum->{error};
         my $exon = $datum->{exon_id};
         my %params = %{ $design_params{ $exon } };
         $params{comment} = $fail_reason;
+        next if $fail_reason =~ /Invalid chromosome name/;
+        auto_param_adjust_deletion_gibson( \%params, $fail_reason );
         $target_output_csv->print( $target_output, [ @params{ @DESIGN_COLUMN_HEADERS } ] );
     }
 }
 
+# REMOVE - TEMP HACK
+sub auto_param_adjust_deletion_gibson {
+    my ( $params, $fail_reason ) = @_;
+
+    if ( $fail_reason =~ /5F/ ) {
+        $params->{'region-offset-5f'} = 1500;
+        $params->{'region-length-5f'} = 1000;
+    }
+
+    if ( $fail_reason =~ /5R/ ) {
+        $params->{'region-length-5r'} = 250;
+    }
+
+    if ( $fail_reason =~ /five_prime/ ) {
+        $params->{'region-offset-5f'} = 1500;
+        $params->{'region-length-5f'} = 1000;
+        $params->{'region-length-5r'} = 250;
+    }
+
+    if ( $fail_reason =~ /3R/ ) {
+        $params->{'region-offset-3r'} = 1500;
+        $params->{'region-length-3r'} = 1000;
+    }
+
+    if ( $fail_reason =~ /3F/ ) {
+        $params->{'region-length-3f'} = 250;
+    }
+
+    if ( $fail_reason =~ /three_prime/ ) {
+        $params->{'region-offset-3r'} = 1500;
+        $params->{'region-length-3r'} = 1000;
+        $params->{'region-length-3f'} = 250;
+    }
+
+    return;
+}
+
 # does a gene already have enough designs
 ## no critic(ProhibitCascadingIfElse)
-sub enough_designs{
-    my ( $gene_id, $dts ) = @_;
-    my $dt_count = @{ $dts };
+#sub enough_designs{
+    #my ( $gene_id, $dts ) = @_;
+    #my $dt_count = @{ $dts };
 
-    my $design_count = 0;
-    for my $dt ( @{ $dts } ) {
-        $design_count++ if @{ $design_data->{ $dt->id } };
-    }
+    #my $design_count = 0;
+    #for my $dt ( @{ $dts } ) {
+        #$design_count++ if @{ $design_data->{ $dt->id } };
+    #}
 
-    INFO( "$gene_id: $dt_count design targets and $design_count designs" );
-    # if every design target has a design then we are good
-    if ( $design_count == $dt_count ) {
-        return 1;
-    }
-    elsif ( $design_count == 0 ) {
-        return;
-    }
-    # 4 / 5 targets and 2+ designs ok
-    elsif ( $dt_count > 3 && $design_count > 1 ) {
-        return 1;
-    }
-    # 1/2/3 targets and 1+ designs ok
-    elsif ( $dt_count <= 3 && $design_count >= 1 ){
-        return 1;
-    }
-    else {
-        return;
-    }
-}
+    #INFO( "$gene_id: $dt_count design targets and $design_count designs" );
+    ## if every design target has a design then we are good
+    #if ( $design_count == $dt_count ) {
+        #return 1;
+    #}
+    #elsif ( $design_count == 0 ) {
+        #return;
+    #}
+    ## 4 / 5 targets and 2+ designs ok
+    #elsif ( $dt_count > 3 && $design_count > 1 ) {
+        #return 1;
+    #}
+    ## 1/2/3 targets and 1+ designs ok
+    #elsif ( $dt_count <= 3 && $design_count >= 1 ){
+        #return 1;
+    #}
+    #else {
+        #return;
+    #}
+#}
 ## use critic
 
 __END__
 
 =head1 NAME
 
-temp_parse_output.pl - create another design param file from failed designs on old multi design run
+parse_failed_design_attempts.pl - create another design param file from failed designs on old multi design run
 
 =head1 SYNOPSIS
 
