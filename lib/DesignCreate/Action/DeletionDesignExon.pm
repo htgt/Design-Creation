@@ -73,7 +73,7 @@ sub execute {
 
     $self->log->info( 'Starting new del-exon design create run: ' . join(',', @{ $self->target_genes } ) );
     $self->log->debug( 'Design run args: ' . pp($opts) );
-    $self->create_design_attempt_record;
+    $self->create_design_attempt_record( $opts );
 
     try {
         $self->target_coordinates;
