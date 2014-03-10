@@ -255,7 +255,8 @@ sub output_valid_oligo_pairs {
         }
 
         #TODO if we add ranking of oligos this needs to use that sp12 Mon 09 Sep 2013 08:48:03 BST
-        my $filename = $self->validated_oligo_dir->stringify . '/' . $oligo_pair_region . '_oligo_pairs.yaml';
+        my $filename = $self->validated_oligo_dir->stringify . '/'
+                     . $oligo_pair_region . '_oligo_pairs.yaml';
         DumpFile( $filename, $self->get_valid_pairs( $oligo_pair_region ) );
     }
 
