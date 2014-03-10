@@ -320,24 +320,36 @@ Only called if a da_id has not already been set and we are persisting data.
 
 =cut
 sub create_design_attempt_record {
-    my ( $self ) = shift;
+    my ( $self, $cmd_opts ) = @_;
     return if !$self->meta->has_attribute('persist') || !$self->persist;
-    return if $self->da_id;
 
-    my $da_data = {
-        gene_id    => join( ' ', @{ $self->design_param( 'target_genes' ) } ),
-        status     => 'started',
-        created_by => $self->design_param( 'created_by' ),
-        species    => $self->design_param( 'species' ),
-    };
-
-    try{
-        my $design_attempt = $self->lims2_api->POST( 'design_attempt', $da_data );
-        $self->da_id( $design_attempt->{id} );
+    $cmd_opts->{'command-name'} = $self->command_names;
+    # if da_id just re-write design params and set status to started
+    # TODO or not, just return once I have sorted out initial design attempt creation in LIMS2
+    if ( $self->da_id ) {
+        my $data = {
+            design_parameters => encode_json( $cmd_opts ),
+            status            => 'started',
+        };
+        $self->update_design_attempt_record( $data );
     }
-    catch {
-        DesignCreate::Exception->throw( "Error creating design attempt record: $_" );
-    };
+    else {
+        my $da_data = {
+            gene_id           => join( ' ', @{ $self->design_param( 'target_genes' ) } ),
+            status            => 'started',
+            created_by        => $self->design_param( 'created_by' ),
+            species           => $self->design_param( 'species' ),
+            design_parameters => encode_json( $cmd_opts ),
+        };
+
+        try{
+            my $design_attempt = $self->lims2_api->POST( 'design_attempt', $da_data );
+            $self->da_id( $design_attempt->{id} );
+        }
+        catch {
+            DesignCreate::Exception->throw( "Error creating design attempt record: $_" );
+        };
+    }
 
     return;
 }
@@ -353,7 +365,6 @@ sub update_design_attempt_record {
     return if !$self->meta->has_attribute('persist') || !$self->persist;
 
     $data->{id} = $self->da_id;
-    $data->{design_parameters} = encode_json( $self->design_parameters );
     try{
         my $design_attempt = $self->lims2_api->PUT( 'design_attempt', $data );
     }
