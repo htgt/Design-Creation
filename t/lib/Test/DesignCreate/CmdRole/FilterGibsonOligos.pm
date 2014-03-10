@@ -29,7 +29,7 @@ sub run_bwa : Test(startup => 2) {
     $test->{bwa_data} = $o->bwa_matches;
 }
 
-sub valid_filter_oligos_cmd : Test(1) {
+sub valid_filter_oligos_cmd : Test(4) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
@@ -38,10 +38,10 @@ sub valid_filter_oligos_cmd : Test(1) {
         '--dir', $o->dir->stringify,
     );
 
-    #ok my $result = test_app($test->cmd_class => \@argv_contents), 'can run command';
+    ok my $result = test_app($test->cmd_class => \@argv_contents), 'can run command';
 
-    #is $result->stderr, '', 'no errors';
-    #ok !$result->error, 'no command errors';
+    is $result->stderr, '', 'no errors';
+    ok !$result->error, 'no command errors';
 }
 
 sub check_oligo_length : Test(4) {
@@ -164,6 +164,31 @@ sub output_validated_oligos : Test(9){
             , "validated oligo dir contains $oligo yaml file";
     }
 
+}
+
+sub validate_oligo_pairs : Tests(9){
+    my $test = shift;
+    ok my $o = $test->_get_test_object, 'can grab test object';
+    # setup bwa match data to save time
+    $o->bwa_matches( $test->{bwa_data} );
+
+    lives_ok{
+        $o->validate_oligos;
+    } 'setup test object';
+
+    for my $region ( qw( five_prime exon three_prime ) ) {
+        ok !$o->region_has_oligo_pairs($region),
+            "do not have valid pair for $region region";
+    }
+
+    lives_ok{
+        $o->validate_oligo_pairs
+    } 'can call validate_oligo_pairs';
+
+    for my $region ( qw( five_prime exon three_prime ) ) {
+        ok $o->region_has_oligo_pairs($region),
+            "have valid pair for $region region";
+    }
 }
 
 sub _get_test_object {
