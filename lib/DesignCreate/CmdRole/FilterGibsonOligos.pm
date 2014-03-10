@@ -14,6 +14,7 @@ meet our requirments.
 
 use Moose::Role;
 use DesignCreate::Exception;
+use DesignCreate::Exception::OligoPairRegionValidation;
 use YAML::Any qw( LoadFile DumpFile );
 use DesignCreate::Types qw( NaturalNumber PositiveInt );
 use DesignCreate::Util::BWA;
@@ -228,6 +229,7 @@ sub validate_oligo_pairs {
             = $self->get_file( $oligo_pair_region . '_oligo_pairs.yaml', $self->oligo_finder_output_dir );
 
         my $oligo_pairs = LoadFile( $oligo_pair_file );
+
         DesignCreate::Exception->throw("No oligo pair data in $oligo_pair_file")
             unless $oligo_pairs;
 
@@ -244,14 +246,24 @@ sub validate_oligo_pairs {
 sub output_valid_oligo_pairs {
     my $self = shift;
 
+    my @missing_oligo_pair_regions;
     my $design_method = $self->design_param( 'design_method' );
     for my $oligo_pair_region ( keys %{ $GIBSON_PRIMER_REGIONS{$design_method} } ) {
-        DesignCreate::Exception->throw( "No valid oligo pairs for $oligo_pair_region oligo region" )
-            unless $self->region_has_oligo_pairs( $oligo_pair_region );
+        unless ( $self->region_has_oligo_pairs( $oligo_pair_region ) ) {
+            push @missing_oligo_pair_regions, $oligo_pair_region;
+            next;
+        }
 
         #TODO if we add ranking of oligos this needs to use that sp12 Mon 09 Sep 2013 08:48:03 BST
         my $filename = $self->validated_oligo_dir->stringify . '/' . $oligo_pair_region . '_oligo_pairs.yaml';
         DumpFile( $filename, $self->get_valid_pairs( $oligo_pair_region ) );
+    }
+
+    if ( @missing_oligo_pair_regions ) {
+        DesignCreate::Exception::OligoPairRegionValidation->throw(
+            oligo_regions   => \@missing_oligo_pair_regions,
+            invalid_reasons => $self->invalid_oligos,
+        );
     }
 
     return;
