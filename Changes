@@ -1,5 +1,11 @@
 {{$NEXT}}
 
+0.022     2014-03-11 13:20:10 Europe/London
+
+    Store all command parameters when creating initial design attempt record.
+    Throw custom error class when we do not have any valid primer pairs for a region.
+    Change default offsets in gibson deletion designs.
+
 0.021     2014-02-19 08:21:47 Europe/London
 
     Write new Primer3 config values into parameters file.
