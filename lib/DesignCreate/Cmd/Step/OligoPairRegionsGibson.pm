@@ -1,8 +1,8 @@
-package DesignCreate::Action::OligoPairRegionsGibson;
+package DesignCreate::Cmd::Step::OligoPairRegionsGibson;
 
 =head1 NAME
 
-DesignCreate::Action::OligoPairRegionsGibson - Work out coordinate for oligo regions in gibson designs
+DesignCreate::Cmd::Step::OligoPairRegionsGibson - Work out coordinate for oligo regions in gibson designs
 
 =head1 DESCRIPTION
 
@@ -18,7 +18,7 @@ use Moose;
 use Try::Tiny;
 use namespace::autoclean;
 
-extends qw( DesignCreate::Action );
+extends qw( DesignCreate::Cmd::Step );
 with 'DesignCreate::CmdRole::OligoPairRegionsGibson';
 
 sub execute {
@@ -33,20 +33,6 @@ sub execute {
 
     return;
 }
-
-# if running command by itself we want to check the oligo target regions dir exists
-# default is to delete and re-create folder
-override _build_oligo_target_regions_dir => sub {
-    my $self = shift;
-
-    my $oligo_target_regions_dir = $self->dir->subdir( $self->oligo_target_regions_dir_name );
-    unless ( $self->dir->contains( $oligo_target_regions_dir ) ) {
-        $self->log->logdie( "Can't find oligo target region dir: "
-                           . $oligo_target_regions_dir->stringify );
-    }
-
-    return $oligo_target_regions_dir->absolute;
-};
 
 __PACKAGE__->meta->make_immutable;
 

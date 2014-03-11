@@ -1,8 +1,8 @@
-package DesignCreate::Action::TargetLocation;
+package DesignCreate::Cmd::Step::TargetLocation;
 
 =head1 NAME
 
-DesignCreate::Action::TargetLocation - Work out target region coordiantes
+DesignCreate::Cmd::Step::TargetLocation - Work out target region coordiantes
 
 =head1 DESCRIPTION
 
@@ -17,7 +17,7 @@ use Moose;
 use Try::Tiny;
 use namespace::autoclean;
 
-extends qw( DesignCreate::Action );
+extends qw( DesignCreate::Cmd::Step );
 with 'DesignCreate::CmdRole::TargetLocation';
 
 sub execute {

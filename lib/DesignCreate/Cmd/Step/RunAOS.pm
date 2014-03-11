@@ -1,8 +1,8 @@
-package DesignCreate::Action::RunAOS;
+package DesignCreate::Cmd::Step::RunAOS;
 
 =head1 NAME
 
-DesignCreate::Action::RunAOS - A wrapper around AOS
+DesignCreate::Cmd::Step::RunAOS - A wrapper around AOS
 
 =head1 DESCRIPTION
 
@@ -32,7 +32,7 @@ use Try::Tiny;
 use Fcntl; # O_ constants
 use namespace::autoclean;
 
-extends qw( DesignCreate::Action );
+extends qw( DesignCreate::Cmd::Step );
 with 'DesignCreate::CmdRole::RunAOS';
 
 sub execute {
@@ -47,20 +47,6 @@ sub execute {
 
     return;
 }
-
-# if running command by itself we want to check the target regions dir exists
-# default is to delete and re-create folder
-override _build_oligo_target_regions_dir => sub {
-    my $self = shift;
-
-    my $target_regions_dir = $self->dir->subdir( $self->oligo_target_regions_dir_name );
-    unless ( $self->dir->contains( $target_regions_dir ) ) {
-        $self->log->logdie( "Can't find aos output dir: "
-                           . $target_regions_dir->stringify );
-    }
-
-    return $target_regions_dir->absolute;
-};
 
 __PACKAGE__->meta->make_immutable;
 

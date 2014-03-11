@@ -1,14 +1,12 @@
-package DesignCreate::Action;
+package DesignCreate::Cmd;
 
 =head1 NAME
 
-DesignCreate::Action
+DesignCreate::Cmd
 
 =head1 DESCRIPTION
 
 Base class for all App Commands
-Common attributes and methods for these commands are stored in the
-DesignCreate::Role::Action role. ( see this module for explanation )
 
 =cut
 
@@ -19,7 +17,6 @@ use namespace::autoclean;
 extends qw( MooseX::App::Cmd::Command );
 with qw(
 MooseX::Log::Log4perl
-DesignCreate::Role::Action
 DesignCreate::Role::EnsEMBL
 );
 
@@ -50,12 +47,6 @@ has verbose => (
 
 sub BUILD {
     my $self = shift;
-
-    # clean out work dir
-    if ( $self->rm_dir ) {
-        $self->dir->rmtree();
-        $self->dir->mkpath();
-    }
 
     # Add command name as a design parameter
     $self->set_param( 'command-name', $self->command_names );

@@ -1,8 +1,8 @@
-package DesignCreate::Action::GibsonDeletionDesignLocation;
+package DesignCreate::Cmd::Complete::GibsonDeletionDesignLocation;
 
 =head1 NAME
 
-DesignCreate::Action::GibsonDeletionDesignLocation - Run design creation for gibson deletion design on specific target
+DesignCreate::Cmd::Complete::GibsonDeletionDesignLocation - Run design creation for gibson deletion design on specific target
 
 =head1 DESCRIPTION
 
@@ -23,7 +23,7 @@ use Scalar::Util 'blessed';
 use JSON;
 use YAML::Any qw( DumpFile );
 
-extends qw( DesignCreate::Action );
+extends qw( DesignCreate::Cmd::Complete );
 with qw(
 DesignCreate::CmdRole::TargetLocation
 DesignCreate::CmdRole::OligoPairRegionsGibsonDel
@@ -31,33 +31,6 @@ DesignCreate::CmdRole::FindGibsonOligos
 DesignCreate::CmdRole::FilterGibsonOligos
 DesignCreate::CmdRole::ConsolidateDesignData
 DesignCreate::CmdRole::PersistDesign
-);
-
-has persist => (
-    is            => 'ro',
-    isa           => 'Bool',
-    traits        => [ 'Getopt' ],
-    documentation => 'Persist design to LIMS2',
-    default       => 0
-);
-
-# Turn off the following attributes command line option attribute
-# these values should be set when running the design creation process
-# end to end
-const my @ATTRIBUTES_NO_CMD_OPTION => qw(
-design_data_file
-validated_oligo_dir
-oligo_finder_output_dir
-oligo_target_regions_dir
-);
-
-for my $attribute ( @ATTRIBUTES_NO_CMD_OPTION ) {
-    has '+' . $attribute => ( traits => [ 'NoGetopt' ] );
-}
-
-# wipe work directory before starting
-has '+rm_dir' => (
-    default => 1,
 );
 
 sub execute {

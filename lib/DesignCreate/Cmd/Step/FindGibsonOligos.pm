@@ -1,8 +1,8 @@
-package DesignCreate::Action::FindGibsonOligos;
+package DesignCreate::Cmd::Step::FindGibsonOligos;
 
 =head1 NAME
 
-DesignCreate::Action::FindGibsonOligos - Get oligos for a gibson design
+DesignCreate::Cmd::Step::FindGibsonOligos - Get oligos for a gibson design
 
 =head1 DESCRIPTION
 
@@ -15,7 +15,7 @@ use Moose;
 use Try::Tiny;
 use namespace::autoclean;
 
-extends qw( DesignCreate::Action );
+extends qw( DesignCreate::Cmd::Step );
 with 'DesignCreate::CmdRole::FindGibsonOligos';
 
 sub execute {
@@ -30,20 +30,6 @@ sub execute {
 
     return;
 }
-
-# if running command by itself we want to check the target regions dir exists
-# default is to delete and re-create folder
-override _build_oligo_target_regions_dir => sub {
-    my $self = shift;
-
-    my $target_regions_dir = $self->dir->subdir( $self->oligo_target_regions_dir_name );
-    unless ( $self->dir->contains( $target_regions_dir ) ) {
-        $self->log->logdie( "Can't find aos output dir: "
-                           . $target_regions_dir->stringify );
-    }
-
-    return $target_regions_dir->absolute;
-};
 
 __PACKAGE__->meta->make_immutable;
 

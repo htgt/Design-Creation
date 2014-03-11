@@ -1,8 +1,8 @@
-package DesignCreate::Action::DeletionDesignLocation;
+package DesignCreate::Cmd::Complete::DeletionDesignLocation;
 
 =head1 NAME
 
-DesignCreate::Action::DeletionDesignLocation - Run design creation for  a location specified deletion design end to end
+DesignCreate::Cmd::Complete::DeletionDesignLocation - Run design creation for  a location specified deletion design end to end
 
 =head1 DESCRIPTION
 
@@ -20,7 +20,7 @@ use Try::Tiny;
 use Fcntl; # O_ constants
 use Data::Dump qw( pp );
 
-extends qw( DesignCreate::Action );
+extends qw( DesignCreate::Cmd::Complete );
 with qw(
 DesignCreate::CmdRole::TargetLocation
 DesignCreate::CmdRole::OligoRegionsInsDel
@@ -30,38 +30,6 @@ DesignCreate::CmdRole::FilterOligos
 DesignCreate::CmdRole::PickGapOligos
 DesignCreate::CmdRole::ConsolidateDesignData
 DesignCreate::CmdRole::PersistDesign
-);
-
-has persist => (
-    is            => 'ro',
-    isa           => 'Bool',
-    traits        => [ 'Getopt' ],
-    documentation => 'Persist design to LIMS2',
-    default       => 0
-);
-
-# Turn off the following attributes command line option attribute
-# these values should be set when running the design creation process
-# end to end
-const my @ATTRIBUTES_NO_CMD_OPTION => qw(
-target_file
-exonerate_target_file
-design_data_file
-validated_oligo_dir
-oligo_finder_output_dir
-oligo_target_regions_dir
-aos_location
-base_chromosome_dir
-genomic_search_method
-);
-
-for my $attribute ( @ATTRIBUTES_NO_CMD_OPTION ) {
-    has '+' . $attribute => ( traits => [ 'NoGetopt' ] );
-}
-
-# wipe work directory before starting
-has '+rm_dir' => (
-    default => 1,
 );
 
 sub execute {

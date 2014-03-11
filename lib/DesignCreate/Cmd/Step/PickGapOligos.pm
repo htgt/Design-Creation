@@ -1,8 +1,8 @@
-package DesignCreate::Action::PickGapOligos;
+package DesignCreate::Cmd::Step::PickGapOligos;
 
 =head1 NAME
 
-DesignCreate::Action::PickGapOligos - Pick the best Gap oligo pair, G5 & G3
+DesignCreate::Cmd::Step::PickGapOligos - Pick the best Gap oligo pair, G5 & G3
 
 =head1 DESCRIPTION
 
@@ -20,7 +20,7 @@ use Const::Fast;
 use Try::Tiny;
 use namespace::autoclean;
 
-extends qw( DesignCreate::Action );
+extends qw( DesignCreate::Cmd::Step );
 with 'DesignCreate::CmdRole::PickGapOligos';
 
 sub execute {
@@ -35,20 +35,6 @@ sub execute {
 
     return;
 }
-
-# if running command by itself we want to check the validate oligo dir exists
-# default is to delete and re-create folder
-override _build_validated_oligo_dir => sub {
-    my $self = shift;
-
-    my $validated_oligo_dir = $self->dir->subdir( $self->validated_oligo_dir_name );
-    unless ( $self->dir->contains( $validated_oligo_dir ) ) {
-        $self->log->logdie( "Can't find validated oligo file dir: "
-                           . $validated_oligo_dir->stringify );
-    }
-
-    return $validated_oligo_dir->absolute;
-};
 
 __PACKAGE__->meta->make_immutable;
 

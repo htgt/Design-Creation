@@ -1,8 +1,8 @@
-package DesignCreate::Action::TargetExons;
+package DesignCreate::Cmd::Step::TargetExons;
 
 =head1 NAME
 
-DesignCreate::Action::TargetExons - Work out target region coordiantes for given exon(s)
+DesignCreate::Cmd::Step::TargetExons - Work out target region coordiantes for given exon(s)
 
 =head1 DESCRIPTION
 
@@ -17,7 +17,7 @@ use Moose;
 use Try::Tiny;
 use namespace::autoclean;
 
-extends qw( DesignCreate::Action );
+extends qw( DesignCreate::Cmd::Step );
 with 'DesignCreate::CmdRole::TargetExons';
 
 sub execute {

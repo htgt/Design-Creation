@@ -1,8 +1,8 @@
-package DesignCreate::Action::FetchOligoRegionsSequence;
+package DesignCreate::Cmd::Step::FetchOligoRegionsSequence;
 
 =head1 NAME
 
-DesignCreate::Action::FetchOligoRegionsSequence - Fetch sequence for oligo target regions
+DesignCreate::Cmd::Step::FetchOligoRegionsSequence - Fetch sequence for oligo target regions
 
 =head1 DESCRIPTION
 
@@ -19,7 +19,7 @@ use Try::Tiny;
 use Fcntl; # O_ constants
 use namespace::autoclean;
 
-extends qw( DesignCreate::Action );
+extends qw( DesignCreate::Cmd::Step );
 with 'DesignCreate::CmdRole::FetchOligoRegionsSequence';
 
 sub execute {
@@ -34,20 +34,6 @@ sub execute {
 
     return;
 }
-
-# if running command by itself we want to check the target regions dir exists
-# default is to delete and re-create folder
-override _build_oligo_target_regions_dir => sub {
-    my $self = shift;
-
-    my $target_regions_dir = $self->dir->subdir( $self->oligo_target_regions_dir_name );
-    unless ( $self->dir->contains( $target_regions_dir ) ) {
-        $self->log->logdie( "Can't find aos output dir: "
-                           . $target_regions_dir->stringify );
-    }
-
-    return $target_regions_dir->absolute;
-};
 
 __PACKAGE__->meta->make_immutable;
 

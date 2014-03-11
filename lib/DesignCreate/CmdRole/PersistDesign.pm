@@ -21,11 +21,8 @@ use namespace::autoclean;
 has design_data_file => (
     is            => 'ro',
     isa           => AbsFile,
-    traits        => [ 'Getopt' ],
-    coerce        => 1,
+    traits        => [ 'NoGetopt' ],
     lazy_build    => 1,
-    documentation => 'The yaml file containing design data ( default [work_dir]/design_data.yaml )',
-    cmd_flag      => 'design-data-file'
 );
 
 sub _build_design_data_file {

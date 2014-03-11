@@ -1,8 +1,8 @@
-package DesignCreate::Action::ConsolidateDesignData;
+package DesignCreate::Cmd::Step::ConsolidateDesignData;
 
 =head1 NAME
 
-DesignCreate::Action::ConsolidateDesignData - Bring together all the design data into one file
+DesignCreate::Cmd::Step::ConsolidateDesignData - Bring together all the design data into one file
 
 =head1 DESCRIPTION
 
@@ -24,7 +24,7 @@ use Const::Fast;
 use Try::Tiny;
 use namespace::autoclean;
 
-extends qw( DesignCreate::Action );
+extends qw( DesignCreate::Cmd::Step );
 with 'DesignCreate::CmdRole::ConsolidateDesignData';
 
 sub execute {
@@ -39,20 +39,6 @@ sub execute {
 
     return;
 }
-
-# if running command by itself we want to check the validate oligo dir exists
-# default is to delete and re-create folder
-override _build_validated_oligo_dir => sub {
-    my $self = shift;
-
-    my $validated_oligo_dir = $self->dir->subdir( $self->validated_oligo_dir_name );
-    unless ( $self->dir->contains( $validated_oligo_dir ) ) {
-        $self->log->logdie( "Can't find validated oligo file dir: "
-                           . $validated_oligo_dir->stringify );
-    }
-
-    return $validated_oligo_dir->absolute;
-};
 
 __PACKAGE__->meta->make_immutable;
 

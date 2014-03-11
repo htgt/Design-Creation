@@ -1,8 +1,8 @@
-package DesignCreate::Action::ConditionalDesignLocation;
+package DesignCreate::Cmd::Complete::ConditionalDesignLocation;
 
 =head1 NAME
 
-DesignCreate::Action::ConditionalDesignLocation - Run design creation for location specified condition designs, end to end
+DesignCreate::Cmd::Complete::ConditionalDesignLocation - Run design creation for location specified condition designs, end to end
 
 =head1 DESCRIPTION
 
@@ -20,8 +20,7 @@ use Try::Tiny;
 use Fcntl; # O_ constants
 use Data::Dump qw( pp );
 
-
-extends qw( DesignCreate::Action );
+extends qw( DesignCreate::Cmd::Complete );
 with qw(
 DesignCreate::CmdRole::TargetLocation
 DesignCreate::CmdRole::OligoRegionsConditional
@@ -33,33 +32,6 @@ DesignCreate::CmdRole::PickGapOligos
 DesignCreate::CmdRole::ConsolidateDesignData
 DesignCreate::CmdRole::PersistDesign
 );
-
-has persist => (
-    is            => 'ro',
-    isa           => 'Bool',
-    traits        => [ 'Getopt' ],
-    documentation => 'Persist design to LIMS2',
-    default       => 0
-);
-
-# Turn off the following attributes command line option attribute
-# these values should be set when running the design creation process
-# end to end
-const my @ATTRIBUTES_NO_CMD_OPTION => qw(
-target_file
-exonerate_target_file
-design_data_file
-validated_oligo_dir
-oligo_finder_output_dir
-oligo_target_regions_dir
-aos_location
-base_chromosome_dir
-genomic_search_method
-);
-
-for my $attribute ( @ATTRIBUTES_NO_CMD_OPTION ) {
-    has '+' . $attribute => ( traits => [ 'NoGetopt' ] );
-}
 
 sub execute {
     my ( $self, $opts, $args ) = @_;

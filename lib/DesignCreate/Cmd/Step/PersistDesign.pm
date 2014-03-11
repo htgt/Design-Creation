@@ -1,8 +1,8 @@
-package DesignCreate::Action::PersistDesign;
+package DesignCreate::Cmd::Step::PersistDesign;
 
 =head1 NAME
 
-DesignCreate::Action::PersistDesign - Persist a design to LIMS2
+DesignCreate::Cmd::Step::PersistDesign - Persist a design to LIMS2
 
 =head1 DESCRIPTION
 
@@ -17,7 +17,7 @@ use Moose;
 use Try::Tiny;
 use namespace::autoclean;
 
-extends qw( DesignCreate::Action );
+extends qw( DesignCreate::Cmd::Step );
 with 'DesignCreate::CmdRole::PersistDesign';
 
 sub execute {
