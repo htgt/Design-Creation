@@ -191,6 +191,34 @@ sub validate_oligo_pairs : Tests(9){
     }
 }
 
+sub output_valid_oligo_pairs : Tests(8) {
+    my $test = shift;
+    ok my $o = $test->_get_test_object, 'can grab test object';
+    # setup bwa match data to save time
+    $o->bwa_matches( $test->{bwa_data} );
+    lives_ok{
+        $o->validate_oligos;
+        $o->validate_oligo_pairs;
+    } 'setup test object';
+
+    lives_ok{
+        $o->output_valid_oligo_pairs;
+    } 'can output_valid_oligo_pairs';
+
+    for my $region ( qw( exon five_prime three_prime ) ) {
+        my $oligo_pair_file = $o->validated_oligo_dir->file( $region . '_oligo_pairs.yaml' );
+        ok $o->validated_oligo_dir->contains( $oligo_pair_file )
+            , "validated oligo dir contains $region oligo pair yaml file";
+    }
+
+    ok delete $o->validated_oligo_pairs->{exon}, 'can delete valid exon oligo pairs';
+
+    throws_ok{
+        $o->output_valid_oligo_pairs
+    } 'DesignCreate::Exception::OligoPairRegionValidation'
+        ,'throws error when missing oligo pairs from one or more regions';
+}
+
 sub _get_test_object {
     my ( $test ) = @_;
 
