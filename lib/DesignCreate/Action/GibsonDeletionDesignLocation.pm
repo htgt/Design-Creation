@@ -1,7 +1,7 @@
 package DesignCreate::Action::GibsonDeletionDesignLocation;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::GibsonDeletionDesignLocation::VERSION = '0.021';
+    $DesignCreate::Action::GibsonDeletionDesignLocation::VERSION = '0.022';
 }
 ## use critic
 
@@ -72,7 +72,7 @@ sub execute {
 
     $self->log->info( 'Starting new gibson deletion design create run: ' . join(',', @{ $self->target_genes } ) );
     $self->log->debug( 'Design run args: ' . pp($opts) );
-    $self->create_design_attempt_record;
+    $self->create_design_attempt_record( $opts );
 
     try {
         $self->target_coordinates;

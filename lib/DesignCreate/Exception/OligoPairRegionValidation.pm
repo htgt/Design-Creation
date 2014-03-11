@@ -1,7 +1,7 @@
-package DesignCreate::Exception::MissingFile;
+package DesignCreate::Exception::OligoPairRegionValidation;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Exception::MissingFile::VERSION = '0.022';
+    $DesignCreate::Exception::OligoPairRegionValidation::VERSION = '0.022';
 }
 ## use critic
 
@@ -12,25 +12,26 @@ use namespace::autoclean;
 extends qw( DesignCreate::Exception );
 
 has '+message' => (
-    default => 'File not found'
+    default => 'Failed to find any valid oligo pairs for one or more regions'
 );
 
-has dir => (
+has oligo_regions => (
     is       => 'ro',
-    isa      => 'Path::Class::Dir',
+    isa      => 'ArrayRef',
     required => 1,
 );
 
-has file => (
+# $reason{'region'}{'left'}
+has invalid_reasons => (
     is       => 'ro',
-    isa      => 'Path::Class::File',
+    isa      => 'HashRef',
     required => 1,
 );
 
 override as_string => sub {
     my $self = shift;
 
-    my $str = 'Cannot find file ' . $self->file->basename . ' in directory ' . $self->dir->stringify;
+    my $str = 'Failed to find any valid oligo pairs for regions: ' . join(',', @{ $self->oligo_regions } );
 
     if ( $self->show_stack_trace ) {
         $str .= "\n\n" . $self->stack_trace->as_string;
@@ -45,8 +46,8 @@ around as_hash => sub {
 
     my $hash = $self->$orig;
 
-    $hash->{file} = $self->file->basename;
-    $hash->{dir} = $self->dir->stringify;
+    $hash->{oligo_regions} = $self->oligo_regions;
+    $hash->{reasons} = $self->invalid_reasons;
 
     return $hash;
 };

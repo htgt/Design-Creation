@@ -45,9 +45,9 @@ sub five_prime_region_start_and_end : Test(10) {
         $o->calculate_pair_region_coordinates
     } 'can call calculate_pair_region_coordinates';
 
-    is $o->five_prime_region_start, $target_end + 200
+    is $o->five_prime_region_start, $target_end + 1
         , 'five_prime_region_start value correct -ve strand';
-    is $o->five_prime_region_end, $target_end + 200 + 100 + 500 + 1000
+    is $o->five_prime_region_end, $target_end + 1 + 100 + 500 + 1000
         , 'five_prime_region_end value correct -ve strand';
 
     my $metaclass = $test->get_test_object_metaclass();
@@ -58,9 +58,9 @@ sub five_prime_region_start_and_end : Test(10) {
         $new_obj->calculate_pair_region_coordinates
     } 'can call calculate_pair_region_coordinates';
 
-    is $new_obj->five_prime_region_start, $target_start - ( 200 + 100 + 500 + 1000 )
+    is $new_obj->five_prime_region_start, $target_start - ( 1 + 100 + 500 + 1000 )
         , 'five_prime_region_start value correct +ve strand';
-    is $new_obj->five_prime_region_end, $target_start - 200
+    is $new_obj->five_prime_region_end, $target_start - 1
         , 'five_prime_region_end value correct +ve strand';
 }
 
@@ -74,9 +74,9 @@ sub three_prime_region_start_and_end : Test(10) {
         $o->calculate_pair_region_coordinates
     } 'can call calculate_pair_region_coordinates';
 
-    is $o->three_prime_region_start, $target_start - ( 100 + 100 + 1000 + 500 )
+    is $o->three_prime_region_start, $target_start - ( 1 + 100 + 1000 + 500 )
         , 'three_prime_region_start value correct -ve strand';
-    is $o->three_prime_region_end, $target_start - 100
+    is $o->three_prime_region_end, $target_start - 1
         , 'three_prime_region_end value correct -ve strand';
 
     my $metaclass = $test->get_test_object_metaclass();
@@ -87,9 +87,9 @@ sub three_prime_region_start_and_end : Test(10) {
         $new_obj->calculate_pair_region_coordinates
     } 'can call calculate_pair_region_coordinates';
 
-    is $new_obj->three_prime_region_start, $target_end + 100
+    is $new_obj->three_prime_region_start, $target_end + 1
         , 'three_prime_region_start value correct +ve strand';
-    is $new_obj->three_prime_region_end, $target_end + 100 + 100 + 500 + 1000
+    is $new_obj->three_prime_region_end, $target_end + 1 + 100 + 500 + 1000
         , 'three_prime_region_end value correct +ve strand';
 }
 

@@ -23,7 +23,6 @@ lib/DesignCreate/Action/GibsonDesignLocation.pm
 lib/DesignCreate/Action/OligoPairRegionsGibson.pm
 lib/DesignCreate/Action/OligoPairRegionsGibsonDel.pm
 lib/DesignCreate/Action/OligoRegionsConditional.pm
-lib/DesignCreate/Action/OligoRegionsDelExon.pm
 lib/DesignCreate/Action/OligoRegionsInsDel.pm
 lib/DesignCreate/Action/PersistDesign.pm
 lib/DesignCreate/Action/PickBlockOligos.pm
@@ -52,6 +51,7 @@ lib/DesignCreate/Constants.pm
 lib/DesignCreate/Exception.pm
 lib/DesignCreate/Exception/MissingFile.pm
 lib/DesignCreate/Exception/NonExistantAttribute.pm
+lib/DesignCreate/Exception/OligoPairRegionValidation.pm
 lib/DesignCreate/Exception/OligoValidation.pm
 lib/DesignCreate/Exception/Primer3FailedFindOligos.pm
 lib/DesignCreate/Exception/Primer3RunFail.pm

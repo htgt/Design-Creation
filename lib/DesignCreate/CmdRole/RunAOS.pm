@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::RunAOS;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::RunAOS::VERSION = '0.021';
+    $DesignCreate::CmdRole::RunAOS::VERSION = '0.022';
 }
 ## use critic
 

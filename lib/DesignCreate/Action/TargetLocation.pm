@@ -1,7 +1,7 @@
 package DesignCreate::Action::TargetLocation;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Action::TargetLocation::VERSION = '0.021';
+    $DesignCreate::Action::TargetLocation::VERSION = '0.022';
 }
 ## use critic
 
