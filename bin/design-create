@@ -3,6 +3,6 @@
 use strict;
 use warnings FATAL => 'all';
 
-use DesignCreate::Cmd;
+use DesignCreate::AppCmd;
 
-DesignCreate::Cmd->run;
+DesignCreate::AppCmd->run;
