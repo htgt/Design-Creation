@@ -2,7 +2,7 @@ package DesignCreate::Cmd::Complete::DeletionDesignLocation;
 
 =head1 NAME
 
-DesignCreate::Cmd::Complete::DeletionDesignLocation - Run design creation for  a location specified deletion design end to end
+DesignCreate::Cmd::Complete::DeletionDesignLocation - Run design creation for a location specified deletion design end to end
 
 =head1 DESCRIPTION
 
