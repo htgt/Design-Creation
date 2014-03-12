@@ -2,12 +2,11 @@ package DesignCreate::Cmd::Complete::GibsonDeletionDesignExon;
 
 =head1 NAME
 
-DesignCreate::Cmd::Complete::GibsonDeletionDesignExon - Run design creation for gibson deletion design on exon(s)
+DesignCreate::Cmd::Complete::GibsonDeletionDesignExon - Create a deletion gibson design for exon targets
 
 =head1 DESCRIPTION
 
 Runs all the seperate steps used to create a gibson deletion design on specified exon(s).
-Persists the design to LIMS2 if persist option given.
 
 =cut
 

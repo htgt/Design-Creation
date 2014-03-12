@@ -2,12 +2,11 @@ package DesignCreate::Cmd::Complete::GibsonDeletionDesignLocation;
 
 =head1 NAME
 
-DesignCreate::Cmd::Complete::GibsonDeletionDesignLocation - Run design creation for gibson deletion design on specific target
+DesignCreate::Cmd::Complete::GibsonDeletionDesignLocation - Create a location specified deletion gibson design
 
 =head1 DESCRIPTION
 
-Runs all the seperate steps used to create a gibson deletion design on specified target.
-Persists the design to LIMS2 if persist option given.
+Runs all the seperate steps used to create a gibson deletion design on a custom target.
 
 =cut
 

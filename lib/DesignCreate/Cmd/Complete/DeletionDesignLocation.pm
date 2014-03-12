@@ -2,12 +2,11 @@ package DesignCreate::Cmd::Complete::DeletionDesignLocation;
 
 =head1 NAME
 
-DesignCreate::Cmd::Complete::DeletionDesignLocation - Run design creation for a location specified deletion design end to end
+DesignCreate::Cmd::Complete::DeletionDesignLocation - Create a location specified deletion design
 
 =head1 DESCRIPTION
 
-Runs all the seperate steps used to create a location specified Deletion design.
-Persists the design to LIMS2 if persist option given.
+Runs all the seperate steps used to create a deletion design on a custom target.
 
 =cut
 

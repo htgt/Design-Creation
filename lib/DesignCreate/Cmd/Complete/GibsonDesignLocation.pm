@@ -2,12 +2,11 @@ package DesignCreate::Cmd::Complete::GibsonDesignLocation;
 
 =head1 NAME
 
-DesignCreate::Cmd::Complete::GibsonDesignLocation - Run design creation for gibson design on target location
+DesignCreate::Cmd::Complete::GibsonDesignLocation - Create a location specified gibson design
 
 =head1 DESCRIPTION
 
-Runs all the seperate steps used to create a gibson design on a specific target location.
-Persists the design to LIMS2 if persist option given.
+Runs all the seperate steps used to create a gibson design on a custom target.
 
 =cut
 

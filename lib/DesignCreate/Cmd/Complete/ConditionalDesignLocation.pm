@@ -2,12 +2,11 @@ package DesignCreate::Cmd::Complete::ConditionalDesignLocation;
 
 =head1 NAME
 
-DesignCreate::Cmd::Complete::ConditionalDesignLocation - Run design creation for location specified condition designs, end to end
+DesignCreate::Cmd::Complete::ConditionalDesignLocation - Create a location specified conditional design
 
 =head1 DESCRIPTION
 
-Runs all the seperate steps used to create a location specified conditional design.
-Persists the design to LIMS2 if persist option given.
+Runs all the seperate steps used to create a conditional design on a specified custom target.
 
 =cut
 

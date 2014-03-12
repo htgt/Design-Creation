@@ -2,12 +2,11 @@ package DesignCreate::Cmd::Complete::DeletionDesignExon;
 
 =head1 NAME
 
-DesignCreate::Cmd::Complete::DeletionDesignExon - Run design creation for deletion design on a exon(s) end to end
+DesignCreate::Cmd::Complete::DeletionDesignExon - Create a deletion design for exon targets
 
 =head1 DESCRIPTION
 
-Runs all the seperate steps used to create a Deletion design on a specified exon.
-Persists the design to LIMS2 if persist option given.
+Runs all the seperate steps used to create a deletion design on a specified exon(s).
 
 =cut
 

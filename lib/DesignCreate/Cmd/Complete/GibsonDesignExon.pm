@@ -2,12 +2,11 @@ package DesignCreate::Cmd::Complete::GibsonDesignExon;
 
 =head1 NAME
 
-DesignCreate::Cmd::Complete::GibsonDesignExon - Run design creation for gibson design on exon(s)
+DesignCreate::Cmd::Complete::GibsonDesignExon - Create a conditional gibson design for exon targets
 
 =head1 DESCRIPTION
 
-Runs all the seperate steps used to create a gibson design on a specified exon(s).
-Persists the design to LIMS2 if persist option given.
+Runs all the seperate steps used to create a conditional gibson design on a specified exon(s).
 
 =cut
 
