@@ -33,8 +33,6 @@ use Try::Tiny;
 use JSON;
 use namespace::autoclean;
 
-#TODO if dir exists, do nothing, otherwise create it sp12 Tue 11 Mar 2014 11:10:23 GMT
-
 has design_parameters => (
     is         => 'ro',
     isa        => 'HashRef',
@@ -171,6 +169,7 @@ has dir => (
 sub _init_output_dir {
     my ( $self, $dir ) = @_;
 
+    # if directory already exists nothing will happen
     $dir->mkpath();
     return;
 }
@@ -190,7 +189,6 @@ sub _build_validated_oligo_dir {
     my $self = shift;
 
     my $validated_oligo_dir = $self->dir->subdir( $self->validated_oligo_dir_name )->absolute;
-    $validated_oligo_dir->rmtree();
     $validated_oligo_dir->mkpath();
 
     return $validated_oligo_dir;
@@ -211,7 +209,6 @@ sub _build_oligo_finder_output_dir {
     my $self = shift;
 
     my $oligo_finder_output_dir = $self->dir->subdir( $self->oligo_finder_output_dir_name )->absolute;
-    $oligo_finder_output_dir->rmtree();
     $oligo_finder_output_dir->mkpath();
 
     return $oligo_finder_output_dir;
@@ -232,7 +229,6 @@ sub _build_oligo_target_regions_dir {
     my $self = shift;
 
     my $oligo_target_regions_dir = $self->dir->subdir( $self->oligo_target_regions_dir_name )->absolute;
-    $oligo_target_regions_dir->rmtree();
     $oligo_target_regions_dir->mkpath();
 
     return $oligo_target_regions_dir;
