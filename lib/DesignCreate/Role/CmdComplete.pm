@@ -301,17 +301,11 @@ Only called if a da_id has not already been set and we are persisting data.
 =cut
 sub create_design_attempt_record {
     my ( $self, $cmd_opts ) = @_;
-    return if !$self->meta->has_attribute('persist') || !$self->persist;
+    return if !$self->persist;
 
     $cmd_opts->{'command-name'} = $self->command_names;
-    # if da_id just re-write design params and set status to started
-    # TODO or not, just return once I have sorted out initial design attempt creation in LIMS2
     if ( $self->da_id ) {
-        my $data = {
-            design_parameters => encode_json( $cmd_opts ),
-            status            => 'started',
-        };
-        $self->update_design_attempt_record( $data );
+        $self->update_design_attempt_record( { status => 'started' } );
     }
     else {
         my $da_data = {
@@ -342,7 +336,7 @@ Only called if persist flag is set.
 =cut
 sub update_design_attempt_record {
     my ( $self, $data ) = @_;
-    return if !$self->meta->has_attribute('persist') || !$self->persist;
+    return if !$self->persist;
 
     $data->{id} = $self->da_id;
     try{
