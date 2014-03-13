@@ -278,6 +278,15 @@ sub design_param {
     return $self->get_design_param( $param_name );
 }
 
+=head2 update_design_attempt_record
+
+For step commands we do not update design attempt data
+
+=cut
+sub update_design_attempt_record {
+    return;
+}
+
 1;
 
 __END__
