@@ -9,10 +9,10 @@ use Bio::Seq;
 use Path::Class qw( tempdir dir );
 use File::Copy::Recursive qw( dircopy );
 use FindBin;
-use base qw( Test::DesignCreate::Class Class::Data::Inheritable );
+use base qw( Test::DesignCreate::CmdStep Class::Data::Inheritable );
 
 # Testing
-# DesignCreate::Action::FindOligos ( through command line )
+# DesignCreate::Cmd::Step::FindOligos ( through command line )
 # DesignCreate::CmdRole::FindOligos, most of its work is done by:
 # Note, DesignCreate::Role::AOS is already tested by RunAOS
 

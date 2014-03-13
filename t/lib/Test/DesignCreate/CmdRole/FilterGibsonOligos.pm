@@ -8,10 +8,10 @@ use Path::Class qw( tempdir dir );
 use File::Copy::Recursive qw( dircopy );
 use YAML::Any qw( LoadFile );
 use FindBin;
-use base qw( Test::DesignCreate::Class Class::Data::Inheritable );
+use base qw( Test::DesignCreate::CmdStep Class::Data::Inheritable );
 
 # Testing
-# DesignCreate::Action::FilterGibsonOligos ( through command line )
+# DesignCreate::Cmd::Step::FilterGibsonOligos ( through command line )
 # DesignCreate::CmdRole::FilterGibsonOligos, most of its work is done by:
 
 BEGIN {

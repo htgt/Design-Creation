@@ -9,10 +9,10 @@ use Path::Class qw( tempdir dir );
 use File::Copy::Recursive qw( dircopy );
 use YAML::Any qw( LoadFile );
 use FindBin;
-use base qw( Test::DesignCreate::Class Class::Data::Inheritable );
+use base qw( Test::DesignCreate::CmdStep Class::Data::Inheritable );
 
 # Testing
-# DesignCreate::Action::PersistDesign ( through command line ) # NO
+# DesignCreate::Cmd::Step::PersistDesign ( through command line ) # NO
 # DesignCreate::CmdRole::PersistDesign
 
 BEGIN {

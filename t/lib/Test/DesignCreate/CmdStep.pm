@@ -1,4 +1,4 @@
-package Test::DesignCreate::Class;
+package Test::DesignCreate::CmdStep;
 
 use strict;
 use warnings FATAL => 'all';
@@ -7,10 +7,10 @@ use Test::Most;
 use base qw( Test::Class Class::Data::Inheritable );
 
 use Test::ObjectRole::DesignCreate;
-use DesignCreate::Cmd;
+use DesignCreate::CmdStep;
 
 BEGIN {
-    __PACKAGE__->mk_classdata( 'cmd_class' => 'DesignCreate::Cmd' );
+    __PACKAGE__->mk_classdata( 'cmd_class' => 'DesignCreate::CmdStep' );
 }
 
 sub get_test_object_metaclass {
