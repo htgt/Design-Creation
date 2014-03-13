@@ -26,6 +26,9 @@ DesignCreate::CmdRole::ConsolidateDesignData
 DesignCreate::CmdRole::PersistDesign
 );
 
+# execute in the parent class carries out all the common steps needed for all
+# the 'complete' design commands. It calls inner which calls the code below, which
+# is where all the code specific to this command is found.
 augment 'execute' => sub {
     my ( $self, $opts, $args ) = @_;
 
