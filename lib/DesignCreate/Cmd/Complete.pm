@@ -12,7 +12,12 @@ These are commands that merge together multiple steps to create a design
 =cut
 
 use Moose;
-use Const::Fast;
+use Try::Tiny;
+use Scalar::Util 'blessed';
+use Data::Dump qw( pp );
+use Fcntl; # O_ constants
+use JSON;
+use YAML::Any qw( DumpFile );
 use namespace::autoclean;
 
 extends qw( DesignCreate::Cmd );
@@ -24,30 +29,57 @@ has persist => (
     is            => 'ro',
     isa           => 'Bool',
     traits        => [ 'Getopt' ],
-    documentation => 'Persist design to LIMS2',
+    documentation => 'Persist design to LIMS2 or WGE',
     default       => 0
 );
 
-# Turn off the following attributes command line option attribute
-# these values should note be set when running the design creation
-# process end to end
-const my @ATTRIBUTES_NO_CMD_OPTION => qw(
-target_file
-exonerate_target_file
-aos_location
-base_chromosome_dir
-genomic_search_method
-);
+# this execute carries out all the common steps needed for the 'complete' design commands,
+# which are sub-classes of this class.
+# We call inner here which calls the sub class specific code, which is found in the
+# execute subroutines in the sub-classes.
+sub execute {
+    my ( $self, $opts, $args ) = @_;
+    Log::Log4perl::NDC->push( @{ $self->target_genes }[0] );
 
-my $meta = __PACKAGE__->meta;
-for my $attribute ( @ATTRIBUTES_NO_CMD_OPTION ) {
-    if ( $meta->has_attribute($attribute) ) {
-        has '+' . $attribute => ( traits => [ 'NoGetopt' ] );
+    $self->log->info( 'Starting new design create run: ' . join(',', @{ $self->target_genes } ) );
+    $self->log->debug( 'Design run args: ' . pp($opts) );
+    $self->create_design_attempt_record( $opts );
+
+    try{
+        inner();
+        $self->persist_design if $self->persist;
+        $self->log->info( 'DESIGN DONE: ' . join(',', @{ $self->target_genes } ) );
+
+        $self->update_design_attempt_record(
+            {
+                status     => 'success',
+                design_ids => join( ' ', @{ $self->design_ids } ),
+            }
+        );
     }
-}
+    catch {
+        if (blessed($_) and $_->isa('DesignCreate::Exception')) {
+            DumpFile( $self->design_fail_file, $_->as_hash );
+            $self->update_design_attempt_record(
+                {   status => 'fail',
+                    fail   => encode_json( $_->as_hash ),
+                }
+            );
+        }
+        else {
+            $self->update_design_attempt_record(
+                {   status => 'error',
+                    error => $_,
+                }
+            );
+        }
+        $self->log->error( 'DESIGN INCOMPLETE: ' . $_ );
 
-#TODO will around execute work here? sp12 Tue 11 Mar 2014 11:44:41 GMT
-# augment / inner would work but not sure it playes with MooseX::App::Cmd
+    };
+
+    Log::Log4perl::NDC->remove;
+    return;
+}
 
 __PACKAGE__->meta->make_immutable;
 
