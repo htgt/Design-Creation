@@ -16,11 +16,16 @@ use Moose;
 use namespace::autoclean;
 
 extends qw( DesignCreate::Cmd );
-with qw(
-DesignCreate::Role::CmdStep
-);
+with qw( DesignCreate::Role::Common );
 
-#TODO custom code? sp12 Tue 11 Mar 2014 10:53:29 GMT
+=head2 update_design_attempt_record
+
+For step commands we do not update design attempt data
+
+=cut
+sub update_design_attempt_record {
+    return;
+}
 
 __PACKAGE__->meta->make_immutable;
 
