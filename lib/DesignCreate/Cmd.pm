@@ -52,26 +52,33 @@ sub BUILD {
     $self->set_param( 'command-name', $self->command_names );
 
     my $log_level
-        = $self->trace   ? $TRACE
-        : $self->debug   ? $DEBUG
-        : $self->verbose ? $INFO
-        :                  $WARN;
+        = $self->trace   ? 'TRACE'
+        : $self->debug   ? 'DEBUG'
+        : $self->verbose ? 'INFO'
+        :                  'WARN';
 
-    # Log output goes to STDERR and a log file
-    Log::Log4perl->easy_init(
-        {
-            level    => $log_level,
-            file     => ">" . $self->dir . '/design-create.log',
-            layout   => '%d %c %p %x %m%n',
-        },
-        {
-            level    => $log_level,
-            file     => "STDERR",
-            layout   => '%d %c %p %x %m%n',
-        },
-    );
+    my $dir_name = $self->dir->stringify;
+    # Log output goes to STDERR and a log file ( the log file level is alway DEBUG )
+    # the STDERR log level is user specified, defaults to WARN
+    my $conf = "
+    log4perl.logger = DEBUG, FileApp, ScreenApp
+
+    log4perl.appender.FileApp                          = Log::Log4perl::Appender::File
+    log4perl.appender.FileApp.filename                 = $dir_name/design-create.log
+    log4perl.appender.FileApp.mode                     = write
+    log4perl.appender.FileApp.layout                   = PatternLayout
+    log4perl.appender.FileApp.layout.ConversionPattern = %d %c %p %x %m%n
+
+    log4perl.appender.ScreenApp                          = Log::Log4perl::Appender::Screen
+    log4perl.appender.ScreenApp.stderr                   = 0
+    log4perl.appender.ScreenApp.layout                   = PatternLayout
+    log4perl.appender.ScreenApp.layout.ConversionPattern = %d %p %x %m%n
+    log4perl.appender.ScreenApp.Threshold                = $log_level
+    ";
+    Log::Log4perl->init(\$conf);
 
     return;
+
 }
 
 override command_names => sub {
