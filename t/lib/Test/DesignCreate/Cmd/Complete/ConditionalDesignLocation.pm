@@ -1,4 +1,4 @@
-package Test::DesignCreate::Action::ConditionalDesignLocation;
+package Test::DesignCreate::Cmd::Complete::ConditionalDesignLocation;
 
 use strict;
 use warnings FATAL => 'all';
@@ -6,10 +6,10 @@ use warnings FATAL => 'all';
 use Test::Most;
 use App::Cmd::Tester;
 use Path::Class qw( tempdir );
-use base qw( Test::DesignCreate::Class Class::Data::Inheritable );
+use base qw( Test::DesignCreate::CmdComplete Class::Data::Inheritable );
 
 # Testing
-# DesignCreate::Action::ConditionalDesignLocation ( through command line )
+# DesignCreate::Cmd::Complete::ConditionalDesignLocation ( through command line )
 
 sub conditional_design_cmd : Test(4) {
     my $test = shift;

@@ -1,4 +1,4 @@
-package Test::DesignCreate::Action::GibsonDeletionDesignLocation;
+package Test::DesignCreate::Cmd::Complete::GibsonDeletionDesignExon;
 
 use strict;
 use warnings FATAL => 'all';
@@ -6,10 +6,10 @@ use warnings FATAL => 'all';
 use Test::Most;
 use App::Cmd::Tester;
 use Path::Class qw( tempdir );
-use base qw( Test::DesignCreate::Class Class::Data::Inheritable );
+use base qw( Test::DesignCreate::CmdComplete Class::Data::Inheritable );
 
 # Testing
-# DesignCreate::Action::GibsonDeletionDesignLocation ( through command line )
+# DesignCreate::Cmd::Complete::GibsonDeletionDesignExon ( through command line )
 
 sub gibson_design_cmd : Test(4) {
     my $test = shift;
@@ -17,14 +17,11 @@ sub gibson_design_cmd : Test(4) {
     my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute;
 
     my @argv_contents = (
-        'gibson-deletion-design-location'         ,
+        'gibson-deletion-design-exon'         ,
         '--dir'                 , $dir->stringify,
         '--species'             , 'Human',
         '--target-gene'         , 'GIBSON',
-        '--target-end'          , 118966177,
-        '--target-start'        , 118964564,
-        '--strand'              , -1,
-        '--chromosome'          , 11,
+        '--target-exon'         , 'ENSE00002184393',
         '--region-offset-er-3f' , 50,
     );
 

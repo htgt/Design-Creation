@@ -1,4 +1,4 @@
-package Test::DesignCreate::Action::DeletionDesignLocation;
+package Test::DesignCreate::Cmd::Complete::DeletionDesignExon;
 
 use strict;
 use warnings FATAL => 'all';
@@ -6,25 +6,22 @@ use warnings FATAL => 'all';
 use Test::Most;
 use App::Cmd::Tester;
 use Path::Class qw( tempdir );
-use base qw( Test::DesignCreate::Class Class::Data::Inheritable );
+use base qw( Test::DesignCreate::CmdComplete Class::Data::Inheritable );
 
 # Testing
-# DesignCreate::Action::DeletionDesignLocation ( through command line )
+# DesignCreate::Cmd::Complete::DeletionDesignExon ( through command line )
 
-sub ins_del_design_cmd : Test(4) {
+sub del_exon_design_cmd : Test(4) {
     my $test = shift;
 
     my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute;
 
     my @argv_contents = (
-        'deletion-design-location'  ,
+        'deletion-design-exon'  ,
         '--dir'           , $dir->stringify,
-        '--species'       , 'Mouse',
-        '--target-start'  , 101176328,
-        '--target-end'    , 101176428,
-        '--chromosome'    , 11,
-        '--strand'        , 1,
-        '--target-gene'   , 'LBL-TEST',
+        '--species'       , 'Human',
+        '--target-exon'   , 'ENSE00001764544',
+        '--target-gene'   , 'ATP2BF',
         '--design-method' , 'deletion',
     );
 

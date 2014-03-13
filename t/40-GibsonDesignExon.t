@@ -5,7 +5,7 @@ use warnings FATAL => 'all';
 use FindBin;
 use lib "$FindBin::Bin/lib";
 use Log::Log4perl qw( :levels );
-use Test::DesignCreate::Action::GibsonDesignExon;
+use Test::DesignCreate::Cmd::Complete::GibsonDesignExon;
 
 Log::Log4perl->easy_init( $OFF );
 
