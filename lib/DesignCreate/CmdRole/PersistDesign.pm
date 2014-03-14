@@ -88,8 +88,8 @@ has design_ids => (
 sub persist_design {
     my ( $self, $opts, $args ) = @_;
 
-    $self->log->info('Persisting design to LIMS2 for gene(s): '
-                     . join( ',', @{ $self->design_data->{gene_ids} } ) );
+    $self->log->info('Persisting design for gene(s): '
+                     . join( ',', map{ $_->{gene_id} } @{ $self->design_data->{gene_ids} } ) );
 
     $self->_persist_design( $self->design_data );
 
