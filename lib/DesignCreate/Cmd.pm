@@ -44,12 +44,19 @@ has verbose => (
     default       => 0
 );
 
+has is_step => (
+    is => 'ro',
+    isa => 'Bool',
+    traits => [ 'NoGetopt' ],
+    default => 0,
+);
 
 sub BUILD {
     my $self = shift;
 
     # Add command name as a design parameter
-    $self->set_param( 'command-name', $self->command_names );
+    my $cmd_name = $self->command_names;
+    $self->set_param( 'command-name', $cmd_name );
 
     my $log_level
         = $self->trace   ? 'TRACE'
@@ -58,13 +65,24 @@ sub BUILD {
         :                  'WARN';
 
     my $dir_name = $self->dir->stringify;
+    my $log_file_name = 'design-create.log';
+    if ( $self->is_step ) {
+        $log_file_name = $cmd_name . '.log';
+    }
+    else {
+        # if 'complete' cmd wipe the work directory first
+        $self->dir->rmtree();
+    }
+    # create the work directory if it does not exist
+    $self->dir->mkpath();
+
     # Log output goes to STDERR and a log file ( the log file level is alway DEBUG )
     # the STDERR log level is user specified, defaults to WARN
     my $conf = "
     log4perl.logger = DEBUG, FileApp, ScreenApp
 
     log4perl.appender.FileApp                          = Log::Log4perl::Appender::File
-    log4perl.appender.FileApp.filename                 = $dir_name/design-create.log
+    log4perl.appender.FileApp.filename                 = $dir_name/$log_file_name
     log4perl.appender.FileApp.mode                     = write
     log4perl.appender.FileApp.layout                   = PatternLayout
     log4perl.appender.FileApp.layout.ConversionPattern = %d %c %p %x %m%n

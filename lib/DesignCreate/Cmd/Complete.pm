@@ -59,13 +59,14 @@ has da_id => (
     cmd_flag      => 'da-id',
 );
 
-#todo not sure this will work
-before '_init_output_dir' => sub {
-    my ( $self, $dir ) = @_;
+sub BUILD {
+    my $self = shift;
 
-    #always delete the work dir 
-    $dir->rmtree();
-};
+    #$self->dir->rmtree();
+    $self->dir->mkpath();
+
+    return;
+}
 
 # this execute carries out all the common steps needed for the 'complete' design commands,
 # which are sub-classes of this class.

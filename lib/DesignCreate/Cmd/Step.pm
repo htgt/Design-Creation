@@ -18,6 +18,10 @@ use namespace::autoclean;
 extends qw( DesignCreate::Cmd );
 with qw( DesignCreate::Role::Common );
 
+has '+is_step' => (
+    default => 1,
+);
+
 =head2 update_design_attempt_record
 
 For step commands we do not update design attempt data
