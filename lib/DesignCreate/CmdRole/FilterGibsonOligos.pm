@@ -23,9 +23,10 @@ use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
 use Const::Fast;
 use Fcntl; # O_ constants
 use List::MoreUtils qw( any );
-use namespace::autoclean;
 use Bio::SeqIO;
 use Try::Tiny;
+use JSON;
+use namespace::autoclean;
 
 with qw(
 DesignCreate::Role::FilterOligos
@@ -135,17 +136,35 @@ has validated_oligo_pairs => (
     }
 );
 
+has region_best_primer3_pair => (
+    is      => 'rw',
+    isa     => 'HashRef',
+    traits  => [ 'Hash', 'NoGetopt' ],
+    default => sub{ {} },
+    handles => {
+        get_region_best_primer3_pair  => 'get',
+        set_region_best_primer3_pair  => 'set',
+    }
+);
+
 sub filter_oligos {
     my ( $self, $opts, $args ) = @_;
 
     $self->add_design_parameters( \@DESIGN_PARAMETERS );
     $self->run_bwa;
 
-    # the following 2 commands are consumed from DesignCreate::Role::FilterOligos
-    $self->validate_oligos;
-    $self->output_validated_oligos;
-
+    try{
+        $self->validate_oligos; # DesignCreate::Role::FilterOligos
+    }
+    catch{
+        $self->validate_oligo_pairs;
+        $self->update_candidate_oligos_after_validation;
+        die $_;
+    };
     $self->validate_oligo_pairs;
+    $self->update_candidate_oligos_after_validation;
+
+    $self->output_validated_oligos; # DesignCreate::Role::FilterOligos
     $self->output_valid_oligo_pairs;
     $self->update_design_attempt_record( { status => 'oligos_validated' } );
 
@@ -229,9 +248,10 @@ sub validate_oligo_pairs {
             = $self->get_file( $oligo_pair_region . '_oligo_pairs.yaml', $self->oligo_finder_output_dir );
 
         my $oligo_pairs = LoadFile( $oligo_pair_file );
-
         DesignCreate::Exception->throw("No oligo pair data in $oligo_pair_file")
             unless $oligo_pairs;
+
+        $self->set_region_best_primer3_pair( $oligo_pair_region => $oligo_pairs->[0] );
 
         for my $pair ( @{ $oligo_pairs } ) {
             next if any{ $self->oligo_is_invalid( $_ ) } values %{ $pair };
@@ -239,6 +259,41 @@ sub validate_oligo_pairs {
             push @{ $self->validated_oligo_pairs->{ $oligo_pair_region } }, $pair;
         }
     }
+
+    return;
+}
+
+=head2 update_candidate_oligos_after_validation
+
+Update design attempt record with the best primer pair from each region.
+This means the users will at least have some primers we fail to find a validated
+primer pair for each region.
+
+=cut
+sub update_candidate_oligos_after_validation {
+    my ( $self ) = @_;
+    my %candidate_oligo_data;
+
+    for my $region ( keys %{ $self->gibson_info } ) {
+        my $best_pair;
+        # if we have a validated primer pair for the region store this
+        if ( $self->region_has_oligo_pairs( $region ) ) {
+            $best_pair = $self->validated_oligo_pairs->{ $region }[0];
+        }
+        # else fall back to best pair from Primer3 ( even though one or both
+        # of the primers in the pair have failed validation )
+        else {
+            $best_pair = $self->get_region_best_primer3_pair( $region );
+        }
+        for my $oligo_type ( keys %{ $best_pair } ) {
+            my $oligo = $self->all_oligos->{$oligo_type}{ $best_pair->{$oligo_type} };
+            if ( $self->oligo_is_invalid( $oligo->{id} ) ) {
+                $oligo->{invalid} = $self->get_invalid_oligo_reason( $oligo->{id} );
+            }
+            $candidate_oligo_data{ $oligo_type } = $oligo;
+        }
+    }
+    $self->update_design_attempt_record( { candidate_oligos =>  encode_json( \%candidate_oligo_data ) } );
 
     return;
 }
@@ -345,8 +400,9 @@ sub define_bwa_query_file {
     my $fh         = $query_file->open( O_WRONLY|O_CREAT ) or die( "Open $query_file: $!" );
     my $seq_out    = Bio::SeqIO->new( -fh => $fh, -format => 'fasta' );
 
+    # all_oligos defined in DesignCreate::Role::FilterOligos
     for my $oligo_type ( keys %{ $self->all_oligos } ) {
-        for my $oligo ( @{ $self->all_oligos->{$oligo_type} } ) {
+        for my $oligo ( values %{ $self->all_oligos->{$oligo_type} } ) {
             my $bio_seq  = Bio::Seq->new( -seq => $oligo->{oligo_seq}, -id => $oligo->{id} );
             $seq_out->write_seq( $bio_seq );
         }

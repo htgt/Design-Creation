@@ -204,7 +204,7 @@ sub define_exonerate_query_file {
     my $seq_out    = Bio::SeqIO->new( -fh => $fh, -format => 'fasta' );
 
     for my $oligo_type ( keys %{ $self->all_oligos } ) {
-        for my $oligo ( @{ $self->all_oligos->{$oligo_type} } ) {
+        for my $oligo ( values %{ $self->all_oligos->{$oligo_type} } ) {
             my $bio_seq  = Bio::Seq->new( -seq => $oligo->{oligo_seq}, -id => $oligo->{id} );
             $seq_out->write_seq( $bio_seq );
         }
@@ -248,13 +248,15 @@ sub target_flanking_region_coordinates {
     my ( $start, $end );
 
     my $strand = $self->design_param( 'chr_strand' );
+    my $g5_oligo = ( values %{ $self->all_oligos->{G5} } )[0];
+    my $g3_oligo = ( values %{ $self->all_oligos->{G3} } )[0];
     if ( $strand == 1 ) {
-        $start = $self->all_oligos->{'G5'}[0]{target_region_start};
-        $end   = $self->all_oligos->{'G3'}[0]{target_region_end};
+        $start = $g5_oligo->{target_region_start};
+        $end   = $g3_oligo->{target_region_end};
     }
     else {
-        $start = $self->all_oligos->{'G3'}[0]{target_region_start};
-        $end   = $self->all_oligos->{'G5'}[0]{target_region_end};
+        $start = $g3_oligo->{target_region_start};
+        $end   = $g5_oligo->{target_region_end};
     }
 
     my $flanking_region_start = $start - $self->flank_length;

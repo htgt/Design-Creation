@@ -37,7 +37,8 @@ sub _build_all_oligos {
         DesignCreate::Exception->throw( "No oligo data in $oligo_file for $oligo_type oligo" )
             unless $oligos;
 
-        $all_oligos{$oligo_type} = $oligos;
+        my %oligos = map{ $_->{id} => $_ } @{ $oligos };
+        $all_oligos{$oligo_type} = \%oligos;
     }
 
     return \%all_oligos;
@@ -49,9 +50,10 @@ has invalid_oligos => (
     traits  => [ 'NoGetopt', 'Hash' ],
     default => sub { {  } },
     handles => {
-        add_invalid_oligo   => 'set',
-        oligo_is_invalid    => 'exists',
-        have_invalid_oligos => 'count',
+        add_invalid_oligo        => 'set',
+        get_invalid_oligo_reason => 'get',
+        oligo_is_invalid         => 'exists',
+        have_invalid_oligos      => 'count',
     }
 );
 
@@ -78,7 +80,7 @@ sub validate_oligos {
     for my $oligo_type ( $self->expected_oligos ) {
         $self->log->debug( "Validating $oligo_type oligos" );
 
-        for my $oligo_data ( @{ $self->all_oligos->{$oligo_type} } ) {
+        for my $oligo_data ( values %{ $self->all_oligos->{$oligo_type} } ) {
             # pass a string ref to $invalid_reason to the validate methods so we can get back the
             # reason oligo failed validation. We can not return this value directly from the
             # validation subroutines because they are set up to return true or false depending on
