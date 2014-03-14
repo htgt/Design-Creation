@@ -47,13 +47,14 @@ sub find_oligos : Test(4) {
     } 'can call find_oligos';
 
     ok my $new_o = $test->_get_test_object( 1 ), 'can grab test object';
+
     throws_ok{
         $new_o->find_oligos
-    } 'DesignCreate::Exception'
-        , 'throws error when unable to find primers for all regions';
+    } 'DesignCreate::Exception::Primer3FailedFindOligos'
+        , 'throws error when no primer pairs can be found for region';
 }
 
-sub run_primer3 : Test(7) {
+sub run_primer3 : Test(5) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
@@ -64,13 +65,6 @@ sub run_primer3 : Test(7) {
     for my $region ( qw( exon five_prime three_prime ) ) {
         ok exists $o->primer3_results->{$region}, "we have results for $region region";
     }
-
-    ok my $new_o = $test->_get_test_object( 1 ), 'can grab test object';
-
-    throws_ok{
-        $new_o->run_primer3
-    } 'DesignCreate::Exception::Primer3FailedFindOligos'
-        , 'throws error when no primer pairs can be found for region';
 
 }
 
@@ -155,7 +149,7 @@ sub parse_primer : Test(11) {
         ,'can call parse_primer';
     is $forward_primer_id, '5F-0', 'correct primer id';
 
-    ok my $oligo_data = $o->primer3_oligos->{ '5F' }[0], 'have stored data hash for 5F oligo';
+    ok my $oligo_data = $o->primer3_oligos->{ '5F' }{ $forward_primer_id }, 'have stored data hash for 5F oligo';
     is $oligo_data->{rank}, 0, 'rank is correct';
     is $oligo_data->{gc_content}, $forward_primer->gc_content, 'gc_content is correct';
     is $oligo_data->{oligo}, '5F', 'oligo_type is correct';
