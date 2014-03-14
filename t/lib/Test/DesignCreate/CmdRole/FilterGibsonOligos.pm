@@ -138,7 +138,7 @@ sub validate_oligos : Test(6) {
     $new_o->bwa_matches( $test->{bwa_data} );
 
     lives_ok { $new_o->all_oligos } 'can call all_oligos on test object';
-    ok $new_o->all_oligos->{'5F'} = [], 'delete 5F oligo data';
+    ok $new_o->all_oligos->{'5F'} = {}, 'delete 5F oligo data';
     throws_ok{
         $new_o->validate_oligos
     } 'DesignCreate::Exception::OligoValidation', 'throws error when missing required valid oligos';

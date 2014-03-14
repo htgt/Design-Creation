@@ -148,7 +148,7 @@ sub validate_oligos : Test(7) {
         $new_o->run_exonerate
     } 'setup test object';
 
-    ok $new_o->all_oligos->{U5} = [], 'delete U5 oligo data';
+    ok $new_o->all_oligos->{U5} = {}, 'delete U5 oligo data';
     throws_ok{
         $new_o->validate_oligos
     } 'DesignCreate::Exception::OligoValidation', 'throws error when missing required valid oligos';
