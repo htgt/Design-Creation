@@ -59,15 +59,6 @@ has da_id => (
     cmd_flag      => 'da-id',
 );
 
-sub BUILD {
-    my $self = shift;
-
-    #$self->dir->rmtree();
-    $self->dir->mkpath();
-
-    return;
-}
-
 # this execute carries out all the common steps needed for the 'complete' design commands,
 # which are sub-classes of this class.
 # We call inner here which calls the sub class specific code, which is found in the
