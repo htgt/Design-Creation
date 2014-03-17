@@ -4,6 +4,7 @@ use strict;
 use warnings FATAL => 'all';
 
 use Test::Most;
+use Test::MockObject;
 use base qw( Test::Class Class::Data::Inheritable );
 
 use Test::ObjectRole::DesignCreate;
@@ -26,6 +27,17 @@ sub get_test_object_metaclass {
     );
 
     return $metaclass
+}
+
+sub get_mock_lims2_api {
+    my $test = shift;
+
+    my $mock_lims2_api = Test::MockObject->new;
+    $mock_lims2_api->set_isa( 'LIMS2::REST::Client' );
+    $mock_lims2_api->mock( 'POST', sub{ { id => 123 } } );
+    $mock_lims2_api->mock( 'PUT', sub{ my $self = shift; return shift } );
+
+    return $mock_lims2_api;
 }
 
 1;

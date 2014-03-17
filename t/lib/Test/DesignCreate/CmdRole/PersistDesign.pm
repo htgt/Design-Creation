@@ -4,7 +4,6 @@ use strict;
 use warnings FATAL => 'all';
 
 use Test::Most;
-use Test::MockObject;
 use Path::Class qw( tempdir dir );
 use File::Copy::Recursive qw( dircopy );
 use YAML::Any qw( LoadFile );
@@ -87,22 +86,13 @@ sub _get_test_object {
 
     my $metaclass = $test->get_test_object_metaclass();
     return $metaclass->new_object(
-        lims2_api         => $test->_get_mock_lims2_api,
+        lims2_api         => $test->get_mock_lims2_api,
         dir               => $dir,
         alternate_designs => $alt_designs,
         design_method     => 'deletion',
     );
 }
 
-sub _get_mock_lims2_api {
-    my $test = shift;
-
-    my $mock_lims2_api = Test::MockObject->new;
-    $mock_lims2_api->set_isa( 'LIMS2::REST::Client' );
-    $mock_lims2_api->mock( 'POST', sub{ { id => 123 } } );
-
-    return $mock_lims2_api;
-}
 
 1;
 
