@@ -88,7 +88,7 @@ sub BUILD {
     log4perl.appender.FileApp.layout.ConversionPattern = %d %c %p %x %m%n
 
     log4perl.appender.ScreenApp                          = Log::Log4perl::Appender::Screen
-    log4perl.appender.ScreenApp.stderr                   = 0
+    log4perl.appender.ScreenApp.stderr                   = 1
     log4perl.appender.ScreenApp.layout                   = PatternLayout
     log4perl.appender.ScreenApp.layout.ConversionPattern = %d %p %x %m%n
     log4perl.appender.ScreenApp.Threshold                = $log_level
