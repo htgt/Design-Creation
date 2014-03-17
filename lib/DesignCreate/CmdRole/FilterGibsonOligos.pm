@@ -274,7 +274,8 @@ sub update_candidate_oligos_after_validation {
     my ( $self ) = @_;
     my %candidate_oligo_data;
 
-    for my $region ( keys %{ $self->gibson_info } ) {
+    my $design_method = $self->design_param( 'design_method' );
+    for my $region ( keys %{ $GIBSON_PRIMER_REGIONS{$design_method} } ) {
         my $best_pair;
         # if we have a validated primer pair for the region store this
         if ( $self->region_has_oligo_pairs( $region ) ) {
