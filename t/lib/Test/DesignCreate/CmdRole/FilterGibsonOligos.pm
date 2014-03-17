@@ -219,6 +219,30 @@ sub output_valid_oligo_pairs : Tests(8) {
         ,'throws error when missing oligo pairs from one or more regions';
 }
 
+sub update_candidate_oligos_after_validation : Tests(7) {
+    my $test = shift;
+    ok my $o = $test->_get_test_object, 'can grab test object';
+    # setup bwa match data to save time
+    $o->bwa_matches( $test->{bwa_data} );
+    lives_ok{
+        $o->validate_oligos;
+        $o->output_validated_oligos;
+    } 'setup test object';
+
+    lives_ok{
+        $o->update_candidate_oligos_after_validation
+    } 'can output_validated_oligos';
+
+    my $mock_api = $o->lims2_api;
+    $mock_api->called_ok( 'PUT', 'called PUT on lims2_api' );
+
+    $mock_api->called_args_pos_is( 1, 2, 'design_attempt',
+        'we are sending design_attempt as the first argument to PUT' );
+    ok my $update_data = $mock_api->call_args_pos( 1, 3 ), 'can grab design attempt update data';
+    ok exists $update_data->{candidate_oligos},
+        '.. and we are trying to update the candidate_oligos column';
+}
+
 sub _get_test_object {
     my ( $test ) = @_;
 
@@ -229,8 +253,10 @@ sub _get_test_object {
 
     my $metaclass = $test->get_test_object_metaclass( [ 'DesignCreate::Role::EnsEMBL' ] );
     return $metaclass->new_object(
-        dir => $dir,
+        dir                     => $dir,
+        lims2_api               => $test->get_mock_lims2_api,
         exon_check_flank_length => 100,
+        persist                 => 1,
     );
 }
 

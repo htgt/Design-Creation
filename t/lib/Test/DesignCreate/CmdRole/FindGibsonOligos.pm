@@ -38,7 +38,7 @@ sub valid_find_gibson_oligos_cmd : Test(4) {
     chdir;
 }
 
-sub find_oligos : Test(4) {
+sub find_oligos : Tests(7) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
@@ -46,15 +46,25 @@ sub find_oligos : Test(4) {
         $o->find_oligos
     } 'can call find_oligos';
 
+    my $mock_api = $o->lims2_api;
+    $mock_api->called_ok( 'PUT', 'called PUT on lims2_api' );
+
+    # second PUT request updates the status of the design attempt to oligos_found
+    $mock_api->called_args_pos_is( 2, 2, 'design_attempt',
+        'we are sending design_attempt as the first argument to PUT' );
+    is_deeply( $mock_api->call_args_pos( 2, 3 ), { status => 'oligos_found' },
+        'we are sending a status update to oligos_found for second argument' );
+
     ok my $new_o = $test->_get_test_object( 1 ), 'can grab test object';
 
     throws_ok{
         $new_o->find_oligos
     } 'DesignCreate::Exception::Primer3FailedFindOligos'
         , 'throws error when no primer pairs can be found for region';
+
 }
 
-sub run_primer3 : Test(5) {
+sub run_primer3 : Test(7) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
@@ -65,6 +75,13 @@ sub run_primer3 : Test(5) {
     for my $region ( qw( exon five_prime three_prime ) ) {
         ok exists $o->primer3_results->{$region}, "we have results for $region region";
     }
+
+    ok my $new_o = $test->_get_test_object( 1 ), 'can grab test object';
+
+    throws_ok{
+        $new_o->run_primer3
+    } 'DesignCreate::Exception::Primer3FailedFindOligos'
+        , 'throws error when no primer pairs can be found for region';
 
 }
 
@@ -226,6 +243,30 @@ sub primer3_config_defaults : Tests(5) {
     } qr/No Primer3 config for primer_max_gc set/, 'throws error if no default set';
 }
 
+sub update_candidate_oligos_after_primer3 : Tests(7) {
+    my $test = shift;
+    ok my $o = $test->_get_test_object, 'can grab test object';
+
+    lives_ok{
+        $o->run_primer3;
+        $o->parse_primer3_results;
+    } 'can run setup to produce oligos';
+
+
+    lives_ok{
+        $o->update_candidate_oligos_after_primer3;
+    } 'can call update_candidate_oligos_after_primer3';
+
+    my $mock_api = $o->lims2_api;
+    $mock_api->called_ok( 'PUT', 'called PUT on lims2_api' );
+
+    $mock_api->called_args_pos_is( 1, 2, 'design_attempt',
+        'we are sending design_attempt as the first argument to PUT' );
+    ok my $update_data = $mock_api->call_args_pos( 1, 3 ), 'can grab design attempt update data';
+    ok exists $update_data->{candidate_oligos},
+        '.. and we are trying to update the candidate_oligos column';
+}
+
 sub _get_test_object {
     my ( $test, $fail_data ) = @_;
 
@@ -245,6 +286,8 @@ sub _get_test_object {
     return $metaclass->new_object(
         dir               => $dir,
         repeat_mask_class => [ 'trf', 'dust' ],
+        lims2_api         => $test->get_mock_lims2_api,
+        persist           => 1,
     );
 }
 
