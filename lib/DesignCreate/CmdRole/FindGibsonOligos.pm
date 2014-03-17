@@ -27,6 +27,7 @@ use Bio::Seq;
 use Const::Fast;
 use Data::Printer;
 use JSON;
+use Try::Tiny;
 use namespace::autoclean;
 
 const my @FIND_GIBSON_OLIGOS_PARAMETERS => qw(
@@ -264,16 +265,18 @@ sub find_oligos {
     # Add current EnsEMBL DB version used
     $self->set_param( 'ensembl-version', $self->ensembl_util->db_adaptor->dbc->dbname );
     $self->add_design_parameters( \@FIND_GIBSON_OLIGOS_PARAMETERS );
-    my $failed_primer_regions = $self->run_primer3;
+
+    try {
+        $self->run_primer3;
+    }
+    catch {
+        $self->parse_primer3_results;
+        $self->update_candidate_oligos_after_primer3;
+        die $_;
+    };
     $self->parse_primer3_results;
     $self->update_candidate_oligos_after_primer3;
 
-    if ( %{ $failed_primer_regions } ) {
-        DesignCreate::Exception::Primer3FailedFindOligos->throw(
-            regions             => [ keys %{ $failed_primer_regions } ],
-            primer_fail_reasons => $failed_primer_regions,
-        );
-    }
 
     $self->create_oligo_files;
     $self->update_design_attempt_record( { status => 'oligos_found' } );
@@ -319,7 +322,14 @@ sub run_primer3 {
         }
     }
 
-    return \%failed_primer_regions;
+    if ( %failed_primer_regions ) {
+        DesignCreate::Exception::Primer3FailedFindOligos->throw(
+            regions             => [ keys %failed_primer_regions ],
+            primer_fail_reasons => \%failed_primer_regions,
+        );
+    }
+
+    return;
 }
 
 =head2 parse_primer3_results
