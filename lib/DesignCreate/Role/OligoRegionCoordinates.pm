@@ -70,6 +70,12 @@ sub create_oligo_region_coordinate_file {
     my $file = $self->oligo_target_regions_dir->file( $DEFAULT_OLIGO_COORD_FILE_NAME );
     DumpFile( $file, $self->oligo_region_coordinates );
 
+    return;
+}
+
+sub set_design_attempt_candidate_regions {
+    my $self = shift;
+
     my %candidate_regions = %{ $self->oligo_region_coordinates };
     my $chr_name = $self->design_param( 'chr_name' );
     $candidate_regions{$_}{chromosome} = $chr_name for keys %candidate_regions;
