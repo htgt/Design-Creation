@@ -7,6 +7,7 @@ use App::Cmd::Tester;
 use Path::Class qw( tempdir dir );
 use File::Copy::Recursive qw( dircopy );
 use YAML::Any qw( LoadFile );
+use JSON;
 use FindBin;
 use base qw( Test::DesignCreate::CmdStep Class::Data::Inheritable );
 
@@ -219,14 +220,14 @@ sub output_valid_oligo_pairs : Tests(8) {
         ,'throws error when missing oligo pairs from one or more regions';
 }
 
-sub update_candidate_oligos_after_validation : Tests(7) {
+sub update_candidate_oligos_after_validation : Tests(9) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
     # setup bwa match data to save time
     $o->bwa_matches( $test->{bwa_data} );
     lives_ok{
         $o->validate_oligos;
-        $o->output_validated_oligos;
+        $o->validate_oligo_pairs;
     } 'setup test object';
 
     lives_ok{
@@ -241,6 +242,11 @@ sub update_candidate_oligos_after_validation : Tests(7) {
     ok my $update_data = $mock_api->call_args_pos( 1, 3 ), 'can grab design attempt update data';
     ok exists $update_data->{candidate_oligos},
         '.. and we are trying to update the candidate_oligos column';
+
+    ok my $candidate_oligo_data = decode_json( $update_data->{candidate_oligos} ),
+        'can decode candidate oligo json data';
+    is_deeply [ sort keys %{$candidate_oligo_data} ], [ '3F', '3R', '5F', '5R', 'EF', 'ER' ],
+        'candidate oligo data hash has correct keys';
 }
 
 sub _get_test_object {
