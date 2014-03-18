@@ -8,6 +8,7 @@ use App::Cmd::Tester;
 use Path::Class qw( tempdir dir );
 use File::Copy::Recursive qw( dircopy );
 use FindBin;
+use JSON;
 use base qw( Test::DesignCreate::CmdStep Class::Data::Inheritable );
 
 # Testing
@@ -38,7 +39,7 @@ sub valid_find_gibson_oligos_cmd : Test(4) {
     chdir;
 }
 
-sub find_oligos : Tests(7) {
+sub find_oligos : Tests(11) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
@@ -47,7 +48,11 @@ sub find_oligos : Tests(7) {
     } 'can call find_oligos';
 
     my $mock_api = $o->lims2_api;
-    $mock_api->called_ok( 'PUT', 'called PUT on lims2_api' );
+    $mock_api->called_pos_ok(1, 'PUT', 'Have initial call to PUT on lims2_api' );
+    $mock_api->called_pos_ok(2, 'PUT', 'Have second call to PUT on lims2_api' );
+
+    $mock_api->called_args_pos_is( 1, 2, 'design_attempt',
+        'we are sending design_attempt as the first argument to initial PUT' );
 
     # second PUT request updates the status of the design attempt to oligos_found
     $mock_api->called_args_pos_is( 2, 2, 'design_attempt',
@@ -62,6 +67,9 @@ sub find_oligos : Tests(7) {
     } 'DesignCreate::Exception::Primer3FailedFindOligos'
         , 'throws error when no primer pairs can be found for region';
 
+    $mock_api = $new_o->lims2_api;
+    $mock_api->called_pos_ok(1, 'PUT', 'Have initial call to PUT on lims2_api' );
+    is ( $mock_api->call_pos(2), undef, 'no second call to api, because no status update' );
 }
 
 sub run_primer3 : Test(7) {
@@ -243,7 +251,7 @@ sub primer3_config_defaults : Tests(5) {
     } qr/No Primer3 config for primer_max_gc set/, 'throws error if no default set';
 }
 
-sub update_candidate_oligos_after_primer3 : Tests(7) {
+sub update_candidate_oligos_after_primer3 : Tests(16) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
@@ -251,7 +259,6 @@ sub update_candidate_oligos_after_primer3 : Tests(7) {
         $o->run_primer3;
         $o->parse_primer3_results;
     } 'can run setup to produce oligos';
-
 
     lives_ok{
         $o->update_candidate_oligos_after_primer3;
@@ -265,6 +272,32 @@ sub update_candidate_oligos_after_primer3 : Tests(7) {
     ok my $update_data = $mock_api->call_args_pos( 1, 3 ), 'can grab design attempt update data';
     ok exists $update_data->{candidate_oligos},
         '.. and we are trying to update the candidate_oligos column';
+
+    ok my $candidate_oligo_data = decode_json( $update_data->{candidate_oligos} ),
+        'can decode candidate oligo json data';
+    is_deeply [ sort keys %{$candidate_oligo_data} ], [ '3F', '3R', '5F', '5R', 'EF', 'ER' ],
+        'candidate oligo data hash has correct keys';
+
+    ok my $new_o = $test->_get_test_object( 1 ), 'can grab test object';
+    throws_ok{
+        $new_o->run_primer3
+    } 'DesignCreate::Exception::Primer3FailedFindOligos'
+        , 'throws error when no primer pairs can be found for region';
+
+    lives_ok{
+        $new_o->parse_primer3_results;
+        $new_o->update_candidate_oligos_after_primer3;
+    } 'can call update_candidate_oligos_after_primer3';
+
+    $mock_api = $new_o->lims2_api;
+    ok $update_data = $mock_api->call_args_pos( 1, 3 ), 'can grab design attempt update data';
+    ok exists $update_data->{candidate_oligos},
+        '.. and we are trying to update the candidate_oligos column';
+
+    ok $candidate_oligo_data = decode_json( $update_data->{candidate_oligos} ),
+        'can decode candidate oligo json data';
+    is_deeply [ sort keys %{$candidate_oligo_data} ], [ '3F', '3R', 'EF', 'ER' ],
+        'candidate oligo data hash has correct keys, missing 5F and 5R oligos';
 }
 
 sub _get_test_object {
