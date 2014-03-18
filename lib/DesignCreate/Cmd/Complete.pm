@@ -72,6 +72,7 @@ sub execute {
     $self->create_design_attempt_record( $opts );
 
     try{
+        # calls the code from the child classes execute subroutine
         inner();
         $self->persist_design if $self->persist;
         $self->log->info( 'DESIGN DONE: ' . join(',', @{ $self->target_genes } ) );
