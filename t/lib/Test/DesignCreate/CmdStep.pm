@@ -14,6 +14,13 @@ BEGIN {
     __PACKAGE__->mk_classdata( 'cmd_class' => 'DesignCreate::CmdStep' );
 }
 
+=head2 get_test_object_metaclass
+
+Use meta object to dynamically create moose classes that consume the specific
+roles we wish to test. Each CmdRole test class has a test_role class
+data value set that specifies which role we are testing.
+
+=cut
 sub get_test_object_metaclass {
     my ( $test, $extra_roles ) = @_;
 
@@ -29,13 +36,19 @@ sub get_test_object_metaclass {
     return $metaclass
 }
 
+=head2 get_mock_lims2_api
+
+Setup a mock LIMS2 api so we can test the PUT and POST requests that are
+sent to the api are as expected.
+
+=cut
 sub get_mock_lims2_api {
     my $test = shift;
 
     my $mock_lims2_api = Test::MockObject->new;
     $mock_lims2_api->set_isa( 'LIMS2::REST::Client' );
     $mock_lims2_api->mock( 'POST', sub{ { id => 123 } } );
-    $mock_lims2_api->mock( 'PUT', sub{ my $self = shift; return shift } );
+    $mock_lims2_api->mock( 'PUT', sub{ } );
 
     return $mock_lims2_api;
 }
