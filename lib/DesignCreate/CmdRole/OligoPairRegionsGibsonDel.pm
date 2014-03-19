@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::OligoPairRegionsGibsonDel;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::OligoPairRegionsGibsonDel::VERSION = '0.022';
+    $DesignCreate::CmdRole::OligoPairRegionsGibsonDel::VERSION = '0.023';
 }
 ## use critic
 
@@ -178,8 +178,9 @@ sub get_oligo_pair_region_coordinates {
         };
     }
 
-    # In role DesignCreate::Role::OligoRegionCoodinatesGibson
+    # In role DesignCreate::Role::OligoRegionCoodinates
     $self->create_oligo_region_coordinate_file;
+    $self->set_design_attempt_candidate_regions;
     $self->update_design_attempt_record( { status => 'coordinates_calculated' } );
 
     return;

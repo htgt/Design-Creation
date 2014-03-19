@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::PersistDesign;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::PersistDesign::VERSION = '0.022';
+    $DesignCreate::CmdRole::PersistDesign::VERSION = '0.023';
 }
 ## use critic
 
@@ -27,11 +27,8 @@ use namespace::autoclean;
 has design_data_file => (
     is            => 'ro',
     isa           => AbsFile,
-    traits        => [ 'Getopt' ],
-    coerce        => 1,
+    traits        => [ 'NoGetopt' ],
     lazy_build    => 1,
-    documentation => 'The yaml file containing design data ( default [work_dir]/design_data.yaml )',
-    cmd_flag      => 'design-data-file'
 );
 
 sub _build_design_data_file {
@@ -97,8 +94,8 @@ has design_ids => (
 sub persist_design {
     my ( $self, $opts, $args ) = @_;
 
-    $self->log->info('Persisting design to LIMS2 for gene(s): '
-                     . join( ',', @{ $self->design_data->{gene_ids} } ) );
+    $self->log->info('Persisting design for gene(s): '
+                     . join( ',', map{ $_->{gene_id} } @{ $self->design_data->{gene_ids} } ) );
 
     $self->_persist_design( $self->design_data );
 

@@ -1,7 +1,7 @@
 package DesignCreate::Util::Exonerate;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Util::Exonerate::VERSION = '0.022';
+    $DesignCreate::Util::Exonerate::VERSION = '0.023';
 }
 ## use critic
 

@@ -2,50 +2,44 @@ package Test::ObjectRole::DesignCreate;
 
 use Moose;
 use Fcntl; # O_ constants
+use Try::Tiny;
 use namespace::autoclean;
 
 with qw(
 MooseX::Log::Log4perl
 MooseX::Getopt
-DesignCreate::Role::Action
+DesignCreate::Role::Common
 DesignCreate::Role::EnsEMBL
 );
 
-#
-# The original methods delete and then recreate these directories.
-# I already have some these directories set up with fixture data so I do
-# not want that to happen in the tests.
-#
+has persist => (
+    is      => 'ro',
+    isa     => 'Bool',
+    default => 0
+);
 
-around '_build_validated_oligo_dir' => sub {
-    my $orig = shift;
-    my $self = shift;
+=head2 update_design_attempt_record
 
-    my $sub_dir = $self->dir->subdir( 'validated_oligos' )->absolute;
-    $sub_dir->mkpath();
+When running standalone 'step' commands we would not update design attempt records. However when running it as part of a 'complete' design
+create command we would attempt to update design attempt records.
 
-    return $sub_dir;
-};
+We leave it up to the individual tests as to if the persist flag is
+set to true or not.
 
-around '_build_oligo_finder_output_dir' => sub {
-    my $orig = shift;
-    my $self = shift;
+=cut
+sub update_design_attempt_record {
+    my ( $self, $data ) = @_;
+    return if !$self->persist;
 
-    my $sub_dir = $self->dir->subdir( 'oligo_finder_output' )->absolute;
-    $sub_dir->mkpath();
+    try{
+        my $design_attempt = $self->lims2_api->PUT( 'design_attempt', $data );
+    }
+    catch {
+        $self->log->error( "Error updating design attempt record: $_" );
+    };
 
-    return $sub_dir;
-};
-
-around '_build_oligo_target_regions_dir' => sub {
-    my $orig = shift;
-    my $self = shift;
-
-    my $sub_dir = $self->dir->subdir( 'oligo_target_regions' )->absolute;
-    $sub_dir->mkpath();
-
-    return $sub_dir;
-};
+    return;
+}
 
 __PACKAGE__->meta->make_immutable;
 

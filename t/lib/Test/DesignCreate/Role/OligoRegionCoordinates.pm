@@ -7,7 +7,7 @@ use Test::Most;
 use Path::Class qw( tempdir dir );
 use File::Copy::Recursive qw( dircopy );
 use Bio::SeqIO;
-use base qw( Test::DesignCreate::Class Class::Data::Inheritable );
+use base qw( Test::DesignCreate::CmdStep Class::Data::Inheritable );
 
 # Testing
 # DesignCreate::Role::OligoRegionCoordinates

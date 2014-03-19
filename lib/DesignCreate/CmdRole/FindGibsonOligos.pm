@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::FindGibsonOligos;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::FindGibsonOligos::VERSION = '0.022';
+    $DesignCreate::CmdRole::FindGibsonOligos::VERSION = '0.023';
 }
 ## use critic
 
@@ -32,6 +32,8 @@ use YAML::Any qw( DumpFile LoadFile );
 use Bio::Seq;
 use Const::Fast;
 use Data::Printer;
+use JSON;
+use Try::Tiny;
 use namespace::autoclean;
 
 const my @FIND_GIBSON_OLIGOS_PARAMETERS => qw(
@@ -220,6 +222,7 @@ has primer3_results => (
     handles => {
         add_primer3_result => 'set',
         get_primer3_result => 'get',
+        has_primer3_result => 'exists',
     }
 );
 
@@ -230,7 +233,6 @@ has primer3_oligos => (
     default => sub { {  } },
     handles => {
         has_oligos => 'count',
-        get_oligos => 'get',
     }
 );
 
@@ -266,11 +268,22 @@ Find the oligos for the 3 target regions using primer3
 sub find_oligos {
     my ( $self, $opts, $args ) = @_;
 
+    # Add current EnsEMBL DB version used
     $self->set_param( 'ensembl-version', $self->ensembl_util->db_adaptor->dbc->dbname );
     $self->add_design_parameters( \@FIND_GIBSON_OLIGOS_PARAMETERS );
-    # Add current EnsEMBL DB version used
-    $self->run_primer3;
+
+    try {
+        $self->run_primer3;
+    }
+    catch {
+        $self->parse_primer3_results;
+        $self->update_candidate_oligos_after_primer3;
+        die $_;
+    };
     $self->parse_primer3_results;
+    $self->update_candidate_oligos_after_primer3;
+
+
     $self->create_oligo_files;
     $self->update_design_attempt_record( { status => 'oligos_found' } );
 
@@ -285,18 +298,11 @@ Run primer3 against the 3 target regions.
 sub run_primer3 {
     my ( $self ) = @_;
 
-    my %primer3_params = (
-        configfile => $self->primer3_config_file->stringify,
-    );
-
-    for my $name ( @PRIMER3_OPTIONS ) {
-        $primer3_params{$name} = $self->$name;
-    }
-
+    my %primer3_params = ( configfile => $self->primer3_config_file->stringify );
+    $primer3_params{$_} = $self->$_ for @PRIMER3_OPTIONS;
     my $p3 = DesignCreate::Util::Primer3->new_with_config( %primer3_params );
 
     my %failed_primer_regions;
-
     for my $region ( keys %{ $self->gibson_info } ) {
         $self->log->debug("Finding primers for $region primer region");
         my $log_file = $self->oligo_finder_output_dir->file( 'primer3_output_' . $region . '.log' );
@@ -322,7 +328,7 @@ sub run_primer3 {
         }
     }
 
-    if (%failed_primer_regions) {
+    if ( %failed_primer_regions ) {
         DesignCreate::Exception::Primer3FailedFindOligos->throw(
             regions             => [ keys %failed_primer_regions ],
             primer_fail_reasons => \%failed_primer_regions,
@@ -342,6 +348,7 @@ sub parse_primer3_results {
     my ( $self ) = @_;
 
     for my $region ( keys %{ $self->gibson_info } ) {
+        next unless $self->has_primer3_result( $region );
         my $result = $self->get_primer3_result( $region );
         while ( my $pair = $result->next_primer_pair ) {
             my $forward_id = $self->parse_primer( $pair->forward_primer, $region, 'forward' );
@@ -385,9 +392,35 @@ sub parse_primer {
     $oligo_data{region}          = $region;
     $oligo_data{oligo}           = $oligo_type;
 
-    push @{ $self->primer3_oligos->{ $oligo_type } }, \%oligo_data;
+    $self->primer3_oligos->{ $oligo_type }{ $primer_id } = \%oligo_data;
 
-    return $oligo_data{id};
+    return $primer_id;
+}
+
+=head2 update_candidate_oligos_after_primer3
+
+Update design attempt record with the best primer pair from each region.
+The 'best' pair is determined by Primer3, which returns the pairs in ranked order.
+This means the users will at least have some primers we fail to
+find primer pairs for all the required regions.
+
+=cut
+sub update_candidate_oligos_after_primer3 {
+    my ( $self ) = @_;
+
+    my %candidate_oligo_data;
+    for my $region ( keys %{ $self->gibson_info } ) {
+        next unless $self->has_primer3_result( $region );
+        my $best_pair = $self->oligo_pairs->{ $region }[0];
+        for my $oligo_type ( keys %{ $best_pair } ) {
+            my %oligo = %{ $self->primer3_oligos->{$oligo_type}{ $best_pair->{$oligo_type} } };
+            $oligo{invalid} = 'Not validated';
+            $candidate_oligo_data{ $oligo_type } = \%oligo;
+        }
+    }
+    $self->update_design_attempt_record( { candidate_oligos =>  encode_json( \%candidate_oligo_data ) } );
+
+    return;
 }
 
 =head2 calculate_oligo_coords_and_sequence
@@ -437,7 +470,8 @@ sub create_oligo_files {
 
     for my $oligo ( keys %{ $self->primer3_oligos } ) {
         my $filename = $self->oligo_finder_output_dir->stringify . '/' . $oligo . '.yaml';
-        DumpFile( $filename, $self->get_oligos( $oligo ) );
+        my @oligos = values %{ $self->primer3_oligos->{$oligo} };
+        DumpFile( $filename, \@oligos );
     }
 
     for my $region ( keys %{ $self->oligo_pairs } ) {
