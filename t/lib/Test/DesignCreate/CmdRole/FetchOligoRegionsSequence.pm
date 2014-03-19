@@ -8,11 +8,11 @@ use App::Cmd::Tester;
 use Path::Class qw( tempdir dir );
 use File::Copy::Recursive qw( dircopy );
 use FindBin;
-use base qw( Test::DesignCreate::Class Class::Data::Inheritable );
+use base qw( Test::DesignCreate::CmdStep Class::Data::Inheritable );
 
 # Testing
 # DesignCreate::CmdRole::FetchOligoRegionsSequence
-# DesignCreate::Action::FetchOligoRegionsSequence ( through command line )
+# DesignCreate::Cmd::Step::FetchOligoRegionsSequence ( through command line )
 
 BEGIN {
     __PACKAGE__->mk_classdata( 'test_role' => 'DesignCreate::CmdRole::FetchOligoRegionsSequence' );

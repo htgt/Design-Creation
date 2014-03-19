@@ -5,7 +5,7 @@ use warnings FATAL => 'all';
 
 use Test::Most;
 use Path::Class qw( tempdir dir );
-use base qw( Test::DesignCreate::Class Class::Data::Inheritable );
+use base qw( Test::DesignCreate::CmdStep Class::Data::Inheritable );
 
 # Testing
 # DesignCreate::Role::EnsEMBL

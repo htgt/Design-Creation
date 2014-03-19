@@ -8,11 +8,11 @@ use App::Cmd::Tester;
 use Path::Class qw( tempdir dir );
 use YAML::Any qw( LoadFile );
 use Bio::SeqIO;
-use base qw( Test::DesignCreate::Class Class::Data::Inheritable );
+use base qw( Test::DesignCreate::CmdStep Class::Data::Inheritable );
 
 # Testing
 # DesignCreate::CmdRole:TargetLocation
-# DesignCreate::Action::TargetLocation ( through command line )
+# DesignCreate::Cmd::Step::TargetLocation ( through command line )
 
 BEGIN {
     __PACKAGE__->mk_classdata( 'test_role' => 'DesignCreate::CmdRole::TargetLocation' );

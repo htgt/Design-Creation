@@ -1,7 +1,8 @@
 ---
 - created_by: system
   gene_ids:
-  - foofoo
+  - gene_id: foofoo
+    gene_type_id: marker_symbol
   oligos:
   - loci:
     - assembly: GRCm38
@@ -55,7 +56,8 @@
   type: conditional
 - created_by: system
   gene_ids:
-  - foofoo
+  - gene_id: foofoo
+    gene_type_id: marker_symbol
   oligos:
   - loci:
     - assembly: GRCm38

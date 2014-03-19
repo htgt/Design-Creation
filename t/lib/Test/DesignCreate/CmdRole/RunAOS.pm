@@ -8,10 +8,10 @@ use App::Cmd::Tester;
 use Path::Class qw( tempdir dir );
 use FindBin;
 use Bio::Seq;
-use base qw( Test::DesignCreate::Class Class::Data::Inheritable );
+use base qw( Test::DesignCreate::CmdStep Class::Data::Inheritable );
 
 # Testing
-# DesignCreate::Action::RunAOS ( through command line )
+# DesignCreate::Cmd::Step::RunAOS ( through command line )
 # DesignCreate::CmdRole::RunAOS, most of its work is done by:
 # DesignCreate::Role::AOS
 

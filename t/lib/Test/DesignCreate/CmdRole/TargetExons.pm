@@ -7,11 +7,11 @@ use Test::Most;
 use App::Cmd::Tester;
 use Path::Class qw( tempdir dir );
 use Bio::SeqIO;
-use base qw( Test::DesignCreate::Class Class::Data::Inheritable );
+use base qw( Test::DesignCreate::CmdStep Class::Data::Inheritable );
 
 # Testing
 # DesignCreate::CmdRole::TargetExons
-# DesignCreate::Action::TargetExons ( through command line )
+# DesignCreate::Cmd::Step::TargetExons ( through command line )
 
 BEGIN {
     __PACKAGE__->mk_classdata( 'test_role' => 'DesignCreate::CmdRole::TargetExons' );

@@ -7,11 +7,12 @@ use App::Cmd::Tester;
 use Path::Class qw( tempdir dir );
 use File::Copy::Recursive qw( dircopy );
 use YAML::Any qw( LoadFile );
+use JSON;
 use FindBin;
-use base qw( Test::DesignCreate::Class Class::Data::Inheritable );
+use base qw( Test::DesignCreate::CmdStep Class::Data::Inheritable );
 
 # Testing
-# DesignCreate::Action::FilterGibsonOligos ( through command line )
+# DesignCreate::Cmd::Step::FilterGibsonOligos ( through command line )
 # DesignCreate::CmdRole::FilterGibsonOligos, most of its work is done by:
 
 BEGIN {
@@ -138,7 +139,7 @@ sub validate_oligos : Test(6) {
     $new_o->bwa_matches( $test->{bwa_data} );
 
     lives_ok { $new_o->all_oligos } 'can call all_oligos on test object';
-    ok $new_o->all_oligos->{'5F'} = [], 'delete 5F oligo data';
+    ok $new_o->all_oligos->{'5F'} = {}, 'delete 5F oligo data';
     throws_ok{
         $new_o->validate_oligos
     } 'DesignCreate::Exception::OligoValidation', 'throws error when missing required valid oligos';
@@ -219,6 +220,35 @@ sub output_valid_oligo_pairs : Tests(8) {
         ,'throws error when missing oligo pairs from one or more regions';
 }
 
+sub update_candidate_oligos_after_validation : Tests(9) {
+    my $test = shift;
+    ok my $o = $test->_get_test_object, 'can grab test object';
+    # setup bwa match data to save time
+    $o->bwa_matches( $test->{bwa_data} );
+    lives_ok{
+        $o->validate_oligos;
+        $o->validate_oligo_pairs;
+    } 'setup test object';
+
+    lives_ok{
+        $o->update_candidate_oligos_after_validation
+    } 'can output_validated_oligos';
+
+    my $mock_api = $o->lims2_api;
+    $mock_api->called_ok( 'PUT', 'called PUT on lims2_api' );
+
+    $mock_api->called_args_pos_is( 1, 2, 'design_attempt',
+        'we are sending design_attempt as the first argument to PUT' );
+    ok my $update_data = $mock_api->call_args_pos( 1, 3 ), 'can grab design attempt update data';
+    ok exists $update_data->{candidate_oligos},
+        '.. and we are trying to update the candidate_oligos column';
+
+    ok my $candidate_oligo_data = decode_json( $update_data->{candidate_oligos} ),
+        'can decode candidate oligo json data';
+    is_deeply [ sort keys %{$candidate_oligo_data} ], [ '3F', '3R', '5F', '5R', 'EF', 'ER' ],
+        'candidate oligo data hash has correct keys';
+}
+
 sub _get_test_object {
     my ( $test ) = @_;
 
@@ -229,8 +259,10 @@ sub _get_test_object {
 
     my $metaclass = $test->get_test_object_metaclass( [ 'DesignCreate::Role::EnsEMBL' ] );
     return $metaclass->new_object(
-        dir => $dir,
+        dir                     => $dir,
+        lims2_api               => $test->get_mock_lims2_api,
         exon_check_flank_length => 100,
+        persist                 => 1,
     );
 }
 

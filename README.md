@@ -5,14 +5,12 @@ Create a Knock-Out design for a given target.
 
 Overview:
 
-1. Specify target area(s) coordinates for design.
-2. Produce oligo target ( candidate ) region sequences.
-3. Produce list of possible oligos, using AOS.
+1. Specify target region for design.
+2. Determine the coordinates of the regions the oligos will be found in.
+3. Produce list of possible oligos/primers, using Primer3 or AOS.
 4. Filter and rank oligos, pick the best one of each type.
-5. Find Valid U/D Region Oligo Pairs ( conditional designs only )
-6. Find Best Gap Oligo Pair
-7. Consolidate Design Data
-8. Persist design with oligos to LIMS2.
+5. Consolidate Design Data
+6. Persist design with oligos to LIMS2 or WGE.
 
 * * *
 
@@ -35,13 +33,79 @@ OR
     * end exon
 PLUS
 * design type
-* phase - conditional
 * name
 
 Oligo Profile:
 --------------
-* oligo parameters
-* define region oligos must be located in
+* defined regions oligos must be located in based on type of design
+
+### Conditional Ready Gibson Design ( +ve Stranded )
+
+```
+|--five prime region--|------exon region-------|--three prime region-|
+
+   5F              5R   EF      TARGET      ER   3F              3R
+|======|---------|====|====|-|   >>>>   |-|====|====|---------|======|
+|------|                                                                   > 5F Region Length
+       |---------|                                                         > 5F Region Offset
+                 |---------|                                               > 5R-EF Region Length
+                           |-|                                             > 5R-EF Region Offset
+                                        |-|                                > ER-3F Region Offset
+                                          |---------|                      > ER-3F Region Length
+                                                    |---------|            > 3R Region Offset
+                                                              |------|     > 3R Region Length
+```
+
+### Conditional Ready Gibson Design ( -ve Stranded )
+
+```
+|--three prime region-|------exon region-------|--five prime region--|
+
+   3R              3F   ER      TARGET      EF   5R              5F
+|======|---------|====|====|-|   <<<<   |-|====|====|---------|======|
+|------|                                                                   > 3R Region Length
+       |---------|                                                         > 3R Region Offset
+                 |---------|                                               > 3F-ER Region Length
+                           |-|                                             > 3F-ER Region Offset
+                                        |-|                                > EF-5R Region Offset
+                                          |---------|                      > EF-5R Region Length
+                                                    |---------|            > 5F Region Offset
+                                                              |------|     > 5F Region Length
+```
+
+### Deletion Gibson Design ( +ve Stranded )
+
+```
+|--five prime region--|------exon region-------|--three prime region-|
+
+   5F                   5R      TARGET      3F                   3R
+|======|--------------|====|-|   >>>>   |-|====|--------------|======|
+|------|                                                                   > 5F Region Length
+       |--------------|                                                    > 5F Region Offset
+                      |----|                                               > 5R Region Length
+                           |-|                                             > 5R Region Offset
+                                        |-|                                > 3F Region Offset
+                                          |----|                           > 3F Region Length
+                                               |--------------|            > 3R Region Offset
+                                                              |------|     > 3R Region Length
+```
+
+### Conditional Ready Gibson Design ( -ve Stranded )
+
+```
+|--three prime region-|------exon region-------|--five prime region--|
+
+   3R                   3F      TARGET      5R                   5F
+|======|--------------|====|-|   <<<<   |-|====|--------------|======|
+|------|                                                                   > 3R Region Length
+       |--------------|                                                    > 3R Region Offset
+                      |----|                                               > 3F Region Length
+                           |-|                                             > 3F Region Offset
+                                        |-|                                > 5R Region Offset
+                                          |----|                           > 5R Region Length
+                                               |     ---------|            > 5F Region Offset
+                                                              |------|     > 5F Region Length
+```
 
 ### Conventional Deletion / Insertion
 
@@ -65,8 +129,8 @@ Oligo Profile:
 |======|---------|==========|-------|==========|--------|======|
 |------|                                                           > G5 Region Length
        |---------|                                                 > G5 Region Offset
-                      |-|                                          > U Oligo Min Gap 
-                                         |-|                       > D Oligo Min Gap 
+                      |-|                                          > U Oligo Min Gap
+                                         |-|                       > D Oligo Min Gap
                                                         |------|   > G3 Region Length
                                              |-----------------|   > G3 Region Offset
 ```
@@ -79,31 +143,37 @@ WORKFLOW
 
 1: Specify Target Area
 ======================
-Given a target gene with details of the exons that are being targetted we need to produce
-a set of coordinates for the target region(s);
+Specify a targetion region for the design, you can either target a specific set of exons on
+a gene or a custom location on the genome.
+This step outputs a yaml file with a set of coordinates for the target region.
 
-###input:
+### Exon Target Input:
 * target gene
 * start exon
 * end exon
 * species
 * assembly
 
-###output:
-* design coordinates
+### Custom Target Input:
+* target gene
+* chromosome name
+* strand
+* start coordinate
+* end coordinate
+* species
+* assembly
 
 * * *
 
 2: Oligo Target Regions
 =======================
-NOTE: Current program start at this step
-
 Given the target coordinates for the design plus the parameters for the oligos
-produce oligo target region sequence files ( input to aos ).
-For deletion designs just one target region ( region to delete ).
+produce oligo target region coordinate files.
 
-For knockout designs we will have 2 ( U region and D region ).
-Need to split these regions in half to get a region for each oligo.
+See diagrams above for details of what parameters used to specify oligo regions.
+
+The gibson designs use Primer3 to find pairs of oligos for each region.
+The recombinering designs use AOS, which finds single oligos in a given region.
 
 ###input:
 * design params
@@ -114,40 +184,38 @@ Need to split these regions in half to get a region for each oligo.
         * end
     * species
     * assembly
-* oligo profile
+* oligo profile ( see diagrams above )
 
-###output: sequence for target region of each oligo
-* G5 region sequence
-* U5 region sequence
-* U3 region sequence ( optional )
-* D5 region sequence ( optional )
-* D3 region sequence
-* G3 region sequence
-
-Sequence files must have fasta headers formated as such:
-```
->oligo_name:start-end
-eg
->U5:123124-123234
-```
+###output: coordinates for target region of each oligo
+* Recombinering design
+    * G5 region
+    * U5 region
+    * U3 region ( optional )
+    * D5 region ( optional )
+    * D3 region
+    * G3 region
+* Gibson Design
+    * 5' region
+    * Exon region ( optional )
+    * 3' region
 
 * * *
 
 3: Produce Oligos
 =================
-Run AOS multiple times for each oligo, group and validate AOS output if needed.
+Run Primer3 or AOS to find potential oligos for design.
 
-###input:
-* design type
-* location of target region sequence files
+Primer3 Wrapper
+---------------
 
-###output:
-* list of oligos for every target region
-
+TODO
 
 AOS Wrapper
 -----------
-Takes target sequence and output list of primers for that region.
+There is a step before AOS runs that takes the oligo target region coordinates file produced
+in the previous step and makes files with the sequence of these oligo regions.
+
+The wrapper takes target sequence and outputs a list of primers for that region.
 Need to wrap up input and output for aos to produce usable output for next step.
 
 To work out assembly coordinates we use the offset information returned by aos for each oligo.
@@ -175,6 +243,8 @@ the assembly coordinates for the oligos.
 4: Oligo Filtering
 ==================
 We will have multiple oligos of each type, need to filter out bad ones.
+Both Primer3 and AOS return oligos ranked from best to worst, we want to pick
+the best ranked oligos of each type that also pass our validation steps.
 
 ###input:
 * oligos
@@ -193,12 +263,15 @@ Check following:
 
 Oligo Specificity
 -----------------
-inside bac ( but use genomes flanking sequence, 100k by default )
+* Gibson designs: use bwa to check oligo specificity in genome.
+* Recombinering designs: check specificity inside bac
+    * use genomes flanking sequence, 100k by default, to represent bac sequence.
+    * uses exonerate to do the alignment.
 
 * * *
 
-5: Find Valid U/D Region Oligo Pairs ( conditional designs )
-=============================
+4a: Find Valid U/D Region Oligo Pairs ( conditional recombinering designs only )
+=====================================
 The pair of oligos from the U and D regions of conditional designs were produced
 by splitting the respective regions in two and getting the appropriate oligo from each half.
 
@@ -221,8 +294,8 @@ The closer the oligos are to the minimum gap distance the better.
 
 * * *
 
-6: Find Best Gap Oligo Pair
-=============================
+4b: Find Best Gap Oligo Pair ( recombinering designs only )
+============================
 We need to carry out additional checks on the G5 and G3 oligos and then
 find the best pair of oligos to use.
 
@@ -238,9 +311,8 @@ then it is not a good oligo pair.
 
 * * *
 
-7: Consolidate Design Data
-=====================
-
+5: Consolidate Design Data
+==========================
 Create the yaml design file, that will be used in the next persist step.
 Brings together all the data from the previous steps and formats it correctly.
 Also calls seperate module to work out phase of design.
@@ -268,13 +340,13 @@ To work our the phase the target transcript and oligo coordinates are required.
 
 * * *
 
-8: Persist Design
+6: Persist Design
 =================
-Once we have valid oligos for the target we persist it, to LIMS2.
-Use the LIMS2 api to insert design.
+Once we have valid oligos for the target we persist it, to LIMS2 or WGE.
+Use the LIMS2 / WGE api to insert design.
 
 ###input:
 * design data yaml file
 
 ###output:
-* design stored in LIMS2
+* design stored in LIMS2 or WGE

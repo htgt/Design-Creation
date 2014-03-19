@@ -115,6 +115,10 @@ end
 sub target_coordinates {
     my ( $self, $opts, $args ) = @_;
 
+    my $exon_string = $self->five_prime_exon;
+    $exon_string .= '-' . $self->three_prime_exon if $self->three_prime_exon;
+    $self->log->info( "Exon targets: $exon_string" );
+
     $self->calculate_target_region_coordinates;
     $self->add_design_parameters( \@DESIGN_PARAMETERS );
     $self->create_target_coordinate_file;

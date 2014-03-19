@@ -9,10 +9,10 @@ use Path::Class qw( tempdir dir );
 use File::Copy::Recursive qw( dircopy );
 use YAML::Any qw( LoadFile );
 use FindBin;
-use base qw( Test::DesignCreate::Class Class::Data::Inheritable );
+use base qw( Test::DesignCreate::CmdStep Class::Data::Inheritable );
 
 # Testing
-# DesignCreate::Action::PickBlockOligos ( through command line )
+# DesignCreate::Cmd::Step::PickBlockOligos ( through command line )
 # DesignCreate::CmdRole::PickBlockOligos, most of its work is done by:
 
 BEGIN {

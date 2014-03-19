@@ -19,6 +19,7 @@ use DesignCreate::Constants qw(
     $DEFAULT_TARGET_COORD_FILE_NAME
 );
 use YAML::Any qw( DumpFile LoadFile );
+use JSON;
 use namespace::autoclean;
 
 has target_coordinate_file => (
@@ -68,6 +69,18 @@ sub create_oligo_region_coordinate_file {
 
     my $file = $self->oligo_target_regions_dir->file( $DEFAULT_OLIGO_COORD_FILE_NAME );
     DumpFile( $file, $self->oligo_region_coordinates );
+
+    return;
+}
+
+sub set_design_attempt_candidate_regions {
+    my $self = shift;
+
+    my %candidate_regions = %{ $self->oligo_region_coordinates };
+    my $chr_name = $self->design_param( 'chr_name' );
+    $candidate_regions{$_}{chromosome} = $chr_name for keys %candidate_regions;
+    $self->update_design_attempt_record(
+        { candidate_regions => encode_json( $self->oligo_region_coordinates ) } );
 
     return;
 }
