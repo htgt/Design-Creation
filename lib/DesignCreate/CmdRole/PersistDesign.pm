@@ -21,8 +21,11 @@ use namespace::autoclean;
 has design_data_file => (
     is            => 'ro',
     isa           => AbsFile,
-    traits        => [ 'NoGetopt' ],
+    traits        => [ 'Getopt' ],
+    coerce        => 1,
     lazy_build    => 1,
+    documentation => 'The yaml file containing the design data ( default [work_dir]/design_data.yaml )',
+    cmd_flag      => 'design-data-file'
 );
 
 sub _build_design_data_file {
@@ -36,11 +39,8 @@ sub _build_design_data_file {
 has alternate_designs_data_file => (
     is            => 'rw',
     isa           => AbsFile,
-    traits        => [ 'Getopt' ],
+    traits        => [ 'NoGetopt' ],
     predicate     => 'have_alt_designs_file',
-    coerce        => 1,
-    documentation => 'The yaml file containing alternate designs data ( default [work_dir]/alt_designs.yaml )',
-    cmd_flag      => 'alt-designs-data-file'
 );
 
 has alternate_designs => (
