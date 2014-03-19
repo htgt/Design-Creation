@@ -78,6 +78,7 @@ sub BUILD {
 
     # Log output goes to STDERR and a log file ( the log file level is alway DEBUG )
     # the STDERR log level is user specified, defaults to WARN
+## no critic(ValuesAndExpressions::ProhibitImplicitNewlines)
     my $conf = "
     log4perl.logger = DEBUG, FileApp, ScreenApp
 
@@ -93,6 +94,7 @@ sub BUILD {
     log4perl.appender.ScreenApp.layout.ConversionPattern = %d %p %x %m%n
     log4perl.appender.ScreenApp.Threshold                = $log_level
     ";
+## use critic
     Log::Log4perl->init(\$conf);
 
     return;
