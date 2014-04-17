@@ -1,5 +1,9 @@
 {{$NEXT}}
 
+0.024     2014-04-17 13:47:27 Europe/London
+
+    Add extra options to Exonerate wrapper
+
 0.023     2014-03-19 07:39:37 Europe/London
 
     Refactor of command structure, now split into step and complete commands.
