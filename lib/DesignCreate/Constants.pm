@@ -1,7 +1,7 @@
 package DesignCreate::Constants;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Constants::VERSION = '0.023';
+    $DesignCreate::Constants::VERSION = '0.024';
 }
 ## use critic
 
