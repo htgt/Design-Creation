@@ -1,5 +1,11 @@
 {{$NEXT}}
 
+0.023     2014-03-19 07:39:37 Europe/London
+
+    Refactor of command structure, now split into step and complete commands.
+    Update design attempts with candidate oligos and candidate regions.
+        - this gives the users some oligos even if the design fails
+
 0.022     2014-03-11 13:20:10 Europe/London
 
     Store all command parameters when creating initial design attempt record.
