@@ -1,18 +1,18 @@
 package DesignCreate::Cmd::Step::PersistDesign;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Cmd::Step::PersistDesign::VERSION = '0.024';
+    $DesignCreate::Cmd::Step::PersistDesign::VERSION = '0.025';
 }
 ## use critic
 
 
 =head1 NAME
 
-DesignCreate::Cmd::Step::PersistDesign - Persist a design to LIMS2
+DesignCreate::Cmd::Step::PersistDesign - Persist a design to a database
 
 =head1 DESCRIPTION
 
-Persist the design data held in a yaml file to LIMS2.
+Persist the design data held in a yaml file to LIMS2 or WGE though the API.
 
 =cut
 
@@ -33,7 +33,7 @@ sub execute {
         $self->persist_design;
     }
     catch{
-        $self->log->error( "Error persisting design to LIMS2:\n" . $_ );
+        $self->log->error( "Error persisting design:\n" . $_ );
     };
 
     return;
