@@ -2,11 +2,11 @@ package DesignCreate::CmdRole::TargetLocation;
 
 =head1 NAME
 
-DesignCreate::Action::TargetExons - target region coordinates for exon(s)
+DesignCreate::Action::TargetLocation - target region coordinates for user specified location
 
 =head1 DESCRIPTION
 
-For given exon id(s) calculate target region coordinates for design.
+For given genome location calculate target region coordinates for design.
 
 =cut
 
