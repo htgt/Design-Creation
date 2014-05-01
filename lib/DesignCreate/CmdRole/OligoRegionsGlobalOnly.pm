@@ -39,6 +39,15 @@ has design_method => (
     default => 'global-only',
 );
 
+#
+# Gap Oligo Parameter attributes in DesignCreate::Role::OligoTargetRegions
+# We set the defaults below via builder methods
+#
+sub default_region_length_G5 { return 400 };
+sub default_region_offset_G5 { return 800 };
+sub default_region_length_G3 { return 400 };
+sub default_region_offset_G3 { return 800 };
+
 =head2 get_oligo_region_coordinates
 
 Work out the G5 / G3 oligos region coordiantes, and write to a yaml file.

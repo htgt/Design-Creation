@@ -49,8 +49,16 @@ has design_method => (
 );
 
 #
-# Oligo Region Parameters
 # Gap Oligo Parameter attributes in DesignCreate::Role::OligoTargetRegions
+# We set the defaults below via builder methods
+#
+sub default_region_length_G5 { return 1000 };
+sub default_region_offset_G5 { return 4000 };
+sub default_region_length_G3 { return 1000 };
+sub default_region_offset_G3 { return 4000 };
+
+#
+# Oligo Region Parameters
 #
 
 has region_length_U_block => (
