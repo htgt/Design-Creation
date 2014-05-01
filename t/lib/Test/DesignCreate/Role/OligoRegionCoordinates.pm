@@ -77,6 +77,14 @@ sub _get_test_object {
     $species //= 'Mouse';
 
     my $metaclass = $test->get_test_object_metaclass( [ 'DesignCreate::Role::GapOligoCoordinates' ] );
+
+    # need some additional builder methods that would normally be supplied by the
+    # class that consumes the Design::Role::GapOligoCoordinates role
+    $metaclass->add_method( 'default_region_offset_G5', sub{ return 4000 } );
+    $metaclass->add_method( 'default_region_length_G5', sub{ return 1000 } );
+    $metaclass->add_method( 'default_region_offset_G3', sub{ return 4000 } );
+    $metaclass->add_method( 'default_region_length_G3', sub{ return 1000 } );
+
     return $metaclass->new_object(
         dir => tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute,
     );
