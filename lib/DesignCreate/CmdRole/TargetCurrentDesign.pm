@@ -57,8 +57,10 @@ sub _build_original_design_data {
     $self->log->debug('Grabbing design info from LIMS2 for design: ' . $self->original_design_id );
     my $design_data = try{ $self->lims2_api->GET( 'design', { id => $self->original_design_id } ) };
 
-    DesignCreate::Exception->throw( "Can not find LIMS2 design: " . $self->original_design_id )
-        unless $design_data;
+    unless ( $design_data ) {
+        $self->log->error( 'DESIGN INCOMPLETE: Unable to find design in LIMS2 ' . $self->original_design_id );
+        DesignCreate::Exception->throw( "Can not find LIMS2 design: " . $self->original_design_id )
+    }
 
     my $file = $self->dir->file( 'original_lims2_design.yaml' );
     DumpFile( $file, $design_data );
