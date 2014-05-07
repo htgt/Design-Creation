@@ -33,7 +33,7 @@ DesignCreate::CmdRole::PersistDesign
 augment 'execute' => sub {
     my ( $self, $opts, $args ) = @_;
 
-    # TODO change NAME
+    Log::Log4perl::NDC->push( $self->original_design_id );
     # target start / end is the boundary of the U / D oligos
     # of a current design
     $self->target_coordinates;
