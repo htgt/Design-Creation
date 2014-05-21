@@ -33,6 +33,7 @@ BEGIN {
     %GIBSON_PRIMER_REGIONS
     %DEFAULT_CHROMOSOME_DIR
     %BWA_GENOME_FILES
+    %GIBSON_OLIGO_CLASS
     );
     our %EXPORT_TAGS = ();
 }
@@ -116,6 +117,15 @@ const our %GIBSON_PRIMER_REGIONS => (
             slice   => 'three_prime_region_slice'
         },
     },
+);
+
+const our %GIBSON_OLIGO_CLASS => (
+    'EF' => 'exon',
+    'ER' => 'exon',
+    '5F' => 'five_prime',
+    '5R' => 'five_prime',
+    '3F' => 'three_prime',
+    '3R' => 'three_prime',
 );
 
 const our %DEFAULT_CHROMOSOME_DIR => (
