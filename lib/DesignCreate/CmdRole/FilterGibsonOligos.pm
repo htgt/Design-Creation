@@ -288,8 +288,10 @@ sub validate_oligo_pairs {
         my @sorted_valid_pairs
             = sort { $self->_sort_valid_oligo_pairs($a) <=> $self->_sort_valid_oligo_pairs($b) }
             @valid_pairs;
+        ## no critic(BuiltinFunctions::ProhibitComplexMappings)
         $self->validated_oligo_pairs->{$oligo_pair_region}
             = [ map { delete $_->{primer3_rank}; $_ } @sorted_valid_pairs ];
+        ## use critic
     }
 
     return;
