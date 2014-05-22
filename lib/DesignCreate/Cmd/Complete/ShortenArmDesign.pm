@@ -1,18 +1,20 @@
-package DesignCreate::Cmd::Complete::DeletionDesignLocation;
+package DesignCreate::Cmd::Complete::ShortenArmDesign;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Cmd::Complete::DeletionDesignLocation::VERSION = '0.026';
+    $DesignCreate::Cmd::Complete::ShortenArmDesign::VERSION = '0.026';
 }
 ## use critic
 
 
 =head1 NAME
 
-DesignCreate::Cmd::Complete::DeletionDesignLocation - Create a location specified deletion design
+DesignCreate::Cmd::Complete::ShortenArmDesign - Create a new design with shortened arms from a existing design
 
 =head1 DESCRIPTION
 
-Runs all the seperate steps used to create a deletion design on a custom target.
+Runs all the seperate steps used to create a short arm design.
+This is merger of the U and D oligos from a existing design with
+new G oligos that shorten arm lengths of the design.
 
 =cut
 
@@ -21,13 +23,13 @@ use namespace::autoclean;
 
 extends qw( DesignCreate::Cmd::Complete );
 with qw(
-DesignCreate::CmdRole::TargetLocation
-DesignCreate::CmdRole::OligoRegionsInsDel
+DesignCreate::CmdRole::TargetCurrentDesign
+DesignCreate::CmdRole::OligoRegionsGlobalOnly
 DesignCreate::CmdRole::FetchOligoRegionsSequence
 DesignCreate::CmdRole::FindOligos
 DesignCreate::CmdRole::FilterOligos
 DesignCreate::CmdRole::PickGapOligos
-DesignCreate::CmdRole::ConsolidateDesignData
+DesignCreate::CmdRole::ConsolidateShortenArmDesignData
 DesignCreate::CmdRole::PersistDesign
 );
 
@@ -37,12 +39,17 @@ DesignCreate::CmdRole::PersistDesign
 augment 'execute' => sub {
     my ( $self, $opts, $args ) = @_;
 
+    Log::Log4perl::NDC->push( $self->original_design_id );
+    # target start / end is the boundary of the U / D oligos
+    # of a current design
     $self->target_coordinates;
+    # get coordiantes for search regions for global oligos
     $self->get_oligo_region_coordinates;
     $self->create_oligo_region_sequence_files;
     $self->find_oligos;
     $self->filter_oligos;
     $self->pick_gap_oligos;
+    # using G oligos we found and U / D oligos from original design
     $self->consolidate_design_data;
 
     return;

@@ -9,6 +9,7 @@ use File::Copy::Recursive qw( dircopy );
 use YAML::Any qw( LoadFile );
 use JSON;
 use FindBin;
+use Storable qw(dclone);
 use base qw( Test::DesignCreate::CmdStep Class::Data::Inheritable );
 
 # Testing
@@ -167,7 +168,7 @@ sub output_validated_oligos : Test(9){
 
 }
 
-sub validate_oligo_pairs : Tests(9){
+sub validate_oligo_pairs : Tests(15){
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
     # setup bwa match data to save time
@@ -190,6 +191,27 @@ sub validate_oligo_pairs : Tests(9){
         ok $o->region_has_oligo_pairs($region),
             "have valid pair for $region region";
     }
+
+    is_deeply $o->get_valid_pairs('three_prime'), [
+        { '3F' => '3F-1', '3R' => '3R-1' },
+
+    ], 'we get expected three_prime region pair';
+
+    ok my $o2 = $test->_get_test_object( 2 ), 'can grab another test object with num_genomic_hits set to 2 ';
+    lives_ok{
+        $o2->bwa_matches( $test->{bwa_data} );
+        $o2->validate_oligos;
+        $o2->validate_oligo_pairs;
+    } 'setup test object';
+
+    ok my $three_prime_oligos = $o2->get_valid_pairs('three_prime'),
+        'can grab three_prime region valid pairs';
+    is scalar( @{ $three_prime_oligos } ),2, 'with relaxed oligo validation we get 2 sets of three_prime oligos';
+    # NOTE that the 0 pair below is ranked higher by Primer3 but has a few more off targets
+    is_deeply $o2->get_valid_pairs('three_prime'), [
+        { '3F' => '3F-1', '3R' => '3R-1' },
+        { '3F' => '3F-0', '3R' => '3R-0' },
+    ], '.. and the ranking of these pairs is correct, the pairs with less combined hits is ranked higher';
 }
 
 sub output_valid_oligo_pairs : Tests(8) {
@@ -249,8 +271,40 @@ sub update_candidate_oligos_after_validation : Tests(9) {
         'candidate oligo data hash has correct keys';
 }
 
+sub check_oligo_specificity : Tests(9) {
+    my $test = shift;
+    ok my $o = $test->_get_test_object, 'can grab test object';
+    my $bwa_data = dclone($test->{bwa_data});
+    my $invalid_reason;
+
+    delete $bwa_data->{'3F-2'};
+    ok !$o->check_oligo_specificity( '3F-2', $bwa_data->{'3F-2'}, \$invalid_reason ),
+        'check_oligo_specificity call fails for 3F-2 oligo';
+
+    $bwa_data->{'3F-1'}{unmapped} = 1;
+    ok !$o->check_oligo_specificity( '3F-1', $bwa_data->{'3F-1'}, \$invalid_reason ),
+        'check_oligo_specificity call fails for 3F-1 oligo';
+    is $invalid_reason, 'Unmapped against genome', 'invalid reason for oligo is correct';
+
+    delete $bwa_data->{'3F-1'}{unmapped};
+    delete $bwa_data->{'3F-1'}{hits};
+    delete $bwa_data->{'3F-1'}{unique_alignment};
+    throws_ok{
+        !$o->check_oligo_specificity( '3F-1', $bwa_data->{'3F-1'}, \$invalid_reason ),
+    } qr/No hits value for oligo 3F-1/, 'throws error if no hits data present for oligo';
+
+    ok !$o->check_oligo_specificity( '3F-0', $bwa_data->{'3F-0'}, \$invalid_reason ),
+        'check_oligo_specificity call fails for 3F-0 oligo';
+    is $invalid_reason, 'Multiple genomic hits: 2', 'invalid reason for oligo is correct';
+
+    ok my $o2 = $test->_get_test_object( 2 ), 'can grab another test object with num_genomic_hits set to 2 ';
+    ok $o2->check_oligo_specificity( '3F-0', $bwa_data->{'3F-0'}, \$invalid_reason ),
+        'check_oligo_specificity call passes for 3F-0 oligo with looser contraints';
+}
+
 sub _get_test_object {
-    my ( $test ) = @_;
+    my ( $test, $num_genomic_hits ) = @_;
+    $num_genomic_hits //= 1;
 
     my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute;
     my $data_dir = dir($FindBin::Bin)->absolute->subdir('test_data/filter_gibson_oligos_data_minus');
@@ -263,6 +317,7 @@ sub _get_test_object {
         lims2_api               => $test->get_mock_lims2_api,
         exon_check_flank_length => 100,
         persist                 => 1,
+        num_genomic_hits        => $num_genomic_hits,
     );
 }
 

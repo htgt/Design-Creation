@@ -1,18 +1,19 @@
-package DesignCreate::Cmd::Step::TargetExons;
+package DesignCreate::Cmd::Step::TargetCurrentDesign;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Cmd::Step::TargetExons::VERSION = '0.026';
+    $DesignCreate::Cmd::Step::TargetCurrentDesign::VERSION = '0.026';
 }
 ## use critic
 
 
 =head1 NAME
 
-DesignCreate::Cmd::Step::TargetExons - Work out target region coordiantes for given exon(s)
+DesignCreate::Cmd::Step::TargetCurrentDesign - Work out target region coordiantes of current LIMS2 design
 
 =head1 DESCRIPTION
 
-Generate a yaml file giving coordinates of the target exon(s).
+Generate a yaml file giving coordinates of the target region of a current LIMS2 design
+by using its U5 and D3 oligo locations.
 
 =cut
 
@@ -24,7 +25,7 @@ use Try::Tiny;
 use namespace::autoclean;
 
 extends qw( DesignCreate::Cmd::Step );
-with 'DesignCreate::CmdRole::TargetExons';
+with 'DesignCreate::CmdRole::TargetCurrentDesign';
 
 sub execute {
     my ( $self, $opts, $args ) = @_;

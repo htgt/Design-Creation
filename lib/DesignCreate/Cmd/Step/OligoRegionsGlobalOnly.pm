@@ -1,19 +1,19 @@
-package DesignCreate::Cmd::Step::OligoRegionsInsDel;
+package DesignCreate::Cmd::Step::OligoRegionsGlobalOnly;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Cmd::Step::OligoRegionsInsDel::VERSION = '0.026';
+    $DesignCreate::Cmd::Step::OligoRegionsGlobalOnly::VERSION = '0.026';
 }
 ## use critic
 
 
 =head1 NAME
 
-DesignCreate::Cmd::Step::OligoRegionsInsDel - Create seq files for oligo region, insertion or deletion designs 
+DesignCreate::Cmd::Step::OligoRegionsGlobalOnly - Get coordiantes for global oligo target regions
 
 =head1 DESCRIPTION
 
 For given target coordinates and oligo region parameters produce target region coordinates file
-for each oligo we must find for deletion or insertion designs.
+for the global oligos.
 
 =cut
 
@@ -25,7 +25,7 @@ use Try::Tiny;
 use namespace::autoclean;
 
 extends qw( DesignCreate::Cmd::Step );
-with 'DesignCreate::CmdRole::OligoRegionsInsDel';
+with 'DesignCreate::CmdRole::OligoRegionsGlobalOnly';
 
 sub execute {
     my ( $self, $opts, $args ) = @_;
@@ -34,7 +34,7 @@ sub execute {
         $self->get_oligo_region_coordinates;
     }
     catch{
-        $self->log->error( "Failed to generate oligo target regions:\n" . $_ );
+        $self->log->error( "Failed to generate oligo target region coordinates:\n" . $_ );
     };
 
     return;

@@ -1,18 +1,18 @@
-package DesignCreate::Cmd::Step::ConsolidateDesignData;
+package DesignCreate::Cmd::Step::ConsolidateShortenArmDesignData;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Cmd::Step::ConsolidateDesignData::VERSION = '0.026';
+    $DesignCreate::Cmd::Step::ConsolidateShortenArmDesignData::VERSION = '0.026';
 }
 ## use critic
 
 
 =head1 NAME
 
-DesignCreate::Cmd::Step::ConsolidateDesignData - Bring together all the design data into one file
+DesignCreate::Cmd::Step::ConsolidateShortenArmDesignData - Bring together all the short arm design data into one file
 
 =head1 DESCRIPTION
 
-Create one yaml file containing all the data for one design:
+Create one yaml file containing all the data for one short arm design:
 Target
 Species
 Phase
@@ -31,7 +31,7 @@ use Try::Tiny;
 use namespace::autoclean;
 
 extends qw( DesignCreate::Cmd::Step );
-with 'DesignCreate::CmdRole::ConsolidateDesignData';
+with 'DesignCreate::CmdRole::ConsolidateShortenArmDesignData';
 
 sub execute {
     my ( $self, $opts, $args ) = @_;

@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::OligoPairRegionsGibsonDel;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::OligoPairRegionsGibsonDel::VERSION = '0.025';
+    $DesignCreate::CmdRole::OligoPairRegionsGibsonDel::VERSION = '0.026';
 }
 ## use critic
 

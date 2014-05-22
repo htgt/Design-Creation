@@ -1,7 +1,7 @@
 package DesignCreate::Cmd::Step::PersistDesign;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Cmd::Step::PersistDesign::VERSION = '0.025';
+    $DesignCreate::Cmd::Step::PersistDesign::VERSION = '0.026';
 }
 ## use critic
 

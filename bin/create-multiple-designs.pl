@@ -26,6 +26,7 @@ GetOptions(
     'gibson-del-exon' => \my $gibson_del_exon,
     'gibson-loc'      => \my $gibson_loc,
     'gibson-del-loc'  => \my $gibson_del_loc,
+    'short-arm'       => \my $short_arm,
     'debug'           => \my $debug,
     'gene=s'          => \my @genes,
     'param=s'         => \my %extra_params,
@@ -81,6 +82,9 @@ sub process_design {
     elsif ( $gibson_del_exon ) {
         push @args, 'gibson-deletion-design-exon'
     }
+    elsif ( $short_arm ) {
+        push @args, 'shorten-arm-design'
+    }
     else {
         ERROR( 'Must pick a design type' );
     }
@@ -129,7 +133,14 @@ sub get_params {
         }
     }
 
-    my $target_gene = _trim( $data->{'target-gene'} );
+    my $target_gene;
+    if ( $short_arm ) {
+        $target_gene = $data->{'design-id'};
+    }
+    else {
+        $target_gene = _trim( $data->{'target-gene'} );
+
+    }
     # can not have : symbols in dir name
     $target_gene =~ s/://g;
 
@@ -184,6 +195,9 @@ create-multiple-designs.pl - Create multiple designs
       --cond-loc        Specify conditional design, coordinate based target
       --gibson-exon     Specify gibson designs, targeting exon(s)
       --gibson-loc      Specify gibson designs, coordinate based target
+      --gibson-del-exon Specify gibson deletion designs, targeting exon(s)
+      --gibson-del-loc  Specify gibson deletion designs, coordinate based target
+      --short-arm       Create a short-arm design for pre-existing LIMS2 design 
       --gene            Only create this gene(s), picked from input file
       --param           Specify additional param(s) not in file
       --dry-run         Just print out command that would be called, don't call it
@@ -199,11 +213,5 @@ design create command. The column headers represent the parameter name.
 =head1 AUTHOR
 
 Sajith Perera
-
-=head1 BUGS
-
-None reported... yet.
-
-=head1 TODO
 
 =cut

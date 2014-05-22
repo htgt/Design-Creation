@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::ConsolidateDesignData;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::ConsolidateDesignData::VERSION = '0.025';
+    $DesignCreate::CmdRole::ConsolidateDesignData::VERSION = '0.026';
 }
 ## use critic
 
@@ -25,7 +25,7 @@ Oligos
 use Moose::Role;
 use DesignCreate::Exception;
 use DesignCreate::Exception::NonExistantAttribute;
-use DesignCreate::Constants qw( %GIBSON_PRIMER_REGIONS );
+use DesignCreate::Constants qw( %GIBSON_PRIMER_REGIONS %GIBSON_OLIGO_CLASS $DEFAULT_BWA_OLIGO_DIR_NAME );
 use YAML::Any qw( LoadFile DumpFile );
 use JSON;
 use List::Util qw( first );
@@ -136,6 +136,32 @@ sub _build_all_valid_oligos {
     }
 
     return \%oligos;
+}
+
+has oligo_off_target_data => (
+    is      => 'ro',
+    isa     => 'HashRef',
+    traits  => [ 'NoGetopt', 'Hash' ],
+    lazy    => 1,
+    builder => '_build_oligo_off_target_data',
+    handles => {
+        get_oligo_off_target_data => 'get',
+        has_oligo_off_target_data => 'exists',
+    }
+);
+
+sub _build_oligo_off_target_data {
+    my $self = shift;
+
+    my $design_method = $self->design_param( 'design_method' );
+    # currently only gibson oligos have this data
+    return {  } unless $design_method =~ /gibson/;
+
+    my $bwa_oligo_dir = $self->dir->subdir( $DEFAULT_BWA_OLIGO_DIR_NAME )->absolute;
+    my $oligo_hits_file = $self->get_file( 'oligo_hits.yaml', $bwa_oligo_dir );
+    my $oligo_hits = LoadFile( $oligo_hits_file );
+
+    return $oligo_hits;
 }
 
 has phase => (
@@ -249,7 +275,14 @@ sub get_oligo {
     my ( $self, $oligo_type, $design_num ) = @_;
     my $oligo;
 
-    if ( $oligo_type =~ /^G/ || $self->design_param( 'design_method' ) eq 'conditional' ) {
+    if ( $self->design_param('design_method') =~ /gibson/ ) {
+        my $oligo_class = $GIBSON_OLIGO_CLASS{ $oligo_type };
+        $oligo = $self->pick_oligo_from_pair( $oligo_type, $design_num, $oligo_class );
+        if ( $oligo && $self->has_oligo_off_target_data( $oligo->{id} ) ) {
+            $oligo->{off_targets} = $self->get_oligo_off_target_data( $oligo->{id} );
+        }
+    }
+    elsif ( $oligo_type =~ /^G/ || $self->design_param( 'design_method' ) eq 'conditional' ) {
         $oligo = $self->pick_oligo_from_pair( $oligo_type, $design_num );
     }
     else {
@@ -262,13 +295,14 @@ sub get_oligo {
         if !$oligo && $design_num == 0;
     return unless $oligo;
 
+
     return $self->format_oligo_data( $oligo );
 }
 
 sub pick_oligo_from_pair {
-    my ( $self, $oligo_type, $design_num ) = @_;
+    my ( $self, $oligo_type, $design_num, $oligo_class ) = @_;
 
-    my $oligo_class = substr( $oligo_type, 0,1 );
+    $oligo_class //= substr( $oligo_type, 0,1 );
     DesignCreate::Exception->throw( "Can not find information on $oligo_class oligo pairs")
         unless $self->have_oligo_pairs( $oligo_class );
 
@@ -299,7 +333,8 @@ sub format_oligo_data {
                 chr_name   => $self->design_param( 'chr_name' ),
                 chr_strand => $self->design_param( 'chr_strand' ),
             }
-        ]
+        ],
+        off_targets => $oligo->{off_targets},
     };
 }
 
@@ -334,6 +369,8 @@ sub create_alt_design_file {
 sub build_design_data {
     my ( $self, $oligos ) = @_;
 
+    my $design_comment = $self->build_design_comment( $oligos );
+
     my %design_data = (
         type              => $self->design_param( 'design_method' ),
         species           => $self->design_param( 'species' ),
@@ -344,6 +381,7 @@ sub build_design_data {
     );
 
     $design_data{phase} = $self->phase if $self->phase;
+    $design_data{comments} = [ $design_comment ] if $design_comment;
 
     return \%design_data;
 }
@@ -365,6 +403,38 @@ sub calculate_gene_type {
                   ;
 
     return $gene_type;
+}
+
+=head2 build_design_comment
+
+Create design comment to store oligo off target data where
+it is available ( for gibson type designs ).
+
+=cut
+sub build_design_comment {
+    my ( $self, $oligos ) = @_;
+
+    my @off_target_data;
+    for my $oligo ( @{ $oligos } ) {
+        next unless exists $oligo->{off_targets};
+        my $data = delete $oligo->{off_targets};
+        next if !exists $data->{hits} || $data->{hits} == 1;
+
+        my $off_target_hits = $data->{hits} - 1;
+        my @off_target_locations = map{ $_->{chr} . ':' . $_->{start} } @{ $data->{hit_locations} };
+        push @off_target_data,
+              $oligo->{type}
+            . " oligo has $off_target_hits off target hits: "
+            . join( ' ', @off_target_locations );
+    }
+    return unless @off_target_data;
+
+    return {
+        category     => 'Oligo Off Target Hits',
+        is_public    => 1,
+        created_by   => $self->created_by,
+        comment_text => join( "\n", @off_target_data ),
+    };
 }
 
 1;

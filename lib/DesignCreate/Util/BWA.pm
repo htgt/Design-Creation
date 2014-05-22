@@ -1,7 +1,7 @@
 package DesignCreate::Util::BWA;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Util::BWA::VERSION = '0.025';
+    $DesignCreate::Util::BWA::VERSION = '0.026';
 }
 ## use critic
 
@@ -189,7 +189,7 @@ sub generate_sam_file {
         'aln',                         # align command
         "-n", $self->num_mismatches,   # number of mismatches allowed over sequence
         "-o", 0,                       # disable gapped alignments
-        "-N",                          # disable iterative search to get all hits
+        "-N",                          # disable iterative search so we get all hits
         "-t", $self->num_bwa_threads,  # specify number of threads
         $self->target_file->stringify, # target genome file, indexed for bwa
         $self->query_file->stringify,  # query file with oligo sequences
@@ -259,18 +259,34 @@ sub oligo_hits {
     while ( <$fh> ) {
         next if /^@/;
         my @data = split /\t/;
-        my $id = $data[0];
-        my $score = $data[4];
-        # score ok above 30 look to be totally unique
-        if ( $score > 30 ) {
-            $oligo_hits{ $id }{'unique_alignment'} = 1;
-        }
-        # score of above 10 means bwa thinks its probably unique but it does have other hits
-        elsif ( $score > 10 ) {
-            $oligo_hits{ $id }{ 'risky_alignment' } = 1;
+        my $id           = $data[0];
+        my $flag         = $data[1];
+        my $chromosome   = $data[2];
+        my $chr_start    = $data[3];
+        my $score        = $data[4];
+        my $sub_opt_hits = $data[14];
+
+        $oligo_hits{$id}{hits}++;
+        if ( _primary_alignment( $flag ) ) {
+            if ( _segment_unmapped( $flag ) ) {
+                $oligo_hits{$id}{unmapped} = 1;
+                next;
+            }
+            $oligo_hits{$id}{score} = $score;
+            $oligo_hits{$id}{sub_opt_hits} = $sub_opt_hits;
+            $oligo_hits{$id}{chr} = $chromosome;
+            $oligo_hits{$id}{start} = $chr_start;
+
+            # score ok above 30 look to be totally unique
+            if ( $score > 30 ) {
+                $oligo_hits{$id}{unique_alignment} = 1;
+            }
         }
         else {
-            $oligo_hits{ $id }{ 'hits' }++;
+            # store the first 10 hit locations
+            if ( $oligo_hits{$id}{hits} < 10 ) {
+                push @{ $oligo_hits{$id}{hit_locations} }, { chr => $chromosome, start => $chr_start };
+            }
         }
     }
 
@@ -278,6 +294,32 @@ sub oligo_hits {
     DumpFile( $oligo_hits_file, \%oligo_hits );
 
     return \%oligo_hits;
+}
+
+=head2 _segment_unmapped
+
+Return true if segment unmapped SAM flag is true.
+
+=cut
+sub _segment_unmapped {
+    my $flag = shift;
+    if ($flag & 0x4){
+        return 1;
+    }
+    return;
+}
+
+=head2 _primary_alignment
+
+Return true if secondary alignment SAM flag is false.
+
+=cut
+sub _primary_alignment {
+    my $flag = shift;
+    if ($flag & 0x100){
+        return;
+    }
+    return 1;
 }
 
 =head2 generate_bed_file

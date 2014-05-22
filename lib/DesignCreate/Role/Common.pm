@@ -1,7 +1,7 @@
 package DesignCreate::Role::Common;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Role::Common::VERSION = '0.025';
+    $DesignCreate::Role::Common::VERSION = '0.026';
 }
 ## use critic
 
@@ -101,6 +101,9 @@ sub _build_oligos {
     }
     elsif ( $design_method eq 'gibson-deletion' ) {
         return [ qw( 5F 5R 3F 3R ) ];
+    }
+    elsif ( $design_method eq 'global-only' ) {
+        return [ qw( G5 G3 ) ];
     }
     else {
         DesignCreate::Exception->throw( 'Unknown design method ' . $design_method );

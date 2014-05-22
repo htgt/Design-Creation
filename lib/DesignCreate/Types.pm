@@ -1,7 +1,7 @@
 package DesignCreate::Types;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Types::VERSION = '0.025';
+    $DesignCreate::Types::VERSION = '0.026';
 }
 ## use critic
 
@@ -53,6 +53,7 @@ const my %DESIGN_METHODS => (
     conditional       => 1,
     gibson            => 1,
     'gibson-deletion' => 1,
+    'global-only'     => 1,
 );
 
 const my %AOS_SEARCH_METHODS => (

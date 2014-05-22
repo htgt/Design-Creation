@@ -11,6 +11,7 @@ build_requires:
   File::Temp: 0
   FindBin: 0
   MooseX::Getopt: 0
+  Storable: 0
   Test::Class: 0
   Test::MockObject: 0
   Test::More: 0.88
@@ -66,4 +67,4 @@ requires:
   namespace::autoclean: 0
   strict: 0
   warnings: 0
-version: 0.025
+version: 0.026

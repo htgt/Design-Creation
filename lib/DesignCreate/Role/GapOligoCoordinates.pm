@@ -1,7 +1,7 @@
 package DesignCreate::Role::GapOligoCoordinates;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Role::GapOligoCoordinates::VERSION = '0.025';
+    $DesignCreate::Role::GapOligoCoordinates::VERSION = '0.026';
 }
 ## use critic
 
@@ -24,7 +24,7 @@ has region_length_G5 => (
     is            => 'ro',
     isa           => PositiveInt,
     traits        => [ 'Getopt' ],
-    default       => 1000,
+    builder       => 'default_region_length_G5',
     documentation => 'Length of G5 oligo candidate region',
     cmd_flag      => 'region-length-g5'
 );
@@ -33,7 +33,7 @@ has region_offset_G5 => (
     is            => 'ro',
     isa           => PositiveInt,
     traits        => [ 'Getopt' ],
-    default       => 4000,
+    builder       => 'default_region_offset_G5',
     documentation => 'Offset from target region of G5 oligo candidate region',
     cmd_flag      => 'region-offset-g5'
 );
@@ -42,7 +42,7 @@ has region_length_G3 => (
     is            => 'ro',
     isa           => PositiveInt,
     traits        => [ 'Getopt' ],
-    default       => 1000,
+    builder       => 'default_region_length_G3',
     documentation => 'Length of G3 oligo candidate region',
     cmd_flag      => 'region-length-g3'
 );
@@ -51,7 +51,7 @@ has region_offset_G3 => (
     is            => 'ro',
     isa           => PositiveInt,
     traits        => [ 'Getopt' ],
-    default       => 4000,
+    builder       => 'default_region_offset_G3',
     documentation => 'Offset from target region of G3 oligo candidate region',
     cmd_flag      => 'region-offset-g3'
 );
