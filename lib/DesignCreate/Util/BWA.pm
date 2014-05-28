@@ -260,12 +260,13 @@ sub oligo_hits {
         my $score        = $data[4];
         my $sub_opt_hits = $data[14];
 
-        $oligo_hits{$id}{hits}++;
-        if ( _primary_alignment( $flag ) ) {
-            if ( _segment_unmapped( $flag ) ) {
+        if ( $self->_primary_alignment( $flag ) ) {
+            if ( $self->_segment_unmapped( $flag ) ) {
                 $oligo_hits{$id}{unmapped} = 1;
                 next;
             }
+            $oligo_hits{$id}{hits}++;
+
             $oligo_hits{$id}{score} = $score;
             $oligo_hits{$id}{sub_opt_hits} = $sub_opt_hits;
             $oligo_hits{$id}{chr} = $chromosome;
@@ -277,6 +278,7 @@ sub oligo_hits {
             }
         }
         else {
+            $oligo_hits{$id}{hits}++;
             # store the first 10 hit locations
             if ( $oligo_hits{$id}{hits} < 10 ) {
                 push @{ $oligo_hits{$id}{hit_locations} }, { chr => $chromosome, start => $chr_start };
@@ -296,7 +298,7 @@ Return true if segment unmapped SAM flag is true.
 
 =cut
 sub _segment_unmapped {
-    my $flag = shift;
+    my ( $self, $flag ) = @_;
     if ($flag & 0x4){
         return 1;
     }
@@ -309,7 +311,7 @@ Return true if secondary alignment SAM flag is false.
 
 =cut
 sub _primary_alignment {
-    my $flag = shift;
+    my ( $self, $flag ) = @_;
     if ($flag & 0x100){
         return;
     }
