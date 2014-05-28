@@ -1,0 +1,12 @@
+---
+assembly: GRCh37
+chr_name: '4'
+chr_strand: '-1'
+created_by: sajith.perera@gmail.com
+design_method: gibson-deletion
+five_prime_exon: ENSE00003608112
+num_genomic_hits: 4
+species: Human
+target_end: 100003267
+target_genes:
+- HGNC:253
