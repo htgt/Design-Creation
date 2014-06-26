@@ -6,7 +6,7 @@ DesignCreate::Util::BWA
 
 =head1 DESCRIPTION
 
-Align sequence(s) against a genome to find number of hits using BWA
+Align sequence(s) against a genome to find number of hits using BWA aln
 
 =cut
 
