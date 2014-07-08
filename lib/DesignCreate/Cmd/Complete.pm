@@ -80,7 +80,7 @@ sub execute {
         $self->update_design_attempt_record(
             {
                 status     => 'success',
-                design_ids => join( ' ', @{ $self->design_ids } ),
+                design_ids => $self->design_ids,
             }
         );
     }
