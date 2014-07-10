@@ -4,7 +4,7 @@ PROGRAMPATH=~/workspace/Design-Creation/bin
 
 BASE_DIR=/lustre/scratch109/sanger/sp12/design-create
 
-WORK_DIR=$BASE_DIR/human_designs/$LSB_JOBINDEX
+WORK_DIR=$BASE_DIR/designs_workdir/$LSB_JOBINDEX
 
 # create base work dir for job index if it does not exist
 mkdir -p $WORK_DIR || exit 1
