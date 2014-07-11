@@ -1,0 +1,119 @@
+---
+3F-0:
+  chr: Chr4
+  hits: 1
+  score: '37'
+  start: '100003101'
+  sub_opt_hits: X1:i:0
+  unique_alignment: 1
+3F-1:
+  chr: Chr4
+  hit_locations:
+  - chr: Chr3
+    start: '66319999'
+  - chr: Chr2
+    start: '144121710'
+  hits: 3
+  score: '20'
+  start: '100003071'
+  sub_opt_hits: X1:i:2
+3R-0:
+  chr: Chr4
+  hit_locations:
+  - chr: Chr18
+    start: '56267043'
+  - chr: Chr3
+    start: '123711439'
+  - chr: Chr16
+    start: '50743839'
+  - chr: Chr18
+    start: '62180423'
+  - chr: Chr10
+    start: '73145720'
+  - chr: Chr3
+    start: '125687549'
+  - chr: Chr3
+    start: '45727261'
+  hits: 8
+  score: '15'
+  start: '100001868'
+  sub_opt_hits: X1:i:7
+3R-1:
+  chr: Chr4
+  hits: 1
+  score: '37'
+  start: '100001701'
+  sub_opt_hits: X1:i:0
+  unique_alignment: 1
+5F-0:
+  chr: Chr4
+  hits: 1
+  score: '37'
+  start: '100004781'
+  sub_opt_hits: X1:i:0
+  unique_alignment: 1
+5F-1:
+  chr: Chr4
+  hits: 1
+  score: '37'
+  start: '100004450'
+  sub_opt_hits: X1:i:0
+  unique_alignment: 1
+5F-2:
+  chr: Chr12
+  hit_locations:
+  - chr: HSCHRUN_RANDOM_CTG15
+    start: '135503'
+  - chr: Chr4
+    start: '100004588'
+  - chr: Chr7
+    start: '4769458'
+  - chr: Chr9
+    start: '28020364'
+  - chr: ChrX
+    start: '41230840'
+  - chr: Chr5
+    start: '123104874'
+  - chr: Chr12
+    start: '95387238'
+  - chr: Chr17
+    start: '41820859'
+  hits: 14264
+  score: '0'
+  start: '133547137'
+  sub_opt_hits: X1:i:14261
+5F-3:
+  chr: Chr4
+  hits: 1
+  score: '37'
+  start: '100004808'
+  sub_opt_hits: X1:i:0
+  unique_alignment: 1
+5R-0:
+  chr: Chr4
+  hits: 1
+  score: '37'
+  start: '100003307'
+  sub_opt_hits: X1:i:0
+  unique_alignment: 1
+5R-1:
+  chr: Chr4
+  hits: 1
+  score: '37'
+  start: '100003287'
+  sub_opt_hits: X1:i:0
+  unique_alignment: 1
+5R-2:
+  chr: Chr4
+  hits: 1
+  score: '37'
+  start: '100003297'
+  sub_opt_hits: X1:i:0
+  unique_alignment: 1
+5R-3:
+  chr: Chr4
+  hits: 1
+  score: '37'
+  start: '100003317'
+  sub_opt_hits: X1:i:0
+  unique_alignment: 1

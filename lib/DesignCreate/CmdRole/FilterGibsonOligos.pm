@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::FilterGibsonOligos;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::FilterGibsonOligos::VERSION = '0.026';
+    $DesignCreate::CmdRole::FilterGibsonOligos::VERSION = '0.027';
 }
 ## use critic
 

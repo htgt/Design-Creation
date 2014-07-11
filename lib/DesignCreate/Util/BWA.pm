@@ -1,7 +1,7 @@
 package DesignCreate::Util::BWA;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Util::BWA::VERSION = '0.026';
+    $DesignCreate::Util::BWA::VERSION = '0.027';
 }
 ## use critic
 
@@ -12,7 +12,7 @@ DesignCreate::Util::BWA
 
 =head1 DESCRIPTION
 
-Align sequence(s) against a genome to find number of hits using BWA
+Align sequence(s) against a genome to find number of hits using BWA aln
 
 =cut
 
@@ -266,12 +266,13 @@ sub oligo_hits {
         my $score        = $data[4];
         my $sub_opt_hits = $data[14];
 
-        $oligo_hits{$id}{hits}++;
-        if ( _primary_alignment( $flag ) ) {
-            if ( _segment_unmapped( $flag ) ) {
+        if ( $self->_primary_alignment( $flag ) ) {
+            if ( $self->_segment_unmapped( $flag ) ) {
                 $oligo_hits{$id}{unmapped} = 1;
                 next;
             }
+            $oligo_hits{$id}{hits}++;
+
             $oligo_hits{$id}{score} = $score;
             $oligo_hits{$id}{sub_opt_hits} = $sub_opt_hits;
             $oligo_hits{$id}{chr} = $chromosome;
@@ -283,6 +284,7 @@ sub oligo_hits {
             }
         }
         else {
+            $oligo_hits{$id}{hits}++;
             # store the first 10 hit locations
             if ( $oligo_hits{$id}{hits} < 10 ) {
                 push @{ $oligo_hits{$id}{hit_locations} }, { chr => $chromosome, start => $chr_start };
@@ -302,7 +304,7 @@ Return true if segment unmapped SAM flag is true.
 
 =cut
 sub _segment_unmapped {
-    my $flag = shift;
+    my ( $self, $flag ) = @_;
     if ($flag & 0x4){
         return 1;
     }
@@ -315,7 +317,7 @@ Return true if secondary alignment SAM flag is false.
 
 =cut
 sub _primary_alignment {
-    my $flag = shift;
+    my ( $self, $flag ) = @_;
     if ($flag & 0x100){
         return;
     }

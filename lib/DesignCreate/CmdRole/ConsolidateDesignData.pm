@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::ConsolidateDesignData;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::ConsolidateDesignData::VERSION = '0.026';
+    $DesignCreate::CmdRole::ConsolidateDesignData::VERSION = '0.027';
 }
 ## use critic
 

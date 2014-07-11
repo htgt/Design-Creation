@@ -1,7 +1,7 @@
 package DesignCreate::Cmd::Complete::DeletionDesignLocation;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Cmd::Complete::DeletionDesignLocation::VERSION = '0.026';
+    $DesignCreate::Cmd::Complete::DeletionDesignLocation::VERSION = '0.027';
 }
 ## use critic
 

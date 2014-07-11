@@ -104,6 +104,7 @@ t/40-GibsonDeletionDesignExon.t
 t/40-GibsonDeletionDesignLocation.t
 t/40-GibsonDesignExon.t
 t/40-GibsonDesignLocation.t
+t/50-BWA.t
 t/50-Exonerate.t
 t/50-PickBlockOligoPair.t
 t/50-Primer3.t
@@ -136,11 +137,13 @@ t/lib/Test/DesignCreate/CmdStep.pm
 t/lib/Test/DesignCreate/Role/Common.pm
 t/lib/Test/DesignCreate/Role/EnsEMBL.pm
 t/lib/Test/DesignCreate/Role/OligoRegionCoordinates.pm
+t/lib/Test/DesignCreate/Util/BWA.pm
 t/lib/Test/DesignCreate/Util/Exonerate.pm
 t/lib/Test/DesignCreate/Util/PickBlockOligoPair.pm
 t/lib/Test/DesignCreate/Util/Primer3.pm
 t/lib/Test/ObjectRole/DesignCreate.pm
 t/release-no-smart-comments.t
+t/test_data/bwa_data/bwa_query.fasta
 t/test_data/consolidate_design_data/design_parameters.yaml
 t/test_data/consolidate_design_data/validated_oligos/D3.yaml
 t/test_data/consolidate_design_data/validated_oligos/D5.yaml
@@ -151,6 +154,14 @@ t/test_data/consolidate_design_data/validated_oligos/G_oligo_pairs.yaml
 t/test_data/consolidate_design_data/validated_oligos/U3.yaml
 t/test_data/consolidate_design_data/validated_oligos/U5.yaml
 t/test_data/consolidate_design_data/validated_oligos/U_oligo_pairs.yaml
+t/test_data/consolidate_design_data_comment/bwa_oligos/oligo_hits.yaml
+t/test_data/consolidate_design_data_comment/design_parameters.yaml
+t/test_data/consolidate_design_data_comment/validated_oligos/3F.yaml
+t/test_data/consolidate_design_data_comment/validated_oligos/3R.yaml
+t/test_data/consolidate_design_data_comment/validated_oligos/5F.yaml
+t/test_data/consolidate_design_data_comment/validated_oligos/5R.yaml
+t/test_data/consolidate_design_data_comment/validated_oligos/five_prime_oligo_pairs.yaml
+t/test_data/consolidate_design_data_comment/validated_oligos/three_prime_oligo_pairs.yaml
 t/test_data/exonerate_data/false_query.fasta
 t/test_data/exonerate_data/query.fasta
 t/test_data/exonerate_data/target.fasta

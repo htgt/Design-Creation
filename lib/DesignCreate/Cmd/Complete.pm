@@ -1,7 +1,7 @@
 package DesignCreate::Cmd::Complete;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Cmd::Complete::VERSION = '0.026';
+    $DesignCreate::Cmd::Complete::VERSION = '0.027';
 }
 ## use critic
 
@@ -86,7 +86,7 @@ sub execute {
         $self->update_design_attempt_record(
             {
                 status     => 'success',
-                design_ids => join( ' ', @{ $self->design_ids } ),
+                design_ids => $self->design_ids,
             }
         );
     }
