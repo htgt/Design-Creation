@@ -70,7 +70,6 @@ sub process_design {
             push @args, $arg;
         }
     }
-    for
 
     try{
         if ( $dry_run ) {
