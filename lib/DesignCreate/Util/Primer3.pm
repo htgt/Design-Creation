@@ -112,14 +112,19 @@ sub _build_primer3_global_arguments {
     return \%primer3_arguments;
 }
 
-#
-#Run Primer3 with passed in arguments and targetting information from
-#the PrimerTarget object
-#
+=head2 run_primer3
 
+Run Primer3 with passed in arguments:
+- outfile: Path::Class::File object, file where logging output from Primer3 sent.
+- seq: Sequence we are running Primer3 against, a Bio::SeqI object
+- target: optional targetting information, explaining where in sequence primers must be located.
+- region: name of region we are working on
+
+=cut
 sub run_primer3 {
     my ( $self, $outfile, $seq, $target, $region ) = @_;
     $self->log->debug( 'Running Primer3' );
+    $region //= 'unknown region';
 
     if ( ! blessed( $outfile ) || ! $outfile->isa( 'Path::Class::File' ) ) {
         DesignCreate::Exception->throw( '$outfile variable must be Path::Class::File object' );
