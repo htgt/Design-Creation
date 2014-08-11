@@ -105,7 +105,7 @@ sub get_params {
     }
 
     unless ( $design_cmd ) {
-        WARN( 'NO cmd value, skipping record' );
+        die( 'NO cmd value, skipping record' );
         return;
     }
 
