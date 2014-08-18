@@ -1,7 +1,7 @@
 package DesignCreate::Util::Primer3;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Util::Primer3::VERSION = '0.027';
+    $DesignCreate::Util::Primer3::VERSION = '0.028';
 }
 ## use critic
 
@@ -31,6 +31,8 @@ use namespace::autoclean;
 
 with qw( MooseX::Log::Log4perl MooseX::SimpleConfig );
 
+# Primer3 Input Options that we use ( there are many many more we don't use )
+# see Primer3 docs for more details
 const my @PRIMER3_GLOBAL_ARGUMENTS => (
     'primer_num_return',
     'primer_min_size',
@@ -48,6 +50,7 @@ const my @PRIMER3_GLOBAL_ARGUMENTS => (
     'primer_product_size_range',
     'primer_thermodynamic_parameters_path',
     'primer_gc_clamp',
+    'sequence_primer',
 );
 
 has [
@@ -99,7 +102,14 @@ has primer_min_three_prime_distance => (
     is       => 'ro',
     isa      => 'Int',
     required => 1,
-) ;
+);
+
+# sequence_primer: preset forward ( left ) primer sequence
+# sequence_primer_revcomp: preset reverse ( right ) primer sequence
+has [ 'sequence_primer', 'sequence_primer_revcomp' ]  => (
+    is  => 'ro',
+    isa => 'Str',
+);
 
 has primer3_global_arguments => (
     is         => 'ro',
@@ -118,14 +128,19 @@ sub _build_primer3_global_arguments {
     return \%primer3_arguments;
 }
 
-#
-#Run Primer3 with passed in arguments and targetting information from
-#the PrimerTarget object
-#
+=head2 run_primer3
 
+Run Primer3 with passed in arguments:
+- outfile: Path::Class::File object, file where logging output from Primer3 sent.
+- seq: Sequence we are running Primer3 against, a Bio::SeqI object
+- target: optional targetting information, explaining where in sequence primers must be located.
+- region: name of region we are working on
+
+=cut
 sub run_primer3 {
     my ( $self, $outfile, $seq, $target, $region ) = @_;
     $self->log->debug( 'Running Primer3' );
+    $region //= 'unknown region';
 
     if ( ! blessed( $outfile ) || ! $outfile->isa( 'Path::Class::File' ) ) {
         DesignCreate::Exception->throw( '$outfile variable must be Path::Class::File object' );
