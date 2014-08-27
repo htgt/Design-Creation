@@ -1,15 +1,15 @@
-package DesignCreate::CmdRole::OligoRegionsInsDel;
+package DesignCreate::CmdRole::OligoRegionsGlobalOnly;
 
 =head1 NAME
 
-DesignCreate::CmdRole::OligoRegionsInsDel -Create seq files for oligo region, insertion or deletion designs
+DesignCreate::CmdRole::OligoRegionsGlobalOnly -Create seq files for global oligo regions
 
 =head1 DESCRIPTION
 
 For given target coordinates and a oligo region parameters produce target region coordinates file
-for each oligo we must find for deletion or insertion designs.
+for each global oligo we must find.
 
-These attributes and code is specific to Insertion / Deletion designs, code generic to all
+These attributes and code is specific to global oligo only designs, code generic to all
 design types is found in DesignCreate::Role::OligoRegionCoodinates.
 
 =cut
@@ -25,10 +25,6 @@ DesignCreate::Role::GapOligoCoordinates
 );
 
 const my @DESIGN_PARAMETERS => qw(
-region_length_U5
-region_offset_U5
-region_length_D3
-region_offset_D3
 region_length_G5
 region_offset_G5
 region_length_G3
@@ -37,59 +33,26 @@ design_method
 );
 
 has design_method => (
-    is            => 'ro',
-    isa           => DesignMethod,
-    traits        => [ 'Getopt' ],
-    required      => 1,
-    documentation => 'Design type, deletion or insertion',
-    cmd_flag      => 'design-method',
+    is      => 'ro',
+    isa     => DesignMethod,
+    traits  => [ 'NoGetopt' ],
+    default => 'global-only',
 );
 
 #
 # Gap Oligo Parameter attributes in DesignCreate::Role::OligoTargetRegions
 # We set the defaults below via builder methods
 #
-sub default_region_length_G5 { return 1000 };
-sub default_region_offset_G5 { return 4000 };
-sub default_region_length_G3 { return 1000 };
-sub default_region_offset_G3 { return 4000 };
+sub default_region_length_G5 { return 400 };
+sub default_region_offset_G5 { return 800 };
+sub default_region_length_G3 { return 400 };
+sub default_region_offset_G3 { return 800 };
 
-has region_length_U5 => (
-    is            => 'ro',
-    isa           => PositiveInt,
-    traits        => [ 'Getopt' ],
-    default       => 200,
-    documentation => 'Length of U5 oligo candidate region',
-    cmd_flag      => 'region-length-u5'
-);
+=head2 get_oligo_region_coordinates
 
-has region_offset_U5 => (
-    is            => 'ro',
-    isa           => NaturalNumber,
-    traits        => [ 'Getopt' ],
-    default       => 0,
-    documentation => 'Offset from target region of U5 oligo candidate region',
-    cmd_flag      => 'region-offset-u5'
-);
+Work out the G5 / G3 oligos region coordiantes, and write to a yaml file.
 
-has region_length_D3 => (
-    is            => 'ro',
-    isa           => PositiveInt,
-    traits        => [ 'Getopt' ],
-    default       => 200,
-    documentation => 'Length of D3 oligo candidate region',
-    cmd_flag      => 'region-length-d3'
-);
-
-has region_offset_D3 => (
-    is            => 'ro',
-    isa           => NaturalNumber,
-    traits        => [ 'Getopt' ],
-    default       => 0,
-    documentation => 'Offset from target region of D3 oligo candidate region',
-    cmd_flag      => 'region-offset-d3'
-);
-
+=cut
 sub get_oligo_region_coordinates {
     my $self = shift;
     $self->add_design_parameters( \@DESIGN_PARAMETERS );
@@ -113,8 +76,12 @@ sub get_oligo_region_coordinates {
     return;
 }
 
-#TODO all oligos coordinates are based from target start and end, unlike
-# all the other DesignCreate::CmdRole::Oligo* modules, change this
+
+=head2 coordinates_for_oligo
+
+Calculate the oligo region coordinates, taking into acount oligo type and design strand.
+
+=cut
 sub coordinates_for_oligo {
     my ( $self, $oligo ) = @_;
     my ( $start, $end );
@@ -127,21 +94,21 @@ sub coordinates_for_oligo {
     my $length = $self->get_oligo_region_length( $oligo );
 
     if ( $strand == 1 ) {
-        if ( $oligo =~ /5$/ ) {
+        if ( $oligo eq 'G5' ) {
             $start = $target_start - ( $offset + $length );
             $end   = $target_start - ( $offset + 1 );
         }
-        elsif ( $oligo =~ /3$/ ) {
+        elsif ( $oligo eq 'G3' ) {
             $start = $target_end + ( $offset + 1 );
             $end   = $target_end + ( $offset + $length );
         }
     }
     else {
-        if ( $oligo =~ /5$/ ) {
+        if ( $oligo eq 'G5') {
             $start = $target_end + ( $offset + 1 );
             $end   = $target_end + ( $offset + $length );
         }
-        elsif ( $oligo =~ /3$/ ) {
+        elsif ( $oligo eq 'G3' ) {
             $start = $target_start - ( $offset + $length );
             $end   = $target_start - ( $offset + 1 );
         }

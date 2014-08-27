@@ -45,6 +45,11 @@ has ryo => (
     default  => $RYO,
 );
 
+has model => (
+    is  => 'ro',
+    isa => 'Str',
+);
+
 has bestn => (
     is       => 'ro',
     isa      => PositiveInt,
@@ -64,6 +69,8 @@ has [
         showalignment
         showsugar
         showvulgar
+        showcigar
+        exhaustive
         )
     ] => (
     is       => 'ro',
@@ -111,11 +118,15 @@ sub run_exonerate {
         "--showalignment", $self->showalignment,
         "--showsugar",     $self->showsugar,
         "--showvulgar",    $self->showvulgar,
+        "--showcigar",     $self->showcigar,
+        "--exhaustive",    $self->exhaustive,
         "--score",         $self->score,
     );
 
     push @command, ( "--ryo", $self->ryo )
         if $self->ryo;
+    push @command, ( "--model", $self->model )
+        if $self->model;
     $self->log->debug( "Exonerate Command: " . join( ' ', @command ) );
 
     my ( $out, $err ) = ( "", "" );

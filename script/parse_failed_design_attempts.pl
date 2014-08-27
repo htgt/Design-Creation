@@ -74,12 +74,15 @@ $target_output_csv->print( $target_output, \@DESIGN_COLUMN_HEADERS );
 my @log_data = slurp $log_file;
 chomp( @log_data );
 my %failed_genes;
+my $current_exon = '';
 for my $line ( @log_data ) {
-    if ( $line =~ /ERROR\s(\S*)\s(\S*)\sDESIGN\sINCOMPLETE:\s(.*)$/  ) {
+    if ( $line =~ /Exon\stargets:\s(.*)$/  ) {
+        $current_exon = $1;
+    }
+    if ( $line =~ /ERROR\s(\S*)\sDESIGN\sINCOMPLETE:\s(.*)$/  ) {
         my $gene = $1;
-        my $exon = $2;
-        my $error_reason = $3;
-        push @{ $failed_genes{ $gene } }, { exon_id => $exon, error => $error_reason };
+        my $error_reason = $2;
+        push @{ $failed_genes{ $gene } }, { exon_id => $current_exon, error => $error_reason };
     }
 }
 
@@ -123,6 +126,7 @@ for my $gene_id ( keys %failed_genes ) {
 sub auto_param_adjust_deletion_gibson {
     my ( $params, $fail_reason ) = @_;
 
+    $params->{'repeat-mask-class'} = 'trf|dust';
     if ( $fail_reason =~ /5F/ ) {
         $params->{'region-offset-5f'} = 1500;
         $params->{'region-length-5f'} = 1000;
@@ -197,13 +201,15 @@ parse_failed_design_attempts.pl - create another design param file from failed d
 
 =head1 SYNOPSIS
 
-  temp_parse_output.pl --log-files [file] --param-file [file] --species [Human|Mouse] 
+  parse_failed_design_attempts.pl --log-files [file] --param-file [file] --species [Human|Mouse]
 
       --help            Display a brief help message
       --man             Display the manual page
-      --log-file        Log file from previous create-multiple-designs.pl run 
+      --log-file        Log file from previous create-multiple-designs.pl run
       --param-file      Parameter file from previous create-multiple-designs.pl run
-      --species         Species of design targets 
+      --species         Species of design targets
+
+Only works for exon targets designs, not specific location target designs.
 
 =head1 DESCRIPTION
 

@@ -23,6 +23,7 @@ use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
 use Const::Fast;
 use Fcntl; # O_ constants
 use List::MoreUtils qw( any );
+use List::Util qw( sum );
 use Bio::SeqIO;
 use Try::Tiny;
 use JSON;
@@ -35,6 +36,7 @@ DesignCreate::Role::FilterOligos
 const my @DESIGN_PARAMETERS => qw(
 exon_check_flank_length
 oligo_three_prime_align
+num_genomic_hits
 );
 
 has exon_check_flank_length => (
@@ -63,6 +65,15 @@ has num_bwa_threads => (
     documentation => 'Number of threads bwa aln will use ( default 2 )',
     cmd_flag      => 'num-bwa-threads',
     default       => 2,
+);
+
+has num_genomic_hits => (
+    is            => 'ro',
+    isa           => PositiveInt,
+    traits        => [ 'Getopt' ],
+    documentation => 'Maximum number of genomic hits a oligos is allowed, default is just 1 hit',
+    cmd_flag      => 'num-genomic-hits',
+    default       => 1,
 );
 
 has bwa_query_file => (
@@ -157,6 +168,9 @@ sub filter_oligos {
         $self->validate_oligos; # DesignCreate::Role::FilterOligos
     }
     catch{
+        # If we throw a error, we still want to show candidate oligos
+        # to the user ( we have all the required oligos but not all of
+        # them will be valid, this could be useful to the user ).
         $self->validate_oligo_pairs;
         $self->update_candidate_oligos_after_validation;
         die $_;
@@ -239,6 +253,12 @@ sub check_oligo_not_near_exon {
     return 0;
 }
 
+=head2 validate_oligo_pairs
+
+We only want pairs where both the the oligos are valid.
+We find valid oligo pairs and write their id's into a hash.
+
+=cut
 sub validate_oligo_pairs {
     my $self = shift;
 
@@ -251,16 +271,48 @@ sub validate_oligo_pairs {
         DesignCreate::Exception->throw("No oligo pair data in $oligo_pair_file")
             unless $oligo_pairs;
 
+        # store the best oligo pair according to Primer3 ( used as the candidate oligos
+        # if none of the oligo pairs for this region turn out to be valid )
         $self->set_region_best_primer3_pair( $oligo_pair_region => $oligo_pairs->[0] );
 
+        my @valid_pairs;
+        my $rank = 1;
         for my $pair ( @{ $oligo_pairs } ) {
             next if any{ $self->oligo_is_invalid( $_ ) } values %{ $pair };
 
-            push @{ $self->validated_oligo_pairs->{ $oligo_pair_region } }, $pair;
+            $pair->{primer3_rank} = $rank++;
+            push @valid_pairs, $pair;
         }
+        next unless @valid_pairs;
+
+        my @sorted_valid_pairs
+            = sort { $self->_sort_valid_oligo_pairs($a) <=> $self->_sort_valid_oligo_pairs($b) }
+            @valid_pairs;
+        ## no critic(BuiltinFunctions::ProhibitComplexMappings)
+        $self->validated_oligo_pairs->{$oligo_pair_region}
+            = [ map { delete $_->{primer3_rank}; $_ } @sorted_valid_pairs ];
+        ## use critic
     }
 
     return;
+}
+
+=head2 _sort_valid_oligo_pairs
+
+Sort the valid oligo pairs, using the Primer3 rank and the combined number of
+genomic hits for the 2 oligos in the pair. The lower the number the higher the rank.
+Weighted to take into account hits more than primer3 rank. The default setting is
+is to discard oligos with any additional genomic hits, so this sort algorithm will
+in these cases preserve the Primer3 ranking.
+
+=cut
+sub _sort_valid_oligo_pairs {
+    my ( $self, $valid_pair ) = @_;
+    my %valid_pair = %{ $valid_pair };
+    my $primer3_rank = delete $valid_pair{primer3_rank};
+    my $oligo_hits = sum map{ $self->bwa_matches->{$_}{hits} } values %valid_pair;
+
+    return ( $primer3_rank / 100 ) + $oligo_hits;
 }
 
 =head2 update_candidate_oligos_after_validation
@@ -299,6 +351,11 @@ sub update_candidate_oligos_after_validation {
     return;
 }
 
+=head2 output_valid_oligo_pairs
+
+Create yaml files storing the valid oligo pairs, one for each region.
+
+=cut
 sub output_valid_oligo_pairs {
     my $self = shift;
 
@@ -310,7 +367,6 @@ sub output_valid_oligo_pairs {
             next;
         }
 
-        #TODO if we add ranking of oligos this needs to use that sp12 Mon 09 Sep 2013 08:48:03 BST
         my $filename = $self->validated_oligo_dir->stringify . '/'
                      . $oligo_pair_region . '_oligo_pairs.yaml';
         DumpFile( $filename, $self->get_valid_pairs( $oligo_pair_region ) );
@@ -329,6 +385,15 @@ sub output_valid_oligo_pairs {
 =head2 check_oligo_specificity
 
 Filter out oligos that have mulitple hits against the reference genome.
+A unique alignment ( score of 30+ ) gives a true return value. This should be
+the case where bwa finds one unique alignment for the oligo, which should be the
+original position of the oligo, though this is not checked.
+
+If the oligo can not be mapped against the genome we return false.
+
+In any other case we count the number of hits, which is 90%+ similarity or up to 2 mismatches.
+By default any more than 1 hit will return false, the user can loosen this criteria though
+and allow up to n hits ( num_genomic_hits attribute ).
 
 =cut
 sub check_oligo_specificity {
@@ -336,8 +401,16 @@ sub check_oligo_specificity {
     # if we have no match info then fail oligo
     return unless $match_info;
 
+    if ( exists $match_info->{unmapped} && $match_info->{unmapped} == 1 ) {
+        $self->log->error( "Oligo $oligo_id does not have any alignments, is not mapped to genome" );
+        $$invalid_reason = 'Unmapped against genome';
+        return;
+    }
+
     #TODO implement three_prime_align checks sp12 Mon 07 Oct 2013 11:14:29 BST
     if ( $self->oligo_three_prime_align ) {
+        DesignCreate::Exception->throw("Three prime align checks not implemented yet");
+
         if ( !$match_info->{exact_matches} ) {
             $self->log->error( "Oligo $oligo_id does not have any exact matches, somethings wrong" );
             return;
@@ -353,21 +426,27 @@ sub check_oligo_specificity {
             return;
         }
     }
-    else {
-        if ( !$match_info->{unique_alignment} ) {
-            $self->log->trace( "Oligo $oligo_id has no a unique alignment");
-            $$invalid_reason = "No unique genomic alignment";
-            return;
-        }
-        # a hit is above 90% similarity
-        elsif ( exists $match_info->{hits} && $match_info->{hits} >= 1 ) {
-            $self->log->debug( "Oligo $oligo_id is invalid, has multiple hits: " . $match_info->{hits} );
-            $$invalid_reason = "Multiple genomic hits: " . $match_info->{hits};
-            return;
-        }
+
+    if ( exists $match_info->{unique_alignment} && $match_info->{unique_alignment} ) {
+        $self->log->trace( "Oligo $oligo_id has a unique alignment");
+        return 1;
     }
 
-    return 1;
+    DesignCreate::Exception->throw("No hits value for oligo $oligo_id, can not validate specificity")
+        unless exists $match_info->{hits};
+    my $hits = $match_info->{hits};
+
+    if ( $hits <= $self->num_genomic_hits ) {
+        $self->log->trace( "Oligo $oligo_id has $hits hits, user allowed " . $self->num_genomic_hits );
+        return 1;
+    }
+    else {
+        $self->log->debug( "Oligo $oligo_id is invalid, has multiple hits: $hits" );
+        $$invalid_reason = "Multiple genomic hits: $hits";
+        return;
+    }
+
+    return;
 }
 
 sub run_bwa {

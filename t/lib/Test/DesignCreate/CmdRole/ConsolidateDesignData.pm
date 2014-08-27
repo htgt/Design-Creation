@@ -165,7 +165,7 @@ sub build_design_oligo_data : Test(16) {
     }
 }
 
-sub get_oligo : Test(12) {
+sub get_oligo : Tests(15) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
@@ -194,6 +194,10 @@ sub get_oligo : Test(12) {
     ok my $u5_oligo_data = $c_o->get_oligo( 'U5', 0 ), 'can call get_oligo';
     my ( $expected_u5_oligo ) = grep{ $_->{id} eq $c_o->all_oligo_pairs->{U}[0]{U5} } @{ $u5_oligos };
     is $u5_oligo_data->{seq}, $expected_u5_oligo->{oligo_seq}, 'get expected U5 oligo for condition design';
+
+    ok my $o2 = $test->_get_test_object( 'test_data/consolidate_design_data_comment' ), 'can grab test object';
+    ok $oligo_data = $o2->get_oligo( '3F', 0 ), 'can call get_oligo';
+    ok exists $oligo_data->{off_targets}, '.. returned oligo has off targets data';
 }
 
 sub pick_oligo_from_pair : Test(10) {
@@ -327,11 +331,46 @@ sub build_design_data : Test(8) {
     ok !exists $design_data->{phase}, 'phase value not set';
 }
 
+sub build_design_comment : Tests(7) {
+    my $test = shift;
+    ok my $o = $test->_get_test_object, 'can grab test object';
+
+    lives_ok{
+        $o->build_primary_design_oligos;
+    } 'test object setup ok';
+
+    ok !$o->build_design_comment( $o->primary_design_oligos ),
+        'calling build_design_comment with no off_targets data returns undef';
+
+    ok my $o2 = $test->_get_test_object( 'test_data/consolidate_design_data_comment' ), 'can grab test object';
+
+    lives_ok{
+        $o2->build_primary_design_oligos;
+    } 'test object setup ok';
+
+    ok my $design_comment = $o2->build_design_comment( $o2->primary_design_oligos ),
+        'calling build_design_comment with off_targets data returns a hash ref';
+
+    is $design_comment->{category}, 'Oligo Off Target Hits', '.. and the category of the comment is correct';
+}
+
+sub oligo_off_target_data : Tests(5) {
+    my $test = shift;
+    ok my $o = $test->_get_test_object('test_data/consolidate_design_data_comment'),
+        'can grab test object';
+
+    ok $o->oligo_off_target_data, 'we have off target data hash';
+    ok $o->has_oligo_off_target_data('3R-0'), 'we have off target data for 3R-0 oligo';
+    ok my $off_target_data = $o->get_oligo_off_target_data('3R-0'), '.. and we can grab the data';
+    is $off_target_data->{hits}, 8, '.. and it has the correct number of hits';
+}
+
 sub _get_test_object {
-    my ( $test, $params ) = @_;
+    my ( $test, $data_dir_name ) = @_;
+    $data_dir_name //= 'test_data/consolidate_design_data';
 
     my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute;
-    my $data_dir = dir($FindBin::Bin)->absolute->subdir('test_data/consolidate_design_data');
+    my $data_dir = dir($FindBin::Bin)->absolute->subdir($data_dir_name);
 
     dircopy( $data_dir->stringify, $dir->stringify );
 

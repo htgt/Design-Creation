@@ -19,13 +19,6 @@ GetOptions(
     'persist'         => \$persist,
     'alt-designs'     => \$alt_designs,
     'dir=s'           => \$base_dir_name,
-    'cond-loc'        => \my $cond_loc,
-    'del-exon'        => \my $del_exon,
-    'del-loc'         => \my $del_loc,
-    'gibson-exon'     => \my $gibson_exon,
-    'gibson-del-exon' => \my $gibson_del_exon,
-    'gibson-loc'      => \my $gibson_loc,
-    'gibson-del-loc'  => \my $gibson_del_loc,
     'debug'           => \my $debug,
     'gene=s'          => \my @genes,
     'param=s'         => \my %extra_params,
@@ -56,41 +49,21 @@ sub process_design {
         return unless any { $data->{'target-gene'} eq $_ } @genes;
     }
 
-    my ( $params, $dir ) = get_params( $data );
+    my ( $params, $design_cmd ) = get_params( $data );
+
     my @args;
-
-## no critic(ProhibitCascadingIfElse)
-    if ( $cond_loc ) {
-        push @args, 'conditional-design-location';
-    }
-    elsif ( $del_exon ) {
-        push @args, 'deletion-design-exon';
-    }
-    elsif ( $del_loc ) {
-        push @args, 'deletion-design-location';
-    }
-    elsif ( $gibson_exon ) {
-        push @args, 'gibson-design-exon'
-    }
-    elsif ( $gibson_loc ) {
-        push @args, 'gibson-design-location'
-    }
-    elsif ( $gibson_del_loc ) {
-        push @args, 'gibson-deletion-design-location'
-    }
-    elsif ( $gibson_del_exon ) {
-        push @args, 'gibson-deletion-design-exon'
-    }
-    else {
-        ERROR( 'Must pick a design type' );
-    }
-## use critic
-
     push @args, $debug ? '--debug' : '--verbose';
     push @args, '--alt-designs' if $alt_designs;
     push @args, '--persist' if $persist;
 
-    push @args, @{ $params };
+    for my $param_name ( keys %{ $params } ) {
+        my @values = @{ $params->{$param_name} };
+        for my $value ( @values ) {
+            push @args, '--' . $param_name;
+            push @args, $value;
+        }
+    }
+
     if ( %extra_params ) {
         while ( my( $cmd, $arg ) = each %extra_params ) {
             push @args, '--' . $cmd,;
@@ -100,10 +73,10 @@ sub process_design {
 
     try{
         if ( $dry_run ) {
-            say 'design-create ' . join( ' ', @args );
+            say 'design-create ' . "$design_cmd " , join( ' ', @args );
         }
         else {
-            system( 'design-create', @args );
+            system( 'design-create', $design_cmd, @args );
         }
     }
     catch{
@@ -116,20 +89,34 @@ sub process_design {
 sub get_params {
     my ( $data ) = @_;
 
-    my @params;
+    my %params;
+    my $design_cmd;
     while ( my( $cmd, $arg ) = each %{ $data } ) {
         next unless $arg;
         next unless $cmd;
+        if ( $cmd eq 'cmd' ) {
+            $design_cmd = $arg;
+            next;
+        }
         next if $cmd eq 'comment';
         # if multiple args we need to split it
-        my @args = split /\|/, $arg;
-        for my $single_arg ( @args ) {
-            push @params, '--' . _trim($cmd);
-            push @params, _trim($single_arg);
-        }
+        my @args = map{ _trim($_) } split /\|/, $arg;
+        $params{ _trim($cmd) } = \@args;
     }
 
-    my $target_gene = _trim( $data->{'target-gene'} );
+    unless ( $design_cmd ) {
+        say 'NO cmd value, skipping record';
+        return;
+    }
+
+    my $target_gene;
+    if ( $design_cmd eq 'shorten-arm-design' ) {
+        $target_gene = $data->{'design-id'};
+    }
+    else {
+        $target_gene = _trim( $data->{'target-gene'} );
+    }
+
     # can not have : symbols in dir name
     $target_gene =~ s/://g;
 
@@ -138,21 +125,14 @@ sub get_params {
         my $target_exon = _trim($data->{'target-exon'});
         $target_exon =~ s/://g;
         $dir_name = $target_gene . '#' . $target_exon;
-
     }
     else {
-        if ( exists $targeted_genes{$target_gene} ) {
-            $dir_name = $target_gene . '-' . $targeted_genes{$target_gene}
-        }
-        else {
-            $dir_name = $target_gene;
-        }
-        $targeted_genes{$target_gene}++;
+        $dir_name = $target_gene . '-' . ++$targeted_genes{$target_gene}
     }
 
     my $dir = $base_dir->subdir($dir_name);
-    push @params, '--dir', $dir->stringify;
-    return ( \@params, $dir );
+    $params{dir} = [ $dir->stringify ];
+    return ( \%params, $design_cmd );
 }
 
 sub _trim{
@@ -179,11 +159,6 @@ create-multiple-designs.pl - Create multiple designs
       --persist         Persist newly created designs to LIMS2
       --alt-designs     Create alternate designs
       --dir             Directory where design-create output goes
-      --del-loc         Specify deletion design, coordinate based target
-      --del-exon        Specify deletion designs, targeting exon(s)
-      --cond-loc        Specify conditional design, coordinate based target
-      --gibson-exon     Specify gibson designs, targeting exon(s)
-      --gibson-loc      Specify gibson designs, coordinate based target
       --gene            Only create this gene(s), picked from input file
       --param           Specify additional param(s) not in file
       --dry-run         Just print out command that would be called, don't call it
@@ -199,11 +174,5 @@ design create command. The column headers represent the parameter name.
 =head1 AUTHOR
 
 Sajith Perera
-
-=head1 BUGS
-
-None reported... yet.
-
-=head1 TODO
 
 =cut

@@ -17,7 +17,6 @@ my $log_level = $DEBUG;
 GetOptions(
     'species=s'        => \my $species,
     'gene_name_type=s' => \my $gene_name_type,
-    'missing'          => \my $missing,
 );
 
 Log::Log4perl->easy_init( { level => $log_level, layout => '%p %x %m%n' } );
@@ -29,7 +28,8 @@ const my $DEFAULT_BUILD => 73;
 
 WARN( "ASSEMBLY: $DEFAULT_ASSEMBLY, BUILD: $DEFAULT_BUILD" );
 
-my $schema = LIMS2::Model->new( user => 'webapp' )->schema;
+my $model = LIMS2::Model->new( user => 'lims2' );
+my $schema = $model->schema;
 
 my @genes = slurp \*STDIN;
 chomp(@genes);
@@ -58,6 +58,7 @@ my @design_targets = $schema->resultset('DesignTarget')->search(
     }
 );
 
+# grabs gibson designs only
 my ( $design_data ) = bulk_designs_for_design_targets( $schema, \@design_targets, $species, $DEFAULT_ASSEMBLY );
 
 my %sorted_dts;
@@ -65,7 +66,6 @@ for my $dt ( @design_targets ) {
     push @{ $sorted_dts{ $dt->$gene_name_type } }, $dt;
 }
 
-#TODO check if the gene has any designs already sp12 Mon 09 Dec 2013 15:09:55 GMT
 for my $gene ( @genes ) {
     Log::Log4perl::NDC->remove;
     Log::Log4perl::NDC->push( $gene );
@@ -96,7 +96,7 @@ for my $gene ( @genes ) {
 }
 
 ## no critic(ProhibitCascadingIfElse)
-sub enough_designs{
+sub enough_designs {
     my ( $dts ) = @_;
     my $dt_count = @{ $dts };
 
