@@ -1,10 +1,5 @@
 {{$NEXT}}
 
-0.028     2014-08-18 11:14:05 Europe/London
-
-    Pass sequencing_primer option to Primer3.
-    Bugfixes.
-
 0.027     2014-07-11 13:57:59 Europe/London
 
     Various bugfixes and script improvements.
