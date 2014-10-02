@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::TargetExons;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::TargetExons::VERSION = '0.028';
+    $DesignCreate::CmdRole::TargetExons::VERSION = '0.029';
 }
 ## use critic
 
@@ -146,7 +146,16 @@ sub calculate_target_region_coordinates {
 
     $self->log->info( 'Calculating target coordinates for exon(s)' );
     my $five_prime_exon = $self->build_exon( $self->five_prime_exon );
-    $self->chr_name( $five_prime_exon->seq_region_name ) unless $self->chr_name;
+    unless ( $self->chr_name ) {
+        if ( is_Chromosome( $five_prime_exon->seq_region_name ) ) {
+            $self->chr_name( $five_prime_exon->seq_region_name );
+        }
+        else {
+            DesignCreate::Exception->throw( 'Unexpected chromosome for exon '
+                    . $self->five_prime_exon . ': '
+                    . $five_prime_exon->seq_region_name );
+        }
+    }
     $self->chr_strand( $five_prime_exon->strand ) unless $self->chr_strand;
 
     my $three_prime_exon

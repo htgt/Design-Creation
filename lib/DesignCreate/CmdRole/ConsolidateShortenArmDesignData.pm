@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::ConsolidateShortenArmDesignData;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::ConsolidateShortenArmDesignData::VERSION = '0.028';
+    $DesignCreate::CmdRole::ConsolidateShortenArmDesignData::VERSION = '0.029';
 }
 ## use critic
 
