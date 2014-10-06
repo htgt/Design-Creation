@@ -1,5 +1,9 @@
 {{$NEXT}}
 
+0.029     2014-10-02 09:03:59 Europe/London
+
+    Bugfix: throw meaningful error when unexpected chromosome used
+
 0.027     2014-07-11 13:57:59 Europe/London
 
     Various bugfixes and script improvements.
