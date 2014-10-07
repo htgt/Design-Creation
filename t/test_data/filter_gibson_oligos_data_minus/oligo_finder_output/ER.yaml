@@ -1,113 +1,127 @@
 ---
-- gc_content: '40.000'
-  id: ER-0
-  melting_temp: '59.758'
-  offset: 11
+- gc_content: '52.174'
+  id: ER-8
+  melting_temp: '61.306'
+  offset: 1
   oligo: ER
   oligo_direction: reverse
-  oligo_end: 118964449
-  oligo_length: 25
-  oligo_seq: CCAAGAAACAGAGCCACAATCTTAA
-  oligo_start: 118964425
-  rank: 0
+  oligo_end: 119093727
+  oligo_length: 23
+  oligo_seq: CCCAGGAACACCAAGAAACAGAG
+  oligo_start: 119093705
+  rank: 8
   region: exon
-  target_region_end: 118966477
-  target_region_start: 118964414
-- gc_content: '40.000'
-  id: ER-1
-  melting_temp: '60.282'
-  offset: 30
-  oligo: ER
-  oligo_direction: reverse
-  oligo_end: 118964468
-  oligo_length: 25
-  oligo_seq: TCTTAAATTCCTATGGTTTGCCCCT
-  oligo_start: 118964444
-  rank: 1
-  region: exon
-  target_region_end: 118966477
-  target_region_start: 118964414
-- gc_content: '44.000'
-  id: ER-2
-  melting_temp: '60.335'
-  offset: 65
-  oligo: ER
-  oligo_direction: reverse
-  oligo_end: 118964503
-  oligo_length: 25
-  oligo_seq: GTAGAGCCTGTTTATATTGCATGGC
-  oligo_start: 118964479
-  rank: 2
-  region: exon
-  target_region_end: 118966477
-  target_region_start: 118964414
-- gc_content: '44.000'
-  id: ER-3
-  melting_temp: '60.745'
-  offset: 46
-  oligo: ER
-  oligo_direction: reverse
-  oligo_end: 118964484
-  oligo_length: 25
-  oligo_seq: TTTGCCCCTTCAGTTAACAGTAGAG
-  oligo_start: 118964460
-  rank: 3
-  region: exon
-  target_region_end: 118966477
-  target_region_start: 118964414
-- gc_content: '45.833'
-  id: ER-4
-  melting_temp: '59.842'
-  offset: 40
-  oligo: ER
-  oligo_direction: reverse
-  oligo_end: 118964477
-  oligo_length: 24
-  oligo_seq: CTATGGTTTGCCCCTTCAGTTAAC
-  oligo_start: 118964454
-  rank: 4
-  region: exon
-  target_region_end: 118966477
-  target_region_start: 118964414
-- gc_content: '40.000'
-  id: ER-5
-  melting_temp: '58.025'
-  offset: 21
-  oligo: ER
-  oligo_direction: reverse
-  oligo_end: 118964459
-  oligo_length: 25
-  oligo_seq: GAGCCACAATCTTAAATTCCTATGG
-  oligo_start: 118964435
-  rank: 5
-  region: exon
-  target_region_end: 118966477
-  target_region_start: 118964414
+  target_region_end: 119095767
+  target_region_start: 119093704
 - gc_content: '50.000'
   id: ER-6
   melting_temp: '61.829'
   offset: 72
   oligo: ER
   oligo_direction: reverse
-  oligo_end: 118964509
+  oligo_end: 119093799
   oligo_length: 24
   oligo_seq: CTGTTTATATTGCATGGCCCCTCC
-  oligo_start: 118964486
+  oligo_start: 119093776
   rank: 6
   region: exon
-  target_region_end: 118966477
-  target_region_start: 118964414
+  target_region_end: 119095767
+  target_region_start: 119093704
+- gc_content: '45.833'
+  id: ER-4
+  melting_temp: '59.842'
+  offset: 40
+  oligo: ER
+  oligo_direction: reverse
+  oligo_end: 119093767
+  oligo_length: 24
+  oligo_seq: CTATGGTTTGCCCCTTCAGTTAAC
+  oligo_start: 119093744
+  rank: 4
+  region: exon
+  target_region_end: 119095767
+  target_region_start: 119093704
+- gc_content: '40.000'
+  id: ER-5
+  melting_temp: '58.025'
+  offset: 21
+  oligo: ER
+  oligo_direction: reverse
+  oligo_end: 119093749
+  oligo_length: 25
+  oligo_seq: GAGCCACAATCTTAAATTCCTATGG
+  oligo_start: 119093725
+  rank: 5
+  region: exon
+  target_region_end: 119095767
+  target_region_start: 119093704
+- gc_content: '44.000'
+  id: ER-2
+  melting_temp: '60.335'
+  offset: 65
+  oligo: ER
+  oligo_direction: reverse
+  oligo_end: 119093793
+  oligo_length: 25
+  oligo_seq: GTAGAGCCTGTTTATATTGCATGGC
+  oligo_start: 119093769
+  rank: 2
+  region: exon
+  target_region_end: 119095767
+  target_region_start: 119093704
+- gc_content: '40.000'
+  id: ER-1
+  melting_temp: '60.282'
+  offset: 30
+  oligo: ER
+  oligo_direction: reverse
+  oligo_end: 119093758
+  oligo_length: 25
+  oligo_seq: TCTTAAATTCCTATGGTTTGCCCCT
+  oligo_start: 119093734
+  rank: 1
+  region: exon
+  target_region_end: 119095767
+  target_region_start: 119093704
+- gc_content: '44.000'
+  id: ER-3
+  melting_temp: '60.745'
+  offset: 46
+  oligo: ER
+  oligo_direction: reverse
+  oligo_end: 119093774
+  oligo_length: 25
+  oligo_seq: TTTGCCCCTTCAGTTAACAGTAGAG
+  oligo_start: 119093750
+  rank: 3
+  region: exon
+  target_region_end: 119095767
+  target_region_start: 119093704
 - gc_content: '45.833'
   id: ER-7
   melting_temp: '61.934'
   offset: 6
   oligo: ER
   oligo_direction: reverse
-  oligo_end: 118964443
+  oligo_end: 119093733
   oligo_length: 24
   oligo_seq: GAACACCAAGAAACAGAGCCACAA
-  oligo_start: 118964420
+  oligo_start: 119093710
   rank: 7
   region: exon
-  target_region_end: 118966477
-  target_region_start: 118964414
+  target_region_end: 119095767
+  target_region_start: 119093704
+- gc_content: '40.000'
+  id: ER-0
+  melting_temp: '59.758'
+  offset: 11
+  oligo: ER
+  oligo_direction: reverse
+  oligo_end: 119093739
+  oligo_length: 25
+  oligo_seq: CCAAGAAACAGAGCCACAATCTTAA
+  oligo_start: 119093715
+  rank: 0
+  region: exon
+  target_region_end: 119095767
+  target_region_start: 119093704
