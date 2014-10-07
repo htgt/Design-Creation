@@ -196,9 +196,9 @@ sub calculate_oligo_coords_and_sequence : Test(19) {
 
     is $oligo_data{target_region_start}, $o->oligo_region_data->{five_prime}{start}
         , 'target_region_start is correct';
-    is $oligo_data{oligo_start}, '32904836', 'oligo_start is correct';
-    is $oligo_data{oligo_end}, '32904860', 'oligo_end is correct';
-    is $oligo_data{offset}, '328', 'offset is correct';
+    is $oligo_data{oligo_start}, '32904517', 'oligo_start is correct';
+    is $oligo_data{oligo_end}, '32904541', 'oligo_end is correct';
+    is $oligo_data{offset}, '9', 'offset is correct';
     is $oligo_data{oligo_seq}, $forward_primer->seq->seq, 'oligo_seq is correct';
 
     my %new_oligo_data;
@@ -214,8 +214,8 @@ sub calculate_oligo_coords_and_sequence : Test(19) {
 
     is $new_oligo_data{target_region_start}, $oligo_data{target_region_start},
         , 'target_region_start is the same on forward strand';
-    is $new_oligo_data{oligo_start}, '32904836', 'oligo_start is correct';
-    is $new_oligo_data{oligo_end}, '32904860', 'oligo_end is correct';
+    is $new_oligo_data{oligo_start}, '32904517', 'oligo_start is correct';
+    is $new_oligo_data{oligo_end}, '32904541', 'oligo_end is correct';
     is $new_oligo_data{offset}, $forward_primer->start, 'offset is correct';
     is $new_oligo_data{oligo_seq}, $forward_primer->seq->seq, 'oligo_seq is correct';
 }
