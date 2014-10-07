@@ -1,85 +1,85 @@
 ---
-- gc_content: '40.000'
-  id: 3F-0
-  melting_temp: '59.875'
-  offset: 1605
-  oligo: 3F
-  oligo_direction: forward
-  oligo_end: 118964393
-  oligo_length: 25
-  oligo_seq: CTGCTTCTGCCTCAATAGTTTTCAT
-  oligo_start: 118964369
-  rank: 0
-  region: three_prime
-  target_region_end: 118964413
-  target_region_start: 118962764
-- gc_content: '45.833'
-  id: 3F-1
-  melting_temp: '60.625'
-  offset: 1599
-  oligo: 3F
-  oligo_direction: forward
-  oligo_end: 118964386
-  oligo_length: 24
-  oligo_seq: TCCTTTCTGCTTCTGCCTCAATAG
-  oligo_start: 118964363
-  rank: 1
-  region: three_prime
-  target_region_end: 118964413
-  target_region_start: 118962764
 - gc_content: '52.174'
   id: 3F-2
   melting_temp: '60.367'
-  offset: 1583
+  offset: 1833
   oligo: 3F
   oligo_direction: forward
-  oligo_end: 118964369
+  oligo_end: 119093659
   oligo_length: 23
   oligo_seq: GAGTTCTCCTGGTACGTCCTTTC
-  oligo_start: 118964347
+  oligo_start: 119093637
   rank: 2
   region: three_prime
-  target_region_end: 118964413
-  target_region_start: 118962764
+  target_region_end: 119093703
+  target_region_start: 119091804
 - gc_content: '50.000'
   id: 3F-3
   melting_temp: '60.029'
-  offset: 1591
+  offset: 1841
   oligo: 3F
   oligo_direction: forward
-  oligo_end: 118964376
+  oligo_end: 119093666
   oligo_length: 22
   oligo_seq: CTGGTACGTCCTTTCTGCTTCT
-  oligo_start: 118964355
+  oligo_start: 119093645
   rank: 3
   region: three_prime
-  target_region_end: 118964413
-  target_region_start: 118962764
-- gc_content: '50.000'
-  id: 3F-4
-  melting_temp: '62.091'
-  offset: 1554
-  oligo: 3F
-  oligo_direction: forward
-  oligo_end: 118964341
-  oligo_length: 24
-  oligo_seq: CTTACCTCAGAGGCTGGGACTTTT
-  oligo_start: 118964318
-  rank: 4
-  region: three_prime
-  target_region_end: 118964413
-  target_region_start: 118962764
+  target_region_end: 119093703
+  target_region_start: 119091804
 - gc_content: '50.000'
   id: 3F-5
   melting_temp: '60.225'
-  offset: 1571
+  offset: 1821
   oligo: 3F
   oligo_direction: forward
-  oligo_end: 118964356
+  oligo_end: 119093646
   oligo_length: 22
   oligo_seq: GACTTTTGCCCAGAGTTCTCCT
-  oligo_start: 118964335
+  oligo_start: 119093625
   rank: 5
   region: three_prime
-  target_region_end: 118964413
-  target_region_start: 118962764
+  target_region_end: 119093703
+  target_region_start: 119091804
+- gc_content: '40.000'
+  id: 3F-0
+  melting_temp: '59.875'
+  offset: 1855
+  oligo: 3F
+  oligo_direction: forward
+  oligo_end: 119093683
+  oligo_length: 25
+  oligo_seq: CTGCTTCTGCCTCAATAGTTTTCAT
+  oligo_start: 119093659
+  rank: 0
+  region: three_prime
+  target_region_end: 119093703
+  target_region_start: 119091804
+- gc_content: '50.000'
+  id: 3F-4
+  melting_temp: '62.091'
+  offset: 1804
+  oligo: 3F
+  oligo_direction: forward
+  oligo_end: 119093631
+  oligo_length: 24
+  oligo_seq: CTTACCTCAGAGGCTGGGACTTTT
+  oligo_start: 119093608
+  rank: 4
+  region: three_prime
+  target_region_end: 119093703
+  target_region_start: 119091804
+- gc_content: '45.833'
+  id: 3F-1
+  melting_temp: '60.625'
+  offset: 1849
+  oligo: 3F
+  oligo_direction: forward
+  oligo_end: 119093676
+  oligo_length: 24
+  oligo_seq: TCCTTTCTGCTTCTGCCTCAATAG
+  oligo_start: 119093653
+  rank: 1
+  region: three_prime
+  target_region_end: 119093703
+  target_region_start: 119091804

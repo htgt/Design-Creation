@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::TargetExons;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::TargetExons::VERSION = '0.029';
+    $DesignCreate::CmdRole::TargetExons::VERSION = '0.030';
 }
 ## use critic
 

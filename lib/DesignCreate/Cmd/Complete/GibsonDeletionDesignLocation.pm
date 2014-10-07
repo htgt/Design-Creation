@@ -1,7 +1,7 @@
 package DesignCreate::Cmd::Complete::GibsonDeletionDesignLocation;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Cmd::Complete::GibsonDeletionDesignLocation::VERSION = '0.029';
+    $DesignCreate::Cmd::Complete::GibsonDeletionDesignLocation::VERSION = '0.030';
 }
 ## use critic
 

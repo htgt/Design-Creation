@@ -1,7 +1,7 @@
 package DesignCreate::Cmd::Step::TargetExons;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Cmd::Step::TargetExons::VERSION = '0.029';
+    $DesignCreate::Cmd::Step::TargetExons::VERSION = '0.030';
 }
 ## use critic
 

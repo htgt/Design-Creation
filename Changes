@@ -1,3 +1,7 @@
+0.030     2014-10-07 14:31:52 Europe/London
+
+    Update design code to work with new human assembly: GRCh38
+
 0.029     2014-10-02 09:03:59 Europe/London
 
     Bugfix: throw meaningful error when unexpected chromosome used

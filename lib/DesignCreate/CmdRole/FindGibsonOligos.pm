@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::FindGibsonOligos;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::FindGibsonOligos::VERSION = '0.029';
+    $DesignCreate::CmdRole::FindGibsonOligos::VERSION = '0.030';
 }
 ## use critic
 
