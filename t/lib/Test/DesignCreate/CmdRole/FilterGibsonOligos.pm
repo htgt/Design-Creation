@@ -20,6 +20,7 @@ BEGIN {
     __PACKAGE__->mk_classdata( 'test_role' => 'DesignCreate::CmdRole::FilterGibsonOligos' );
 }
 
+use Smart::Comments;
 sub run_bwa : Test(startup => 2) {
     my $test = shift;
 
@@ -83,7 +84,7 @@ sub check_oligo_sequence : Test(5) {
     ok !$o->check_oligo_sequence( $oligo_data, $oligo_slice ), 'check_oligo_sequence check fails';
 }
 
-sub check_oligo_not_near_exon : Test(4) {
+sub check_oligo_not_near_exon : Test(5) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
 
@@ -98,16 +99,17 @@ sub check_oligo_not_near_exon : Test(4) {
     );
 
     ok $o->check_oligo_not_near_exon( $oligo_data, $oligo_slice )
-        , 'check_oligo_not_near_exon check passes';
+        , 'check_oligo_not_near_exon check passes because check not set';
 
+    ok $o = $test->_get_test_object( undef, 100 ), 'can grab test object';
     # moving slice back 50 bases takes it close enough to a exon
     my $oligo_slice_modified = $o->get_slice(
-        $oligo_data->{oligo_start} - 50,
-        $oligo_data->{oligo_end} - 50,
+        $oligo_data->{oligo_start},
+        $oligo_data->{oligo_end},
         $o->design_param( 'chr_name' ),
     );
     ok !$o->check_oligo_not_near_exon( $oligo_data, $oligo_slice_modified )
-        , 'check_oligo_not_near_exon check fails';
+        , 'check_oligo_not_near_exon check fails after turning check on';
 }
 
 sub validate_oligo : Test(5) {
@@ -193,7 +195,8 @@ sub validate_oligo_pairs : Tests(15){
     }
 
     is_deeply $o->get_valid_pairs('three_prime'), [
-        { '3F' => '3F-1', '3R' => '3R-1' },
+        { '3F' => '3F-2', '3R' => '3R-2' },
+        { '3F' => '3F-4', '3R' => '3R-4' },
 
     ], 'we get expected three_prime region pair';
 
@@ -206,11 +209,12 @@ sub validate_oligo_pairs : Tests(15){
 
     ok my $three_prime_oligos = $o2->get_valid_pairs('three_prime'),
         'can grab three_prime region valid pairs';
-    is scalar( @{ $three_prime_oligos } ),2, 'with relaxed oligo validation we get 2 sets of three_prime oligos';
+    is scalar( @{ $three_prime_oligos } ),3, 'with relaxed oligo validation we get 2 sets of three_prime oligos';
     # NOTE that the 0 pair below is ranked higher by Primer3 but has a few more off targets
     is_deeply $o2->get_valid_pairs('three_prime'), [
-        { '3F' => '3F-1', '3R' => '3R-1' },
-        { '3F' => '3F-0', '3R' => '3R-0' },
+        { '3F' => '3F-2', '3R' => '3R-2' },
+        { '3F' => '3F-4', '3R' => '3R-4' },
+        { '3F' => '3F-5', '3R' => '3R-5' },
     ], '.. and the ranking of these pairs is correct, the pairs with less combined hits is ranked higher';
 }
 
@@ -303,8 +307,9 @@ sub check_oligo_specificity : Tests(9) {
 }
 
 sub _get_test_object {
-    my ( $test, $num_genomic_hits ) = @_;
+    my ( $test, $num_genomic_hits, $exon_check_flank_length ) = @_;
     $num_genomic_hits //= 1;
+    $exon_check_flank_length //= 0;
 
     my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute;
     my $data_dir = dir($FindBin::Bin)->absolute->subdir('test_data/filter_gibson_oligos_data_minus');
@@ -315,8 +320,8 @@ sub _get_test_object {
     return $metaclass->new_object(
         dir                     => $dir,
         lims2_api               => $test->get_mock_lims2_api,
-        exon_check_flank_length => 100,
         persist                 => 1,
+        exon_check_flank_length => $exon_check_flank_length,
         num_genomic_hits        => $num_genomic_hits,
     );
 }

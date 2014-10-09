@@ -1,85 +1,85 @@
 ---
-- gc_content: '44.000'
-  id: 5R-0
-  melting_temp: '60.394'
-  offset: 45
-  oligo: 5R
-  oligo_direction: reverse
-  oligo_end: 118966547
-  oligo_length: 25
-  oligo_seq: GCGTAGGATTTTTAAAGGAAAGGGG
-  oligo_start: 118966523
-  rank: 0
-  region: five_prime
-  target_region_end: 118968077
-  target_region_start: 118966478
-- gc_content: '40.000'
-  id: 5R-1
-  melting_temp: '59.215'
-  offset: 65
-  oligo: 5R
-  oligo_direction: reverse
-  oligo_end: 118966567
-  oligo_length: 25
-  oligo_seq: AGGGGTCAATATTATAGCTACTGCA
-  oligo_start: 118966543
-  rank: 1
-  region: five_prime
-  target_region_end: 118968077
-  target_region_start: 118966478
-- gc_content: '52.174'
-  id: 5R-2
-  melting_temp: '60.243'
-  offset: 17
-  oligo: 5R
-  oligo_direction: reverse
-  oligo_end: 118966517
-  oligo_length: 23
-  oligo_seq: CTAGAGAGCGTCTGGGAAATCTG
-  oligo_start: 118966495
-  rank: 2
-  region: five_prime
-  target_region_end: 118968077
-  target_region_start: 118966478
 - gc_content: '47.826'
   id: 5R-3
   melting_temp: '60.730'
   offset: 39
   oligo: 5R
   oligo_direction: reverse
-  oligo_end: 118966539
+  oligo_end: 119095829
   oligo_length: 23
   oligo_seq: GTGCCGGCGTAGGATTTTTAAAG
-  oligo_start: 118966517
+  oligo_start: 119095807
   rank: 3
   region: five_prime
-  target_region_end: 118968077
-  target_region_start: 118966478
-- gc_content: '59.091'
-  id: 5R-4
-  melting_temp: '61.010'
-  offset: 3
+  target_region_end: 119097767
+  target_region_start: 119095768
+- gc_content: '40.000'
+  id: 5R-1
+  melting_temp: '59.215'
+  offset: 65
   oligo: 5R
   oligo_direction: reverse
-  oligo_end: 118966502
-  oligo_length: 22
-  oligo_seq: GAGTCTGAGGCCACCTAGAGAG
-  oligo_start: 118966481
-  rank: 4
+  oligo_end: 119095857
+  oligo_length: 25
+  oligo_seq: AGGGGTCAATATTATAGCTACTGCA
+  oligo_start: 119095833
+  rank: 1
   region: five_prime
-  target_region_end: 118968077
-  target_region_start: 118966478
+  target_region_end: 119097767
+  target_region_start: 119095768
 - gc_content: '50.000'
   id: 5R-5
   melting_temp: '62.642'
   offset: 34
   oligo: 5R
   oligo_direction: reverse
-  oligo_end: 118966533
+  oligo_end: 119095823
   oligo_length: 22
   oligo_seq: AATCTGTGCCGGCGTAGGATTT
-  oligo_start: 118966512
+  oligo_start: 119095802
   rank: 5
   region: five_prime
-  target_region_end: 118968077
-  target_region_start: 118966478
+  target_region_end: 119097767
+  target_region_start: 119095768
+- gc_content: '44.000'
+  id: 5R-0
+  melting_temp: '60.394'
+  offset: 45
+  oligo: 5R
+  oligo_direction: reverse
+  oligo_end: 119095837
+  oligo_length: 25
+  oligo_seq: GCGTAGGATTTTTAAAGGAAAGGGG
+  oligo_start: 119095813
+  rank: 0
+  region: five_prime
+  target_region_end: 119097767
+  target_region_start: 119095768
+- gc_content: '52.174'
+  id: 5R-2
+  melting_temp: '60.243'
+  offset: 17
+  oligo: 5R
+  oligo_direction: reverse
+  oligo_end: 119095807
+  oligo_length: 23
+  oligo_seq: CTAGAGAGCGTCTGGGAAATCTG
+  oligo_start: 119095785
+  rank: 2
+  region: five_prime
+  target_region_end: 119097767
+  target_region_start: 119095768
+- gc_content: '59.091'
+  id: 5R-4
+  melting_temp: '61.010'
+  offset: 3
+  oligo: 5R
+  oligo_direction: reverse
+  oligo_end: 119095792
+  oligo_length: 22
+  oligo_seq: GAGTCTGAGGCCACCTAGAGAG
+  oligo_start: 119095771
+  rank: 4
+  region: five_prime
+  target_region_end: 119097767
+  target_region_start: 119095768

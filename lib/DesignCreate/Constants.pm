@@ -78,13 +78,13 @@ const our $EXONERATE_CMD => $ENV{EXONERATE_CMD}
 # '/software/ensembl/exonerate-2.2.0/bin/exonerate'
 
 const our %BWA_GENOME_FILES => (
-    Human => $ENV{'DESIGN_CREATION_HUMAN_FA'} // '/lustre/scratch110/srpipe/references/Human/GRCh37_53/all/bwa/Homo_sapiens.GRCh37.dna.all.fa',
+    Human => $ENV{'DESIGN_CREATION_HUMAN_FA'} // '/lustre/scratch110/srpipe/references/Human/GRCh38_15/all/bwa/Homo_sapiens.GRCh38_15.fa',
     Mouse => $ENV{'DESIGN_CREATION_MOUSE_FA'} // '/lustre/scratch110/srpipe/references/Mus_musculus/GRCm38/all/bwa/Mus_musculus.GRCm38.68.dna.toplevel.fa',
 );
 
 const our %CURRENT_ASSEMBLY => (
     Mouse => 'GRCm38',
-    Human => 'GRCh37',
+    Human => 'GRCh38',
 );
 
 const our %GIBSON_PRIMER_REGIONS => (
@@ -134,6 +134,7 @@ const our %DEFAULT_CHROMOSOME_DIR => (
     },
     Human =>{
         GRCh37 => '/lustre/scratch109/blastdb/Users/team87/Human/GRCh37',
+        GRCh38 => '/lustre/scratch109/blastdb/Users/team87/Human/GRCh38',
     },
 );
 

@@ -33,8 +33,8 @@ LOGDIE( 'Specify file with gene names' ) unless $genes_file;
 $species ||= 'Human';
 LOGDIE( 'Must specify species' ) unless $species;
 
-const my $DEFAULT_ASSEMBLY => $species eq 'Human' ? 'GRCh37' :  $species eq 'Mouse' ? 'GRCm38' : undef;
-const my $DEFAULT_BUILD => 73;
+const my $DEFAULT_ASSEMBLY => $species eq 'Human' ? 'GRCh38' :  $species eq 'Mouse' ? 'GRCm38' : undef;
+const my $DEFAULT_BUILD => 76;
 
 LOGDIE( "Can not work out default assembly for species $species" ) unless $DEFAULT_ASSEMBLY;
 
@@ -78,7 +78,7 @@ ensembl_id_b
 my $ensembl_util = LIMS2::Util::EnsEMBL->new( species => $species );
 my $db = $ensembl_util->db_adaptor;
 my $db_details = $db->to_hash;
-WARN("Ensembl DB: " . $db_details->{DBNAME});
+WARN("Ensembl DB: " . $db_details->{'-DBNAME'});
 
 my ( $target_output, $target_output_csv, $design_output, $design_output_csv, $failed_output, $failed_output_csv );
 $target_output = IO::File->new( 'target_parameters.csv' , 'w' );
