@@ -32,6 +32,7 @@ const my $DEFAULT_ASSEMBLY => $species eq 'Human' ? 'GRCh37' :  $species eq 'Mou
 #'region-offset-5r-ef' ,
 #'region-offset-er-3f',
 const my @DESIGN_COLUMN_HEADERS => (
+'cmd',
 'target-gene',
 'target-exon',
 'exon-check-flank-length',

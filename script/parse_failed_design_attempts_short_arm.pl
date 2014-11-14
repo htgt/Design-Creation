@@ -20,6 +20,7 @@ GetOptions(
 Log::Log4perl->easy_init( { level => $INFO, layout => '%p %m%n' } );
 
 const my @DESIGN_COLUMN_HEADERS => (
+'cmd',
 'target-gene',
 'design-id',
 'repeat-mask-class',
