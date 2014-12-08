@@ -1,5 +1,10 @@
 {{$NEXT}}
 
+0.031     2014-12-08 09:09:17 Europe/London
+
+    Minor bugfixes.
+    Add optional design comment
+
 0.030     2014-10-07 14:31:52 Europe/London
 
     Update design code to work with new human assembly: GRCh38
