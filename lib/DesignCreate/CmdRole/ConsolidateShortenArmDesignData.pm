@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::ConsolidateShortenArmDesignData;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::ConsolidateShortenArmDesignData::VERSION = '0.030';
+    $DesignCreate::CmdRole::ConsolidateShortenArmDesignData::VERSION = '0.031';
 }
 ## use critic
 
@@ -64,6 +64,14 @@ has software_version => (
     isa        => 'Str',
     traits     => [ 'NoGetopt' ],
     lazy_build => 1,
+);
+
+has design_comment => (
+    is            => 'ro',
+    isa           => 'Str',
+    traits        => [ 'Getopt' ],
+    documentation => 'Optional design comment',
+    cmd_flag      => 'design-comment',
 );
 
 sub _build_software_version {
@@ -296,6 +304,16 @@ sub build_design_data {
     for my $type ( qw( phase target_transcript cassette_first ) ) {
         $design_data{$type } = $self->original_design->{$type}
             if exists $self->original_design->{$type};
+    }
+
+    if ( $self->design_comment ) {
+        $design_data{comments} = [
+            {
+                category     => 'Other',
+                comment_text => $self->design_comment,
+                created_by   => $self->created_by,
+            }
+        ];
     }
 
     return \%design_data;

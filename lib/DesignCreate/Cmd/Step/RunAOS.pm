@@ -1,7 +1,7 @@
 package DesignCreate::Cmd::Step::RunAOS;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Cmd::Step::RunAOS::VERSION = '0.030';
+    $DesignCreate::Cmd::Step::RunAOS::VERSION = '0.031';
 }
 ## use critic
 
