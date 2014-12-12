@@ -28,6 +28,7 @@ const my @DESIGN_COLUMN_HEADERS => (
 'region-length-g5' ,
 'region-offset-g3',
 'region-length-g3',
+'design-comment',
 'comment',
 );
 
