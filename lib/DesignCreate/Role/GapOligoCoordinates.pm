@@ -1,7 +1,7 @@
 package DesignCreate::Role::GapOligoCoordinates;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Role::GapOligoCoordinates::VERSION = '0.031';
+    $DesignCreate::Role::GapOligoCoordinates::VERSION = '0.032';
 }
 ## use critic
 
