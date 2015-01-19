@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::OligoRegionsGlobalOnly;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::OligoRegionsGlobalOnly::VERSION = '0.032';
+    $DesignCreate::CmdRole::OligoRegionsGlobalOnly::VERSION = '0.033';
 }
 ## use critic
 

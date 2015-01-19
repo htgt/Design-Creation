@@ -1,7 +1,7 @@
 package DesignCreate::Cmd::Step::FindOligos;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Cmd::Step::FindOligos::VERSION = '0.032';
+    $DesignCreate::Cmd::Step::FindOligos::VERSION = '0.033';
 }
 ## use critic
 

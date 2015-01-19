@@ -1,7 +1,7 @@
 package DesignCreate::Cmd::Step::FindGibsonOligos;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Cmd::Step::FindGibsonOligos::VERSION = '0.032';
+    $DesignCreate::Cmd::Step::FindGibsonOligos::VERSION = '0.033';
 }
 ## use critic
 
