@@ -35,7 +35,7 @@ sub ensembl_util : Test(7) {
     ok my $o = $test->_get_test_object, 'can grab test object';
 
     ok my $ensembl_util = $o->ensembl_util, 'can grab ensembl util';
-    isa_ok $ensembl_util, 'LIMS2::Util::EnsEMBL';
+    isa_ok $ensembl_util, 'WebAppCommon::Util::EnsEMBL';
 
     ok my $slice_adaptor = $o->ensembl_util->slice_adaptor, 'can grab slice adaptor';
     isa_ok $slice_adaptor, 'Bio::EnsEMBL::DBSQL::SliceAdaptor';
