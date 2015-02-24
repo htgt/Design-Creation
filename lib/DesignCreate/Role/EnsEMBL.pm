@@ -1,7 +1,7 @@
 package DesignCreate::Role::EnsEMBL;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Role::EnsEMBL::VERSION = '0.033';
+    $DesignCreate::Role::EnsEMBL::VERSION = '0.034';
 }
 ## use critic
 
@@ -23,7 +23,7 @@ use namespace::autoclean;
 
 has ensembl_util => (
     is         => 'ro',
-    isa        => 'LIMS2::Util::EnsEMBL',
+    isa        => 'WebAppCommon::Util::EnsEMBL',
     traits     => [ 'NoGetopt' ],
     lazy_build => 1,
     handles    => [ qw( slice_adaptor exon_adaptor gene_adaptor ) ],
@@ -31,10 +31,10 @@ has ensembl_util => (
 
 sub _build_ensembl_util {
     my $self = shift;
-    require LIMS2::Util::EnsEMBL;
+    require WebAppCommon::Util::EnsEMBL;
 
     my $species = $self->design_param( 'species' );
-    my $ensembl_util = LIMS2::Util::EnsEMBL->new( species => $species );
+    my $ensembl_util = WebAppCommon::Util::EnsEMBL->new( species => $species );
 
     # this flag should stop the database connection being lost on long jobs
     $ensembl_util->registry->set_reconnect_when_lost;
