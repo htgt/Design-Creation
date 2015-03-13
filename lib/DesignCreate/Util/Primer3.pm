@@ -45,6 +45,15 @@ const my @PRIMER3_GLOBAL_ARGUMENTS => (
     'primer_thermodynamic_parameters_path',
     'primer_gc_clamp',
     'sequence_primer',
+    'sequence_excluded_region',
+    'sequence_included_region',
+);
+
+has primer3_task => (
+    is       => 'ro',
+    isa      => 'Str',
+    default  => 'pick_pcr_primers',
+    required => 1,
 );
 
 has [
@@ -101,6 +110,11 @@ has primer_min_three_prime_distance => (
 # sequence_primer: preset forward ( left ) primer sequence
 # sequence_primer_revcomp: preset reverse ( right ) primer sequence
 has [ 'sequence_primer', 'sequence_primer_revcomp' ]  => (
+    is  => 'ro',
+    isa => 'Str',
+);
+
+has [ 'sequence_excluded_region', 'sequence_included_region' ] => (
     is  => 'ro',
     isa => 'Str',
 );
@@ -163,7 +177,8 @@ sub run_primer3 {
 
     my $results;
     try{
-        $results = $primer3->pick_pcr_primers( $seq );
+        my $task = $self->primer3_task;
+        $results = $primer3->$task( $seq );
     }
     catch {
         $self->log->debug( "Error running primer3: $_" );
