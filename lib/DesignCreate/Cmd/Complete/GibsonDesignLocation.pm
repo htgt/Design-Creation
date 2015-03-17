@@ -1,7 +1,7 @@
 package DesignCreate::Cmd::Complete::GibsonDesignLocation;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Cmd::Complete::GibsonDesignLocation::VERSION = '0.034';
+    $DesignCreate::Cmd::Complete::GibsonDesignLocation::VERSION = '0.035';
 }
 ## use critic
 

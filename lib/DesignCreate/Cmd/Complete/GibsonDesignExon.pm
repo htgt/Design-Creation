@@ -1,7 +1,7 @@
 package DesignCreate::Cmd::Complete::GibsonDesignExon;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Cmd::Complete::GibsonDesignExon::VERSION = '0.034';
+    $DesignCreate::Cmd::Complete::GibsonDesignExon::VERSION = '0.035';
 }
 ## use critic
 

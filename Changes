@@ -1,3 +1,7 @@
+0.035     2015-03-17 13:57:40 Europe/London
+
+    Primer3 Util: Add primer_task, sequence_excluded_region and sequence_included_region options
+
 0.034     2015-02-24 13:06:57 Europe/London
 
     Switch to using WebAppCommon::Util::EnsEMBL
