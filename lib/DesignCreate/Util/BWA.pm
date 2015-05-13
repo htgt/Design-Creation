@@ -148,6 +148,7 @@ sub run_bwa_checks {
 
     $self->generate_sam_file;
     my $oligo_hits = $self->oligo_hits;
+    #NOTE This is not implemented
     if ( $self->three_prime_check ) {
         $self->generate_bed_file;
         $self->oligo_hits_three_prime_check( $oligo_hits );
