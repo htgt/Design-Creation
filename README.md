@@ -50,7 +50,7 @@ For details look at github [wiki](https://github.com/htgt/Design-Creation/wiki)
 
 ```
    G5               U5       TARGET       D3               G3
-|======|---------|======|-|          |-|======|---------|======|
+|======|---------|======|-|   >>>>   |-|======|---------|======|
 |------|                                                           > G5 Region Length
        |------------------|                                        > G5 Region Offset
                  |------|                                          > U5 Region Length
@@ -64,12 +64,12 @@ For details look at github [wiki](https://github.com/htgt/Design-Creation/wiki)
 ### Conventional Conditional
 
 ```
-   G5              U-REGION           D-REGION             G3
-|======|---------|==========|-------|==========|--------|======|
-|------|                                                           > G5 Region Length
-       |---------|                                                 > G5 Region Offset
-                      |-|                                          > U Oligo Min Gap
-                                         |-|                       > D Oligo Min Gap
-                                                        |------|   > G3 Region Length
-                                             |-----------------|   > G3 Region Offset
+   G5              U-REGION    TARGET    D-REGION             G3
+|======|---------|==========|   >>>>   |==========|--------|======|
+|------|                                                              > G5 Region Length
+       |---------|                                                    > G5 Region Offset
+                      |-|                                             > U Oligo Min Gap
+                                            |-|                       > D Oligo Min Gap
+                                                           |------|   > G3 Region Length
+                                                |-----------------|   > G3 Region Offset
 ```
