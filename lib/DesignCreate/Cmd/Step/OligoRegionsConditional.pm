@@ -2,7 +2,7 @@ package DesignCreate::Cmd::Step::OligoRegionsConditional;
 
 =head1 NAME
 
-DesignCreate::Cmd::Step::OligoRegionsConditional - Create seq files for oligo region, insertion or deletion designs 
+DesignCreate::Cmd::Step::OligoRegionsConditional - Work out coordinate for oligo regions in conditional designs
 
 =head1 DESCRIPTION
 

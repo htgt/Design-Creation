@@ -2,7 +2,7 @@ package DesignCreate::Cmd::Step::OligoRegionsInsDel;
 
 =head1 NAME
 
-DesignCreate::Cmd::Step::OligoRegionsInsDel - Create seq files for oligo region, insertion or deletion designs 
+DesignCreate::Cmd::Step::OligoRegionsInsDel - Work out coordinate for oligo regions in indel designs
 
 =head1 DESCRIPTION
 
