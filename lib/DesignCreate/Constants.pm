@@ -1,7 +1,7 @@
 package DesignCreate::Constants;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Constants::VERSION = '0.035';
+    $DesignCreate::Constants::VERSION = '0.036';
 }
 ## use critic
 
@@ -137,12 +137,10 @@ const our %GIBSON_OLIGO_CLASS => (
 const our %DEFAULT_CHROMOSOME_DIR => (
     Mouse => {
         GRCm38 => '/lustre/scratch109/blastdb/Users/team87/Mouse/GRCm38',
-        #GRCm38 => '/lustre/scratch110/sanger/sp12/temp_ref_files/Mouse/GRCm38',
     },
     Human =>{
         GRCh37 => '/lustre/scratch109/blastdb/Users/team87/Human/GRCh37',
         GRCh38 => '/lustre/scratch109/blastdb/Users/team87/Human/GRCh38',
-        #GRCh38 => '/lustre/scratch110/sanger/sp12/temp_ref_files/Human/GRCh38',
     },
 );
 

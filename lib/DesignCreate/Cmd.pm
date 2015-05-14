@@ -1,7 +1,7 @@
 package DesignCreate::Cmd;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Cmd::VERSION = '0.035';
+    $DesignCreate::Cmd::VERSION = '0.036';
 }
 ## use critic
 
@@ -51,9 +51,9 @@ has verbose => (
 );
 
 has is_step => (
-    is => 'ro',
-    isa => 'Bool',
-    traits => [ 'NoGetopt' ],
+    is      => 'ro',
+    isa     => 'Bool',
+    traits  => [ 'NoGetopt' ],
     default => 0,
 );
 

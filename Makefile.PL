@@ -35,7 +35,8 @@ my %WriteMakefileArgs = (
   "EXE_FILES" => [
     "bin/create-multiple-designs.pl",
     "bin/design-create",
-    "bin/design-create-step"
+    "bin/design-create-step",
+    "bin/farm-wrapper-script.sh"
   ],
   "LICENSE" => "perl",
   "NAME" => "Design::Creation",
@@ -82,7 +83,7 @@ my %WriteMakefileArgs = (
     "strict" => 0,
     "warnings" => 0
   },
-  "VERSION" => "0.035",
+  "VERSION" => "0.036",
   "test" => {
     "TESTS" => "t/*.t"
   }

@@ -1,7 +1,7 @@
 package DesignCreate::Cmd::Step::TargetLocation;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Cmd::Step::TargetLocation::VERSION = '0.035';
+    $DesignCreate::Cmd::Step::TargetLocation::VERSION = '0.036';
 }
 ## use critic
 
