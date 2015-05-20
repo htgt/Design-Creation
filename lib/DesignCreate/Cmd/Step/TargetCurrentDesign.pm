@@ -1,7 +1,7 @@
 package DesignCreate::Cmd::Step::TargetCurrentDesign;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Cmd::Step::TargetCurrentDesign::VERSION = '0.036';
+    $DesignCreate::Cmd::Step::TargetCurrentDesign::VERSION = '0.037';
 }
 ## use critic
 

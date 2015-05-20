@@ -1,7 +1,7 @@
 package DesignCreate::Constants;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Constants::VERSION = '0.036';
+    $DesignCreate::Constants::VERSION = '0.037';
 }
 ## use critic
 
@@ -65,7 +65,7 @@ const our $AOS_LOCATION => $ENV{AOS_LOCATION}
     || '/nfs/team87/farm3_lims2_vms/software/AOS';
 
 const our $PRIMER3_CMD => $ENV{PRIMER3_CMD}
-    || '/nfs/users/nfs_s/sp12/workspace/primer3-2.3.5/src/primer3_core';
+    || '/opt/t87/global/software/primer3-2.3.6/src/primer3_core';
 #TODO switch to value below once vms upgraded sp12 Wed 11 Dec 2013 13:56:19 GMT
 # '/nfs/team87/farm3_lims2_vms/software/primer3/src/primer3_core'
 

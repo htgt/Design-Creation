@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::PersistDesign;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::PersistDesign::VERSION = '0.036';
+    $DesignCreate::CmdRole::PersistDesign::VERSION = '0.037';
 }
 ## use critic
 

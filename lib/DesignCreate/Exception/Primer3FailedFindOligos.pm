@@ -1,7 +1,7 @@
 package DesignCreate::Exception::Primer3FailedFindOligos;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Exception::Primer3FailedFindOligos::VERSION = '0.036';
+    $DesignCreate::Exception::Primer3FailedFindOligos::VERSION = '0.037';
 }
 ## use critic
 

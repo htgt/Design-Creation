@@ -1,7 +1,7 @@
 package DesignCreate::Role::Common;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Role::Common::VERSION = '0.036';
+    $DesignCreate::Role::Common::VERSION = '0.037';
 }
 ## use critic
 

@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::PickBlockOligos;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::PickBlockOligos::VERSION = '0.036';
+    $DesignCreate::CmdRole::PickBlockOligos::VERSION = '0.037';
 }
 ## use critic
 

@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::OligoRegionsInsDel;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::OligoRegionsInsDel::VERSION = '0.036';
+    $DesignCreate::CmdRole::OligoRegionsInsDel::VERSION = '0.037';
 }
 ## use critic
 

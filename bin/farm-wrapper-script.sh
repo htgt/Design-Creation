@@ -17,4 +17,4 @@ exit $?
 # SETUP
 # source /nfs/team87/farm3_lims2_vms/conf/run_in_farm3 [wge|wge_devel|lims2_live|lims2_staging|path to custom rest client config]
 # example bsub:
-# bsub -J"create-designs[1-10]%3" -G team87-grp -q long -R"select[mem>2500] rusage[mem=2500] span[hosts=1]" -M2500 -n2 -o output/create-designs.%J-%I -e error/create-designs.%J-%I  ( path to this script )
+# bsub -J"create-designs[1-10]%3" -G team87-grp -q long -R"select[mem>2500] rusage[mem=2500] span[hosts=1]" -M2500 -n2 -o output/create-designs.%J-%I -e error/create-designs.%J-%I farm-wrapper-script.sh 
