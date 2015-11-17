@@ -31,9 +31,11 @@ BEGIN {
 
     %CURRENT_ASSEMBLY
     %GIBSON_PRIMER_REGIONS
+    %FUSION_PRIMER_REGIONS
     %DEFAULT_CHROMOSOME_DIR
     %BWA_GENOME_FILES
     %GIBSON_OLIGO_CLASS
+    %FUSION_OLIGO_CLASS
     );
     our %EXPORT_TAGS = ();
 }
@@ -119,6 +121,21 @@ const our %GIBSON_PRIMER_REGIONS => (
     },
 );
 
+const our %FUSION_PRIMER_REGIONS => (
+    'fusion-deletion' => {
+        five_prime => {
+            forward => '5R',
+            reverse => '3R',
+            slice   => 'five_prime_region_slice'
+        },
+        three_prime => {
+            forward => 'U5',
+            reverse => 'D3',
+            slice   => 'three_prime_region_slice'
+        },
+    },
+);
+
 const our %GIBSON_OLIGO_CLASS => (
     'EF' => 'exon',
     'ER' => 'exon',
@@ -127,6 +144,14 @@ const our %GIBSON_OLIGO_CLASS => (
     '3F' => 'three_prime',
     '3R' => 'three_prime',
 );
+
+const our %FUSION_OLIGO_CLASS => (
+    '5R' => 'five_prime',
+    '3R' => 'five_prime',
+    'U5' => 'three_prime',
+    'D3' => 'three_prime',
+);
+
 
 const our %DEFAULT_CHROMOSOME_DIR => (
     Mouse => {

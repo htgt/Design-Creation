@@ -48,6 +48,7 @@ const my %DESIGN_METHODS => (
     gibson            => 1,
     'gibson-deletion' => 1,
     'global-only'     => 1,
+    'fusion-deletion'  => 1,
 );
 
 const my %AOS_SEARCH_METHODS => (

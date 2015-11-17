@@ -53,7 +53,6 @@ has is_step => (
 
 sub BUILD {
     my $self = shift;
-
     # Add command name as a design parameter
     my $cmd_name = $self->command_names;
     $self->set_param( 'command-name', $cmd_name );
@@ -104,7 +103,6 @@ sub BUILD {
 override command_names => sub {
     # from App::Cmd::Command
     my ( $name ) = (ref( $_[0] ) || $_[0]) =~ /([^:]+)$/;
-
     # split camel case into words
     my @parts = $name =~ m/[[:upper:]](?:[[:upper:]]+|[[:lower:]]*)(?=\Z|[[:upper:]])/g;
 

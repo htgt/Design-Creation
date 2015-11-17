@@ -96,6 +96,9 @@ sub _build_oligos {
     elsif ( $design_method eq 'gibson-deletion' ) {
         return [ qw( 5F 5R 3F 3R ) ];
     }
+    elsif ( $design_method eq 'fusion-deletion' ) {
+        return [ qw( 5R U5 D3 3R ) ];
+    }
     elsif ( $design_method eq 'global-only' ) {
         return [ qw( G5 G3 ) ];
     }

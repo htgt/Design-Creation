@@ -64,6 +64,7 @@ has da_id => (
 # We call inner here which calls the sub class specific code, which is found in the
 # execute subroutines in the sub-classes.
 sub execute {
+$DB::single=1;
     my ( $self, $opts, $args ) = @_;
     Log::Log4perl::NDC->push( @{ $self->target_genes }[0] );
 
