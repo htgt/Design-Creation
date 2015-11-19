@@ -26,14 +26,14 @@ with qw( DesignCreate::Role::OligoRegionCoordinates );
 
 const my @DESIGN_PARAMETERS => qw(
 design_method
-region_length_5R
-region_offset_5R
+region_length_f5F
+region_offset_f5F
 region_length_U5
 region_offset_U5
 region_length_D3
 region_offset_D3 
-region_length_3R
-region_offset_3R
+region_length_f3R
+region_offset_f3R
 );
 
 has design_method => (
@@ -43,21 +43,21 @@ has design_method => (
     default => 'fusion-deletion'
 );
 
-has region_length_5R => (
+has region_length_f5F => (
     is            => 'ro',
     isa           => PositiveInt,
     traits        => [ 'Getopt' ],
     default       => 500,
-    documentation => 'Length of 5R oligo candidate region',
+    documentation => 'Length of f5F oligo candidate region',
     cmd_flag      => 'region-length-5f'
 );
 
-has region_offset_5R => (
+has region_offset_f5F => (
     is            => 'ro',
     isa           => PositiveInt,
     traits        => [ 'Getopt' ],
     default       => 1000,
-    documentation => 'Offset from 5R oligo candidate region of 5R oligo candidate region',
+    documentation => 'Offset from f5F oligo candidate region of f5F oligo candidate region',
     cmd_flag      => 'region-offset-5f'
 );
 
@@ -79,21 +79,21 @@ has region_offset_U5 => (
     cmd_flag      => 'region-offset-5r'
 );
 
-has region_length_3R => (
+has region_length_f3R => (
     is            => 'ro',
     isa           => PositiveInt,
     traits        => [ 'Getopt' ],
     default       => 500,
-    documentation => 'Length of 3R oligo candidate region',
+    documentation => 'Length of f3R oligo candidate region',
     cmd_flag      => 'region-length-3r'
 );
 
-has region_offset_3R => (
+has region_offset_f3R => (
     is            => 'ro',
     isa           => PositiveInt,
     traits        => [ 'Getopt' ],
     default       => 1000,
-    documentation => 'Offset from D3 oligo candidate region of 3R oligo candidate region',
+    documentation => 'Offset from D3 oligo candidate region of f3R oligo candidate region',
     cmd_flag      => 'region-offset-3r'
 );
 
@@ -192,25 +192,32 @@ sub calculate_pair_region_coordinates {
     my $strand       = $self->get_target_data( 'chr_strand' );
     if ( $strand == 1 ) {
         # five prime region
-        $self->five_prime_region_end( $target_start - $self->region_offset_3R );
-        $self->five_prime_region_start( $self->five_prime_region_end
-               - ( $self->region_offset_5R + $self->region_length_5R + $self->region_length_3R ) );
+        $self->three_prime_region_start( $target_start - $self->region_offset_U5 - $self->region_length_U5);
+        $self->five_prime_region_start( $self->three_prime_region_start
+               - ( $self->region_offset_f5F + $self->region_length_f5F + $self->region_length_U5 ) );
 
         # three prime region
-        $self->three_prime_region_start( $target_end + $self->region_offset_D3 );
-        $self->three_prime_region_end( $self->three_prime_region_start
-             + ( $self->region_offset_U5 + $self->region_length_U5 + $self->region_length_D3 ) );
+        $self->three_prime_region_end( $target_end + $self->region_offset_D3 + $self->region_length_D3 );
+        $self->five_prime_region_end( $self->three_prime_region_end
+             + ( $self->region_offset_f3R + $self->region_length_f3R + $self->region_length_D3 ) );
+
+        $self->log->debug("Three prime start: " . $self->three_prime_region_start);
+        $self->log->debug("Three prime end: " . $self->three_prime_region_end);
+        $self->log->debug("Five prime start: " . $self->five_prime_region_start);
+        $self->log->debug("Five prime end: " . $self->five_prime_region_end);
+        $self->log->debug("Target start: " . $target_start);
+        $self->log->debug("Target end: " . $target_end);
     }
     else {
         # five prime region
-        $self->five_prime_region_start( $target_end + $self->region_offset_3R );
-        $self->five_prime_region_end( $self->five_prime_region_start
-             + ( $self->region_offset_5R + $self->region_length_5R + $self->region_length_3R ) );
+        #$self->five_prime_region_start( $target_end + $self->region_offset_f3R );
+        #$self->five_prime_region_end( $self->five_prime_region_start
+        #     + ( $self->region_offset_f5F + $self->region_length_f5F + $self->region_length_f3R ) );
 
         # three prime region
-        $self->three_prime_region_end( $target_start - $self->region_offset_U5 );
-        $self->three_prime_region_start( $self->three_prime_region_end
-               - ( $self->region_offset_D3 + $self->region_length_D3 + $self->region_length_D3 ) );
+        #$self->three_prime_region_end( $target_start - $self->region_offset_U5 );
+        #$self->three_prime_region_start( $self->three_prime_region_end
+        #        - ( $self->region_offset_D3 + $self->region_length_D3 + $self->region_length_D3 ) );
     }
     $self->log->info('Calculated oligo region coordinates for design');
 

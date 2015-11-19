@@ -124,8 +124,8 @@ const our %GIBSON_PRIMER_REGIONS => (
 const our %FUSION_PRIMER_REGIONS => (
     'fusion-deletion' => {
         five_prime => {
-            forward => '5R',
-            reverse => '3R',
+            forward => 'f5F',
+            reverse => 'f3R',
             slice   => 'five_prime_region_slice'
         },
         three_prime => {

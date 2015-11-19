@@ -163,6 +163,8 @@ sub get_oligo_pair_region_coordinates {
     $self->check_oligo_region_sizes;
 
     my $design_method = $self->design_param( 'design_method' );
+    my $primer_regions;
+
     for my $region ( keys %{ $GIBSON_PRIMER_REGIONS{$design_method} } ) {
         my $start_attr_name = $region . '_region_start';
         my $end_attr_name = $region . '_region_end';

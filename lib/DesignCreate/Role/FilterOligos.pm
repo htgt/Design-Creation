@@ -29,10 +29,8 @@ has all_oligos => (
 sub _build_all_oligos {
     my $self = shift;
     my %all_oligos;
-$DB::single=1;
     for my $oligo_type ( $self->expected_oligos ) {
         my $oligo_file = $self->get_file( "$oligo_type.yaml", $self->oligo_finder_output_dir );
-
         my $oligos = LoadFile( $oligo_file );
         DesignCreate::Exception->throw( "No oligo data in $oligo_file for $oligo_type oligo" )
             unless $oligos;
@@ -76,7 +74,6 @@ Throw error if we have no valid oligoes for a oligo type.
 sub validate_oligos {
     my $self = shift;
     my @no_valid_oligos_of_type;
-$DB::single=1;
     for my $oligo_type ( $self->expected_oligos ) {
         $self->log->debug( "Validating $oligo_type oligos" );
 
@@ -125,7 +122,6 @@ consumes with role.
 sub validate_oligo {
     my ( $self, $oligo_data, $oligo_type, $invalid_reason ) = @_;
     $self->log->debug( "$oligo_type oligo, id: " . $oligo_data->{id} );
-$DB::single=1;
     if ( !defined $oligo_data->{oligo} || $oligo_data->{oligo} ne $oligo_type )   {
         $self->log->error("Oligo name mismatch, expecting $oligo_type, got: "
             . $oligo_data->{oligo} . 'for: ' . $oligo_data->{id} );
@@ -150,7 +146,6 @@ into a yaml file in the validated oligo directory.
 =cut
 sub output_validated_oligos {
     my $self = shift;
-$DB::single=1;
     for my $oligo_type ( keys %{ $self->validated_oligos } ) {
         my $filename = $self->validated_oligo_dir->stringify . '/' . $oligo_type . '.yaml';
         DumpFile( $filename, $self->validated_oligos->{$oligo_type} );
@@ -168,7 +163,6 @@ worked out.
 =cut
 sub check_oligo_sequence {
     my ( $self, $oligo_data, $oligo_slice, $invalid_reason ) = @_;
-$DB::single=1;
     if ( $oligo_slice->seq ne uc( $oligo_data->{oligo_seq} ) ) {
         $self->log->error( 'Oligo seq does not match coordinate sequence: ' . $oligo_data->{id} );
         $self->log->trace( 'Oligo seq  : ' . $oligo_data->{oligo_seq} );
@@ -188,7 +182,6 @@ Check the length of the oligo sequence is the same value we expect.
 =cut
 sub check_oligo_length {
     my ( $self, $oligo_data, $invalid_reason) = @_;
-$DB::single=1;
     my $oligo_length = length($oligo_data->{oligo_seq});
     if ( $oligo_length != $oligo_data->{oligo_length} ) {
         $self->log->error("Oligo length is $oligo_length, should be "

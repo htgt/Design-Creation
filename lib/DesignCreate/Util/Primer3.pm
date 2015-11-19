@@ -174,7 +174,6 @@ sub run_primer3 {
         $self->log->debug('Specify target primers must flank: ' . $target->{SEQUENCE_TARGET} );
         $primer3->set_parameters( SEQUENCE_TARGET => $target->{SEQUENCE_TARGET} );
     }
-
     my $results;
     try{
         my $task = $self->primer3_task;

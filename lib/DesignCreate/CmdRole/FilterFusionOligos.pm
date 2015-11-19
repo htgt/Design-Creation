@@ -25,6 +25,7 @@ use Fcntl; # O_ constants
 use List::MoreUtils qw( any );
 use List::Util qw( sum );
 use Bio::SeqIO;
+use Bio::Perl;
 use Try::Tiny;
 use JSON;
 use namespace::autoclean;
@@ -160,7 +161,6 @@ has region_best_primer3_pair => (
 
 sub filter_oligos {
     my ( $self, $opts, $args ) = @_;
-$DB::single=1;
     $self->add_design_parameters( \@DESIGN_PARAMETERS );
     $self->run_bwa;
 
@@ -193,11 +193,19 @@ If it passes all checks return 1, otherwise return undef.
 =cut
 ## no critic(Subroutines::ProhibitUnusedPrivateSubroutine)
 sub _validate_oligo {
-$DB::single=1;
     my ( $self, $oligo_data, $oligo_type, $oligo_slice, $invalid_reason ) = @_;
     $self->log->debug( "$oligo_type oligo, id: " . $oligo_data->{id} );
-
-    $self->check_oligo_sequence( $oligo_data, $oligo_slice, $invalid_reason ) or return;
+    my $seq;
+    if ( $self->chr_strand == 1 && $oligo_type =~ /U5|D3/ ) {
+        $DB::single=1;
+        $seq = revcom( $oligo_slice->seq );
+    } 
+    elsif ( $self->chr_strand == -1 && $oligo_type =~ /f5R|f3R/ ) {
+        $seq = revcom( $oligo_slice->seq );
+    } else {
+        $seq = $oligo_slice;
+    }
+    $self->check_oligo_sequence( $oligo_data, $seq, $invalid_reason ) or return;
     $self->check_oligo_length( $oligo_data, $invalid_reason )                 or return;
     if ( $oligo_type =~ /U5|D3/ ) {
         $self->check_oligo_not_near_exon( $oligo_data, $oligo_slice, $invalid_reason ) or return;
@@ -212,6 +220,11 @@ $DB::single=1;
     return 1;
 }
 ## use critic
+
+=head2 perform reverse compliment on three arm seqs
+
+=cut 
+
 
 =head2 check_oligo_not_near_exon
 
@@ -359,7 +372,6 @@ Create yaml files storing the valid oligo pairs, one for each region.
 =cut
 sub output_valid_oligo_pairs {
     my $self = shift;
-
     my @missing_oligo_pair_regions;
     my $design_method = $self->design_param( 'design_method' );
     for my $oligo_pair_region ( keys %{ $FUSION_PRIMER_REGIONS{$design_method} } ) {

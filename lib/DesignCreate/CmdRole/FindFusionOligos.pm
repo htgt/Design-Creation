@@ -291,7 +291,6 @@ Run primer3 against the 3 target regions.
 =cut
 sub run_primer3 {
     my ( $self ) = @_;
-$DB::single=1;
     my %primer3_params = ( configfile => $self->primer3_config_file->stringify );
     $primer3_params{$_} = $self->$_ for @PRIMER3_OPTIONS;
     my $p3 = DesignCreate::Util::Primer3->new_with_config( %primer3_params );
@@ -377,7 +376,6 @@ sub parse_primer {
         unless $primer->validate_seq;
 
     $self->calculate_oligo_coords_and_sequence( $primer, $region, \%oligo_data, $direction );
-
     $oligo_data{oligo_length}    = $primer->length;
     $oligo_data{melting_temp}    = $primer->melting_temp;
     $oligo_data{gc_content}      = $primer->gc_content;
@@ -429,13 +427,27 @@ sub calculate_oligo_coords_and_sequence{
     my $region_coords = $self->get_region_coords( $region );
     $oligo_data->{target_region_start} = $region_coords->{start};
     $oligo_data->{target_region_end}   = $region_coords->{end};
-
     if ( $self->design_param('chr_strand') == 1 ) {
         $oligo_data->{oligo_start} = $region_coords->{start} + $primer->start - 1;
         $oligo_data->{oligo_end}   = $region_coords->{start} + $primer->end - 1;
         $oligo_data->{offset}      = $primer->start;
-        $oligo_data->{oligo_seq}
-            = $direction eq 'forward' ? $primer->seq->seq : $primer->seq->revcom->seq;
+        $self->log->debug("--------------------------------");
+        if ($oligo_data->{id} =~ m/^U5/ || $oligo_data->{id} =~ m/^D3/) {
+            $oligo_data->{oligo_seq}
+                = $direction eq 'forward' ? $primer->seq->revcom->seq : $primer->seq->seq;
+            $self->log->debug("Third Prime");
+        }
+        else {
+            $oligo_data->{oligo_seq}
+                = $direction eq 'forward' ? $primer->seq->seq : $primer->seq->revcom->seq ;
+            $self->log->debug("Five Prime");
+        }
+        $self->log->debug("Primer: " . $oligo_data->{id});
+        $self->log->debug("Direction: " . $direction);
+        $self->log->debug("Seq: " . $oligo_data->{oligo_seq});
+        $self->log->debug("Left: " . $primer->seq->seq);
+        $self->log->debug("Right: " . $primer->seq->revcom->seq);
+
     }
     else {
         $oligo_data->{oligo_start} = $region_coords->{end} - $primer->end + 1;
@@ -451,15 +463,15 @@ sub calculate_oligo_coords_and_sequence{
 
 =head2 create_oligo_files
 
-Create a yaml file for a oligo type giving details
+create a yaml file for a oligo type giving details
 of the candidate oligos.
 
 =cut
 sub create_oligo_files {
     my $self = shift;
-    $self->log->info('Creating oligo output files');
+    $self->log->info('creating oligo output files');
 
-    DesignCreate::Exception->throw( 'No oligos found' )
+    designcreate::exception->throw( 'no oligos found' )
         unless $self->has_oligos;
 
     for my $oligo ( keys %{ $self->primer3_oligos } ) {
