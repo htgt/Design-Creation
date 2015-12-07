@@ -1,4 +1,10 @@
 package DesignCreate::CmdRole::OligoRegionsInsDel;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::CmdRole::OligoRegionsInsDel::VERSION = '0.038';
+}
+## use critic
+
 
 =head1 NAME
 

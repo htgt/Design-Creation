@@ -1,4 +1,10 @@
 package DesignCreate::Exception::OligoPairRegionValidation;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::Exception::OligoPairRegionValidation::VERSION = '0.038';
+}
+## use critic
+
 
 use Moose;
 use namespace::autoclean;

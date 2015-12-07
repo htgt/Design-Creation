@@ -1,4 +1,10 @@
 package DesignCreate::Role::OligoRegionCoordinates;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::Role::OligoRegionCoordinates::VERSION = '0.038';
+}
+## use critic
+
 
 =head1 NAME
 

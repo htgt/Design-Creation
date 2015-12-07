@@ -1,4 +1,10 @@
 package DesignCreate::Cmd::Step::OligoRegionsConditional;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::Cmd::Step::OligoRegionsConditional::VERSION = '0.038';
+}
+## use critic
+
 
 =head1 NAME
 

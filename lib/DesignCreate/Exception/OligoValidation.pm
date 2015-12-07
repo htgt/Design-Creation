@@ -1,4 +1,10 @@
 package DesignCreate::Exception::OligoValidation;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::Exception::OligoValidation::VERSION = '0.038';
+}
+## use critic
+
 
 use Moose;
 use namespace::autoclean;

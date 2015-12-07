@@ -1,4 +1,10 @@
 package DesignCreate::CmdRole::FilterFusionOligos;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::CmdRole::FilterFusionOligos::VERSION = '0.038';
+}
+## use critic
+
 
 =head1 NAME
 

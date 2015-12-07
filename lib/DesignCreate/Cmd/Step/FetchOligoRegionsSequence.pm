@@ -1,4 +1,10 @@
 package DesignCreate::Cmd::Step::FetchOligoRegionsSequence;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::Cmd::Step::FetchOligoRegionsSequence::VERSION = '0.038';
+}
+## use critic
+
 
 =head1 NAME
 

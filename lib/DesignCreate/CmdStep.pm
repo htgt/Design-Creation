@@ -1,4 +1,10 @@
 package DesignCreate::CmdStep;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::CmdStep::VERSION = '0.038';
+}
+## use critic
+
 
 use Moose;
 use namespace::autoclean;

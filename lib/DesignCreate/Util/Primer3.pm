@@ -1,4 +1,10 @@
 package DesignCreate::Util::Primer3;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::Util::Primer3::VERSION = '0.038';
+}
+## use critic
+
 
 =head1 NAME
 

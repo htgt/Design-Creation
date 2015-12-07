@@ -1,4 +1,10 @@
 package DesignCreate::Cmd::Complete;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::Cmd::Complete::VERSION = '0.038';
+}
+## use critic
+
 
 =head1 NAME
 

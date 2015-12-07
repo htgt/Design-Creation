@@ -1,4 +1,10 @@
 package DesignCreate::Cmd::Step::TargetExons;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::Cmd::Step::TargetExons::VERSION = '0.038';
+}
+## use critic
+
 
 =head1 NAME
 

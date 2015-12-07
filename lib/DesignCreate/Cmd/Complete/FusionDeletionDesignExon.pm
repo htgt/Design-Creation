@@ -1,4 +1,10 @@
 package DesignCreate::Cmd::Complete::FusionDeletionDesignExon;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::Cmd::Complete::FusionDeletionDesignExon::VERSION = '0.038';
+}
+## use critic
+
 
 =head1 NAME
 

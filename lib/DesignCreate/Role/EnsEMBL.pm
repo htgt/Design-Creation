@@ -1,4 +1,10 @@
 package DesignCreate::Role::EnsEMBL;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::Role::EnsEMBL::VERSION = '0.038';
+}
+## use critic
+
 
 =head1 NAME
 

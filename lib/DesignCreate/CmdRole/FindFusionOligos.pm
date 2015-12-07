@@ -1,4 +1,10 @@
 package DesignCreate::CmdRole::FindFusionOligos;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::CmdRole::FindFusionOligos::VERSION = '0.038';
+}
+## use critic
+
 
 =head1 NAME
 
