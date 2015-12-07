@@ -28,7 +28,6 @@ DesignCreate::CmdRole::PersistDesign
 # is where all the code specific to this command is found.
 augment 'execute' => sub {
     my ( $self, $opts, $args ) = @_;
-$DB::single=1;
     $self->target_coordinates;
     $self->get_oligo_pair_region_coordinates;
     $self->find_oligos;

@@ -23,9 +23,15 @@ use DesignCreate::Constants qw( %GIBSON_PRIMER_REGIONS %GIBSON_OLIGO_CLASS $DEFA
 use YAML::Any qw( LoadFile DumpFile );
 use JSON;
 use List::Util qw( first );
+use YAML::Tiny;
 use DateTime;
 use Const::Fast;
 use namespace::autoclean;
+use Bio::SeqIO;
+use Bio::EnsEMBL::Registry;
+use DesignCreate::Constants qw(
+    $DEFAULT_OLIGO_COORD_FILE_NAME
+);
 
 const my @DESIGN_PARAMETERS => qw(
 created_by
@@ -40,6 +46,24 @@ has created_by => (
     default       => 'system',
     cmd_flag      => 'created-by',
 );
+
+has target_region_slice => (
+    is         => 'ro',
+    isa        => 'Bio::EnsEMBL::Slice',
+    init_arg   => undef,
+    lazy_build => 1,
+);
+
+sub _build_target_region_slice {
+    my $self = shift;
+    return $self->slice_adaptor->fetch_by_region(
+        'chromosome',
+        $self->chr_name,
+        $self->target_region_start,
+        $self->target_region_end,
+        $self->chr_strand
+    );
+}
 
 has software_version => (
     is         => 'ro',
@@ -268,7 +292,6 @@ sub build_design_oligo_data {
 sub get_oligo {
     my ( $self, $oligo_type, $design_num ) = @_;
     my $oligo;
-
     if ( $self->design_param('design_method') =~ /gibson/ ) {
         my $oligo_class = $GIBSON_OLIGO_CLASS{ $oligo_type };
         $oligo = $self->pick_oligo_from_pair( $oligo_type, $design_num, $oligo_class );
@@ -288,7 +311,6 @@ sub get_oligo {
     DesignCreate::Exception->throw("Can not find $oligo_type oligo")
         if !$oligo && $design_num == 0;
     return unless $oligo;
-
 
     return $self->format_oligo_data( $oligo );
 }
@@ -362,9 +384,10 @@ sub create_alt_design_file {
 
 sub build_design_data {
     my ( $self, $oligos ) = @_;
-
     my $design_comment = $self->build_design_comment( $oligos );
-
+    if ($self->design_param( 'design_method' ) eq 'fusion-deletion') {
+        modify_fusion_oligos( $self, $oligos);
+    }
     my %design_data = (
         type              => $self->design_param( 'design_method' ),
         species           => $self->design_param( 'species' ),
@@ -378,6 +401,123 @@ sub build_design_data {
     $design_data{comments} = [ $design_comment ] if $design_comment;
 
     return \%design_data;
+}
+
+sub modify_fusion_oligos {
+    my ($self, $oligos) = @_;
+    my @oligos_arr = @{$oligos};
+    my $slice;
+    my $seq;
+
+    my $oligo_slice = {
+        '1U5'   => sub { return $_[0]-25, $_[0]-1, 1 },
+        '-1D3'  => sub { return $_[1]+1, $_[1]+25, 1 },
+        '1D3'   => sub { return $_[1]+1, $_[1]+25, 0 },
+        '-1U5'  => sub { return $_[0]-25, $_[0]-1, 0 },
+    };
+
+    my $oligo_trim = {
+        '1f5F'  => sub { return 0, 15 },
+        '-1f5F' => sub { return $_[0]-15, $_[0] },
+        '1f3R'  => sub { return $_[0]-15, $_[0] },
+        '-1f3R' => sub { return 0, 15 },
+    };
+
+    my $oligo_rename = {
+        'f5F'   => 'f5F',
+        'U5'    => 'D3',
+        'D3'    => 'f3R',
+        'f3R'   => 'U5',
+    };
+
+    foreach my $oligo (@oligos_arr) {
+        my @loci_array = @{$oligo->{loci}};
+        foreach my $loci (@loci_array) {
+
+            $oligo->{type} = $oligo_rename->{$oligo->{type}};
+                $self->log->debug($oligo->{type} . ' ' . "Start: " . $loci->{chr_start} . " End: " . $loci->{chr_end} . " Strand: " . $self->chr_strand . " Key: " . $self->chr_strand . $oligo->{type});
+
+            if ($oligo->{type} eq 'D3' || $oligo->{type} eq 'U5') {
+                my ($start_loc, $end_loc, $ident) = $oligo_slice->{$self->chr_strand . $oligo->{type}}->($loci->{chr_start}, $loci->{chr_end});
+
+                $slice = $self->slice_adaptor->fetch_by_region(
+                    'chromosome',
+                    $self->chr_name,
+                    $start_loc,
+                    $end_loc,
+                    $self->chr_strand,
+                );
+
+                if ($self->chr_strand == -1) {
+                    $seq = Bio::Seq->new( -alphabet => 'dna', -seq => $oligo->{seq}, -verbose => -1 )->revcom;
+                    $seq = $seq->seq;
+                }
+                else {
+                    $seq = $oligo->{seq};
+                }
+
+                if ($ident == 0) {
+                    $seq = $seq . $slice->seq;
+                    if ($self->chr_strand == -1) {
+                        $loci->{chr_start} = $start_loc;
+                    }
+                    else {
+                        $loci->{chr_end} = $end_loc;
+                    }
+                }
+                else {
+                    $seq = $slice->seq . $seq;
+                    if ($self->chr_strand == -1) {
+                        $loci->{chr_end} = $end_loc;
+                    }
+                    else {
+                        $loci->{chr_start} = $start_loc;
+                    }
+                }
+
+
+            }
+
+            else {
+                my $length = length $oligo->{seq};
+                my ($start_loc, $end_loc) = $oligo_trim->{$self->chr_strand . $oligo->{type}}->($length);
+                $seq = substr($oligo->{seq}, $start_loc, $end_loc);
+                if ($start_loc == 0) {
+                    $loci->{chr_end} = $loci->{chr_start} + 14;
+                }
+                else {
+                    $loci->{chr_start} = $loci->{chr_end} - 14;
+                }
+                if ($self->chr_strand == -1) {
+                     $seq = Bio::Seq->new( -alphabet => 'dna', -seq => $seq, -verbose => -1 )->revcom;
+                     $seq = $seq->seq;
+                }
+            }
+
+            $oligo->{seq} = $seq;
+            $self->log->debug($oligo->{type} . ' ' . $seq);
+
+        }
+    }
+    edit_oligo_region_file($self);
+    return;
+}
+
+sub edit_oligo_region_file {
+    my $self = shift;
+    my $yaml = YAML::Tiny->new;
+
+    $yaml = YAML::Tiny->read( $self->oligo_region_coordinate_file );
+
+    my $three_start = $yaml->[0]->{three_prime}->{start};
+
+    $yaml->[0]->{three_prime}->{start} = $yaml->[0]->{five_prime}->{end};
+    $yaml->[0]->{five_prime}->{end} = $yaml->[0]->{three_prime}->{end};
+    $yaml->[0]->{three_prime}->{end} = $three_start;
+
+    $yaml->write( $self->oligo_region_coordinate_file );
+
+    return;
 }
 
 =head2 calculate_gene_type

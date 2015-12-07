@@ -195,17 +195,8 @@ If it passes all checks return 1, otherwise return undef.
 sub _validate_oligo {
     my ( $self, $oligo_data, $oligo_type, $oligo_slice, $invalid_reason ) = @_;
     $self->log->debug( "$oligo_type oligo, id: " . $oligo_data->{id} );
-    my $seq;
-    if ( $self->chr_strand == 1 && $oligo_type =~ /U5|D3/ ) {
-        $DB::single=1;
-        $seq = revcom( $oligo_slice->seq );
-    } 
-    elsif ( $self->chr_strand == -1 && $oligo_type =~ /f5R|f3R/ ) {
-        $seq = revcom( $oligo_slice->seq );
-    } else {
-        $seq = $oligo_slice;
-    }
-    $self->check_oligo_sequence( $oligo_data, $seq, $invalid_reason ) or return;
+
+    $self->check_oligo_sequence( $oligo_data, $oligo_slice, $invalid_reason ) or return;
     $self->check_oligo_length( $oligo_data, $invalid_reason )                 or return;
     if ( $oligo_type =~ /U5|D3/ ) {
         $self->check_oligo_not_near_exon( $oligo_data, $oligo_slice, $invalid_reason ) or return;

@@ -146,8 +146,8 @@ const our %GIBSON_OLIGO_CLASS => (
 );
 
 const our %FUSION_OLIGO_CLASS => (
-    '5R' => 'five_prime',
-    '3R' => 'five_prime',
+    'f5F' => 'five_prime',
+    'f3R' => 'five_prime',
     'U5' => 'three_prime',
     'D3' => 'three_prime',
 );

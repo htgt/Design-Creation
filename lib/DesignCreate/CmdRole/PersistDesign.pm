@@ -109,7 +109,6 @@ sub persist_design {
 
 sub _persist_design {
     my ( $self, $design_data ) = @_;
-
     try{
         $self->log->debug( pp( $design_data ) );
         my $design = $self->lims2_api->POST( 'design', $design_data );

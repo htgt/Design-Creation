@@ -112,7 +112,6 @@ has oligo_region_coordinate_file => (
 
 sub _build_oligo_region_coordinate_file {
     my $self = shift;
-
     return $self->get_file( $DEFAULT_OLIGO_COORD_FILE_NAME, $self->oligo_target_regions_dir );
 }
 
@@ -293,8 +292,8 @@ sub run_primer3 {
     my ( $self ) = @_;
     my %primer3_params = ( configfile => $self->primer3_config_file->stringify );
     $primer3_params{$_} = $self->$_ for @PRIMER3_OPTIONS;
-    my $p3 = DesignCreate::Util::Primer3->new_with_config( %primer3_params );
 
+    my $p3 = DesignCreate::Util::Primer3->new_with_config( %primer3_params );
     my %failed_primer_regions;
     for my $region ( keys %{ $self->gibson_info } ) {
         $self->log->debug("Finding primers for $region primer region");
@@ -307,7 +306,7 @@ sub run_primer3 {
 
         my ( $result, $primer3_explain ) = $p3->run_primer3( $log_file->absolute, $region_bio_seq,
             { SEQUENCE_TARGET => $target_string }, $region );
-        $DB::single=1;
+
         DesignCreate::Exception->throw( "Errors running primer3 on $region region" )
             unless $result;
 
@@ -431,29 +430,15 @@ sub calculate_oligo_coords_and_sequence{
         $oligo_data->{oligo_start} = $region_coords->{start} + $primer->start - 1;
         $oligo_data->{oligo_end}   = $region_coords->{start} + $primer->end - 1;
         $oligo_data->{offset}      = $primer->start;
-        $self->log->debug("--------------------------------");
-        if ($oligo_data->{id} =~ m/^U5/ || $oligo_data->{id} =~ m/^D3/) {
-            $oligo_data->{oligo_seq}
-                = $direction eq 'forward' ? $primer->seq->revcom->seq : $primer->seq->seq;
-            $self->log->debug("Third Prime");
-        }
-        else {
-            $oligo_data->{oligo_seq}
-                = $direction eq 'forward' ? $primer->seq->seq : $primer->seq->revcom->seq ;
-            $self->log->debug("Five Prime");
-        }
-        $self->log->debug("Primer: " . $oligo_data->{id});
-        $self->log->debug("Direction: " . $direction);
-        $self->log->debug("Seq: " . $oligo_data->{oligo_seq});
-        $self->log->debug("Left: " . $primer->seq->seq);
-        $self->log->debug("Right: " . $primer->seq->revcom->seq);
-
+        $oligo_data->{oligo_seq}
+            = $direction eq 'forward' ? $primer->seq->seq : $primer->seq->revcom->seq ;
     }
     else {
         $oligo_data->{oligo_start} = $region_coords->{end} - $primer->end + 1;
         $oligo_data->{oligo_end}   = $region_coords->{end} - $primer->start + 1;
         $oligo_data->{offset}
             = ( $region_coords->{end} - $region_coords->{start} + 1 ) - $primer->end;
+
         $oligo_data->{oligo_seq}
             = $direction eq 'forward' ? $primer->seq->revcom->seq : $primer->seq->seq;
     }
