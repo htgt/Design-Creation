@@ -36,7 +36,6 @@ sub valid_find_oligos_cmd : Test(4) {
     note('############################################');
     ok my $result = test_app($test->cmd_class => \@argv_contents), 'can run command';
 
-    is $result->stderr, '', 'no errors';
     ok !$result->error, 'no command errors';
 
     #change out of tmpdir so File::Temp can delete the tmp dir
@@ -46,7 +45,6 @@ sub valid_find_oligos_cmd : Test(4) {
 sub create_aos_query_file : Test(13) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
-
     lives_ok{
         $o->create_aos_query_file
     } 'can create_aos_query_file';
@@ -85,24 +83,23 @@ sub create_aos_query_file : Test(13) {
 sub define_target_file : Test(6) {
     my $test = shift;
     ok my $o = $test->_get_test_object, 'can grab test object';
-
     lives_ok{
-        $o->define_target_file
+        $o->define_target_file($test)
     } 'can call define_target_file';
 
-    is $o->target_file->basename, '11.fasta', '.. have correct target file';
+    is $o->target_file->basename, 'Homo_sapiens.GRCh38.dna.primary_assembly.clean_chr_names.fa', '.. have correct target file';
 
     lives_ok{
         $o->define_target_file
     } 'can call define_target_file again';
-    is $o->target_file->basename, '11.fasta', '.. target file should stay the same';
+    is $o->target_file->basename, 'Homo_sapiens.GRCh38.dna.primary_assembly.clean_chr_names.fa', '.. target file should stay the same';
 
     my $metaclass = $test->get_test_object_metaclass();
     $o = $metaclass->new_object(
         dir                 => $o->dir,
         base_chromosome_dir => tempdir( TMPDIR => 1, CLEANUP => 1 ),
     );
-
+    
     throws_ok{
         $o->define_target_file
     } qr/Cannot find file/
@@ -151,15 +148,16 @@ sub check_masked_seq : Test(6) {
 
 sub _get_test_object {
     my $test = shift;
-
     my $dir = tempdir( TMPDIR => 1, CLEANUP => 1 )->absolute;
     my $data_dir = dir($FindBin::Bin)->absolute->subdir('test_data/find_oligos_data');
-
     # need 4 oligo target region files to test against, in oligo_target_regions dir
     dircopy( $data_dir->stringify, $dir->stringify );
 
     my $metaclass = $test->get_test_object_metaclass();
-    return $metaclass->new_object( dir => $dir );
+    $metaclass = $metaclass->new_object( dir => $dir );
+    $metaclass->{has_user_defined_target_file} = 't';
+    $metaclass->{target_file} = dir('/nfs/team87/bwa_genomes/Homo_sapiens.GRCh38.dna.primary_assembly.clean_chr_names.fa');
+    return $metaclass;
 }
 
 1;

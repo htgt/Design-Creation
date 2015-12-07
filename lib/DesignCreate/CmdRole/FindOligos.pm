@@ -155,7 +155,6 @@ sub check_masked_seq {
 
 sub define_target_file {
     my $self = shift;
-
     if ( $self->has_user_defined_target_file ) {
         $self->log->debug( 'We have a user defined target file: ' . $self->target_file->stringify );
         return;
