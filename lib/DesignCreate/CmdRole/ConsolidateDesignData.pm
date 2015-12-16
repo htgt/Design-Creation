@@ -408,14 +408,6 @@ sub build_design_data {
 sub modify_fusion_oligos {
     my ($self, $oligos, $convert) = @_;
     my @oligos_arr = @{$oligos};
-$DB::single=1;
-    # For the LIMS2 conversion method, $self is empty since we have not built $self through out the design creation module.
-    # This is temporary hack to use this function in LIMS2 and avoid modifying the existing system as little as possible.
-    if ($convert) { 
-        $self->{'chr_name'} = $oligos_arr[0]->{chr_name};
-        $self->{'chr_strand'} = $oligos_arr[0]->{chr_strand};
-    }
-
 
     my $slice;
     my $seq;
@@ -444,9 +436,8 @@ $DB::single=1;
     foreach my $oligo (@oligos_arr) {
         my @loci_array = @{$oligo->{loci}};
         foreach my $loci (@loci_array) {
-
-            $oligo->{type} = $oligo_rename->{$oligo->{type}};
             unless($convert) {
+                $oligo->{type} = $oligo_rename->{$oligo->{type}};
                 $self->log->debug($oligo->{type} . ' ' . "Start: " . $loci->{chr_start} . " End: " . $loci->{chr_end} . " Strand: " . $self->chr_strand . " Key: " . $self->chr_strand . $oligo->{type});
             }
             if ($oligo->{type} eq 'D3' || $oligo->{type} eq 'U5') {
@@ -486,8 +477,6 @@ $DB::single=1;
                         $loci->{chr_start} = $start_loc;
                     }
                 }
-
-
             }
 
             else {
@@ -507,15 +496,15 @@ $DB::single=1;
             }
 
             $oligo->{seq} = $seq;
-            
-            unless ($convert) { 
+            unless ($convert) {
                 $self->log->debug($oligo->{type} . ' ' . $seq);
             }
         }
     }
-    unless ($convert) {
-        edit_oligo_region_file($self);
+    unless($convert) {
+        return @oligos_arr;
     }
+    edit_oligo_region_file($self);
     return;
 }
 
