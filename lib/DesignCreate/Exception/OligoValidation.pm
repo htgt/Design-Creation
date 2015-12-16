@@ -1,7 +1,7 @@
 package DesignCreate::Exception::OligoValidation;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Exception::OligoValidation::VERSION = '0.038';
+    $DesignCreate::Exception::OligoValidation::VERSION = '0.039';
 }
 ## use critic
 

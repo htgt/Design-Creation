@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::ConsolidateDesignData;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::ConsolidateDesignData::VERSION = '0.038';
+    $DesignCreate::CmdRole::ConsolidateDesignData::VERSION = '0.039';
 }
 ## use critic
 
@@ -409,9 +409,12 @@ sub build_design_data {
     return \%design_data;
 }
 
+
+
 sub modify_fusion_oligos {
-    my ($self, $oligos) = @_;
+    my ($self, $oligos, $convert) = @_;
     my @oligos_arr = @{$oligos};
+
     my $slice;
     my $seq;
 
@@ -439,10 +442,10 @@ sub modify_fusion_oligos {
     foreach my $oligo (@oligos_arr) {
         my @loci_array = @{$oligo->{loci}};
         foreach my $loci (@loci_array) {
-
-            $oligo->{type} = $oligo_rename->{$oligo->{type}};
+            unless($convert) {
+                $oligo->{type} = $oligo_rename->{$oligo->{type}};
                 $self->log->debug($oligo->{type} . ' ' . "Start: " . $loci->{chr_start} . " End: " . $loci->{chr_end} . " Strand: " . $self->chr_strand . " Key: " . $self->chr_strand . $oligo->{type});
-
+            }
             if ($oligo->{type} eq 'D3' || $oligo->{type} eq 'U5') {
                 my ($start_loc, $end_loc, $ident) = $oligo_slice->{$self->chr_strand . $oligo->{type}}->($loci->{chr_start}, $loci->{chr_end});
 
@@ -480,8 +483,6 @@ sub modify_fusion_oligos {
                         $loci->{chr_start} = $start_loc;
                     }
                 }
-
-
             }
 
             else {
@@ -501,9 +502,13 @@ sub modify_fusion_oligos {
             }
 
             $oligo->{seq} = $seq;
-            $self->log->debug($oligo->{type} . ' ' . $seq);
-
+            unless ($convert) {
+                $self->log->debug($oligo->{type} . ' ' . $seq);
+            }
         }
+    }
+    unless($convert) {
+        return @oligos_arr;
     }
     edit_oligo_region_file($self);
     return;
