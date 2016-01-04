@@ -1,7 +1,7 @@
 package DesignCreate::Exception::Primer3RunFail;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Exception::Primer3RunFail::VERSION = '0.039';
+    $DesignCreate::Exception::Primer3RunFail::VERSION = '0.040';
 }
 ## use critic
 
