@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::OligoPairRegionsFusionDel;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::OligoPairRegionsFusionDel::VERSION = '0.040';
+    $DesignCreate::CmdRole::OligoPairRegionsFusionDel::VERSION = '0.041';
 }
 ## use critic
 

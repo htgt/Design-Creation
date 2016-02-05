@@ -1,7 +1,7 @@
 package DesignCreate::Exception::NonExistantAttribute;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Exception::NonExistantAttribute::VERSION = '0.040';
+    $DesignCreate::Exception::NonExistantAttribute::VERSION = '0.041';
 }
 ## use critic
 

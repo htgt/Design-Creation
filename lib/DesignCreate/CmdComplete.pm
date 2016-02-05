@@ -1,7 +1,7 @@
 package DesignCreate::CmdComplete;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdComplete::VERSION = '0.040';
+    $DesignCreate::CmdComplete::VERSION = '0.041';
 }
 ## use critic
 

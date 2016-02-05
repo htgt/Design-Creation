@@ -1,7 +1,7 @@
 package DesignCreate::Cmd::Complete::ConditionalDesignLocation;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Cmd::Complete::ConditionalDesignLocation::VERSION = '0.040';
+    $DesignCreate::Cmd::Complete::ConditionalDesignLocation::VERSION = '0.041';
 }
 ## use critic
 

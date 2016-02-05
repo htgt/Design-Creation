@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::PickGapOligos;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::PickGapOligos::VERSION = '0.040';
+    $DesignCreate::CmdRole::PickGapOligos::VERSION = '0.041';
 }
 ## use critic
 
