@@ -49,7 +49,7 @@ has region_length_f5F => (
     traits        => [ 'Getopt' ],
     default       => 500,
     documentation => 'Length of f5F oligo candidate region',
-    cmd_flag      => 'region-length-5f'
+    cmd_flag      => 'region-length-f5f'
 );
 
 has region_offset_f5F => (
@@ -58,7 +58,7 @@ has region_offset_f5F => (
     traits        => [ 'Getopt' ],
     default       => 1000,
     documentation => 'Offset from U5 oligo candidate region of f5F oligo candidate region',
-    cmd_flag      => 'region-offset-5f'
+    cmd_flag      => 'region-offset-f5f'
 );
 
 has region_length_U5 => (
@@ -67,7 +67,7 @@ has region_length_U5 => (
     traits        => [ 'Getopt' ],
     default       => 100,
     documentation => 'Length of U5 oligo candidate region',
-    cmd_flag      => 'region-length-5r'
+    cmd_flag      => 'region-length-u5'
 );
 
 has region_offset_U5 => (
@@ -76,7 +76,7 @@ has region_offset_U5 => (
     traits        => [ 'Getopt' ],
     default       => 1,
     documentation => 'Offset from exon of U5 oligo candidate region',
-    cmd_flag      => 'region-offset-5r'
+    cmd_flag      => 'region-offset-u5'
 );
 
 has region_length_f3R => (
@@ -85,7 +85,7 @@ has region_length_f3R => (
     traits        => [ 'Getopt' ],
     default       => 500,
     documentation => 'Length of f3R oligo candidate region',
-    cmd_flag      => 'region-length-3r'
+    cmd_flag      => 'region-length-f3r'
 );
 
 has region_offset_f3R => (
@@ -94,7 +94,7 @@ has region_offset_f3R => (
     traits        => [ 'Getopt' ],
     default       => 1000,
     documentation => 'Offset from D3 oligo candidate region of f3R oligo candidate region',
-    cmd_flag      => 'region-offset-3r'
+    cmd_flag      => 'region-offset-f3r'
 );
 
 has region_length_D3 => (
@@ -103,7 +103,7 @@ has region_length_D3 => (
     traits        => [ 'Getopt' ],
     default       => 100,
     documentation => 'Length of D3 oligo candidate region',
-    cmd_flag      => 'region-length-3f'
+    cmd_flag      => 'region-length-d3'
 );
 
 has region_offset_D3 => (
@@ -112,7 +112,7 @@ has region_offset_D3 => (
     traits        => [ 'Getopt' ],
     default       => 1,
     documentation => 'Offset from exon of D3 oligo candidate region',
-    cmd_flag      => 'region-offset-3f'
+    cmd_flag      => 'region-offset-d3'
 );
 
 has five_prime_region_start => (
@@ -188,7 +188,6 @@ Calculate start and end coordinates of the oligo pair regions
 =cut
 sub calculate_pair_region_coordinates {
     my ( $self ) = @_;
-
     my $target_start = $self->get_target_data( 'target_start' );
     my $target_end   = $self->get_target_data( 'target_end' );
     my $strand       = $self->get_target_data( 'chr_strand' );
