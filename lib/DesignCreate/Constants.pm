@@ -80,8 +80,10 @@ const our $EXONERATE_CMD => $ENV{EXONERATE_CMD}
 # '/software/ensembl/exonerate-2.2.0/bin/exonerate'
 
 const our %BWA_GENOME_FILES => (
-    Human => $ENV{'DESIGN_CREATION_HUMAN_FA'} // '/lustre/scratch109/srpipe/references/Human/GRCh38_15/all/bwa/Homo_sapiens.GRCh38_15.fa',
-    Mouse => $ENV{'DESIGN_CREATION_MOUSE_FA'} // '/lustre/scratch109/srpipe/references/Mus_musculus/GRCm38/all/bwa/Mus_musculus.GRCm38.68.dna.toplevel.fa',
+    Human => $ENV{'DESIGN_CREATION_HUMAN_FA'} //
+    '/lustre/scratch109/srpipe/references/Human/GRCh38_15/all/bwa/Homo_sapiens.GRCh38_15.fa',
+    Mouse => $ENV{'DESIGN_CREATION_MOUSE_FA'} //
+    '/lustre/scratch109/srpipe/references/Mus_musculus/GRCm38/all/bwa/Mus_musculus.GRCm38.68.dna.toplevel.fa',
 );
 
 const our %CURRENT_ASSEMBLY => (
