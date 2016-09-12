@@ -1,7 +1,7 @@
 package DesignCreate::Cmd::Step::OligoRegionsGlobalOnly;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Cmd::Step::OligoRegionsGlobalOnly::VERSION = '0.041';
+    $DesignCreate::Cmd::Step::OligoRegionsGlobalOnly::VERSION = '0.042';
 }
 ## use critic
 

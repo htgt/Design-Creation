@@ -1,7 +1,7 @@
 package DesignCreate::Constants;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Constants::VERSION = '0.041';
+    $DesignCreate::Constants::VERSION = '0.042';
 }
 ## use critic
 
@@ -131,12 +131,12 @@ const our %FUSION_PRIMER_REGIONS => (
     'fusion-deletion' => {
         five_prime => {
             forward => 'f5F',
-            reverse => 'f3R',
+            reverse => 'U5',
             slice   => 'five_prime_region_slice'
         },
         three_prime => {
-            forward => 'U5',
-            reverse => 'D3',
+            forward => 'D3',
+            reverse => 'f3R',
             slice   => 'three_prime_region_slice'
         },
     },
