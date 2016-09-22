@@ -1,8 +1,8 @@
-package DesignCreate::Cmd::Complete::CrisprConditionalLocation;
+package DesignCreate::Cmd::Complete::ConditionalInversionDesignLocation;
 
 =head1 NAME
 
-DesignCreate::Cmd::Complete::CrisprConditionalLocation - Create a location specified crispr conditional design
+DesignCreate::Cmd::Complete::ConditionalInversionDesignLocation - Create a location specified crispr conditional design
 
 =head1 DESCRIPTION
 
