@@ -47,7 +47,7 @@ has region_length_LFOligo => (
     is            => 'ro',
     isa           => PositiveInt,
     traits        => [ 'Getopt' ],
-    default       => 500,
+    default       => 800,
     documentation => 'Length of LFOligo oligo candidate region',
     cmd_flag      => 'region-length-LFOligo'
 );
@@ -56,7 +56,7 @@ has region_offset_LFOligo => (
     is            => 'ro',
     isa           => PositiveInt,
     traits        => [ 'Getopt' ],
-    default       => 1000,
+    default       => 400,
     documentation => 'Offset from LROligo oligo candidate region of LFOligo oligo candidate region',
     cmd_flag      => 'region-offset-LFOligo'
 );
@@ -65,7 +65,7 @@ has region_length_LROligo => (
     is            => 'ro',
     isa           => PositiveInt,
     traits        => [ 'Getopt' ],
-    default       => 100,
+    default       => 25,
     documentation => 'Length of LROligo oligo candidate region',
     cmd_flag      => 'region-length-LROligo'
 );
@@ -74,7 +74,7 @@ has region_offset_LROligo => (
     is            => 'ro',
     isa           => PositiveInt,
     traits        => [ 'Getopt' ],
-    default       => 1,
+    default       => 2,
     documentation => 'Offset from exon of LROligo oligo candidate region',
     cmd_flag      => 'region-offset-LROligo'
 );
@@ -83,7 +83,7 @@ has region_length_RROligo => (
     is            => 'ro',
     isa           => PositiveInt,
     traits        => [ 'Getopt' ],
-    default       => 500,
+    default       => 800,
     documentation => 'Length of RROligo oligo candidate region',
     cmd_flag      => 'region-length-RROligo'
 );
@@ -92,7 +92,7 @@ has region_offset_RROligo => (
     is            => 'ro',
     isa           => PositiveInt,
     traits        => [ 'Getopt' ],
-    default       => 1000,
+    default       => 400,
     documentation => 'Offset from RLOligo oligo candidate region of RROligo oligo candidate region',
     cmd_flag      => 'region-offset-RROligo'
 );
@@ -101,7 +101,7 @@ has region_length_RLOligo => (
     is            => 'ro',
     isa           => PositiveInt,
     traits        => [ 'Getopt' ],
-    default       => 100,
+    default       => 25,
     documentation => 'Length of RLOligo oligo candidate region',
     cmd_flag      => 'region-length-RLOligo'
 );
@@ -153,7 +153,7 @@ sub get_oligo_pair_region_coordinates {
     $self->add_design_parameters( \@DESIGN_PARAMETERS );
 
     # check target coordinate have been set, if not die
-    for my $data_type ( qw( target_start target_end chr_name chr_strand ) ) {
+    for my $data_type ( qw( target_point chr_name chr_strand ) ) {
         DesignCreate::Exception->throw( "No target value for: $data_type" )
             unless $self->have_target_data( $data_type );
     }
@@ -164,7 +164,7 @@ sub get_oligo_pair_region_coordinates {
 
     my $design_method = $self->design_param( 'design_method' );
 
-    for my $region ( keys %{ $FUSION_PRIMER_REGIONS{$design_method} } ) {
+    for my $region ( keys %{ $COIN_PRIMER_REGIONS{$design_method} } ) {
         my $start_attr_name = $region . '_region_start';
         my $end_attr_name = $region . '_region_end';
         $self->oligo_region_coordinates->{ $region } = {
@@ -188,30 +188,33 @@ Calculate start and end coordinates of the oligo pair regions
 =cut
 sub calculate_pair_region_coordinates {
     my ( $self ) = @_;
-    my $target_start = $self->get_target_data( 'target_start' );
-    my $target_end   = $self->get_target_data( 'target_end' );
+    my $target_point = $self->get_target_data( 'target_point' );
     my $strand       = $self->get_target_data( 'chr_strand' );
+    #  S     Left  E |S   Right     E
+    #  -1200 ~~~~~ AG|A/G ~~~~~ +1200
     if ( $strand == 1 ) {
-        # left arm
-        $self->left_arm_region_end( $target_start - $self->region_offset_LROligo );
-        $self->left_arm_region_start( $self->left_arm_region_end
-               - ( $self->region_offset_LFOligo + $self->region_length_LFOligo + $self->region_length_LROligo ) );
+        # Left arm
+        $self->left_arm_region_end( $target_point - $self->region_offset_LROligo );
+        $self->left_arm_region_start( $self->left_arm_region_end - 
+            ( $self->region_offset_LFOligo + $self->region_length_LFOligo ) );
 
-        # right arm
-        $self->right_arm_region_start( $target_end + $self->region_offset_RLOligo );
+        # Right arm
+        $self->right_arm_region_start( $target_point + $self->region_offset_RLOligo );
         $self->right_arm_region_end( $self->right_arm_region_start
-             + ( $self->region_offset_RROligo + $self->region_length_RROligo + $self->region_length_RLOligo ) );
+             + ( $self->region_offset_RROligo + $self->region_length_RROligo ) );
     }
+    #  S     Right   E| S Left     E
+    #  -1200 ~~~~~ A/G|GA ~~~~~ +1200
     else {
-        # left arm
-        $self->left_arm_region_start( $target_end + $self->region_offset_LROligo );
+        # Left arm
+        $self->left_arm_region_start( $target_point + $self->region_offset_LROligo );
         $self->left_arm_region_end( $self->left_arm_region_start
-             + ( $self->region_offset_LFOligo + $self->region_length_LFOligo + $self->region_length_LROligo ) );
+             + ( $self->region_offset_LFO ligo + $self->region_length_LFOligo ) );
 
-        # right arm
+        # Right arm
         $self->right_arm_region_end( $target_start - $self->region_offset_RLOligo );
         $self->right_arm_region_start( $self->right_arm_region_end
-               - ( $self->region_offset_RROligo + $self->region_length_RROligo + $self->region_length_RLOligo ) );
+               - ( $self->region_offset_RROligo + $self->region_length_RROligo ) );
 
     }
 
