@@ -11,6 +11,30 @@ gibson design.
 
 =cut
 
+
+
+
+
+
+
+
+
+
+# Unmodified copy and paste of find fusion oligos
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 use Moose::Role;
 use DesignCreate::Util::Primer3;
 use DesignCreate::Exception;
