@@ -138,6 +138,21 @@ const our %FUSION_PRIMER_REGIONS => (
     },
 );
 
+const our %COIN_PRIMER_REGIONS => (
+    'conditional-inversion' => {
+        left_arm => {
+            forward => 'LFOligo',
+            reverse => 'LROligo',
+            slice   => 'left_arm_slice',
+        },
+        right_arm => {
+            forward => 'RFOligo',
+            reverse => 'RROligo',
+            slice   => 'right_arm_slice',
+        },
+    },
+);
+
 const our %GIBSON_OLIGO_CLASS => (
     'EF' => 'exon',
     'ER' => 'exon',
