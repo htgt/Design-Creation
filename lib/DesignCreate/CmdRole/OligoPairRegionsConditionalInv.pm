@@ -203,7 +203,7 @@ sub calculate_pair_region_coordinates {
         $self->right_arm_region_end( $self->right_arm_region_start
              + ( $self->region_offset_RROligo + $self->region_length_RROligo ) );
     }
-    #  S     Right   E| S Left     E
+    #  S     Right   E| S Left      E
     #  -1200 ~~~~~ A/G|GA ~~~~~ +1200
     else {
         # Left arm

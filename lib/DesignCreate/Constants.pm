@@ -169,6 +169,12 @@ const our %FUSION_OLIGO_CLASS => (
     'D3' => 'three_prime',
 );
 
+const our %COIN_OLIGO_CLASS => (
+    'LFOligo' => 'left_arm',
+    'LROligo' => 'left_arm',
+    'RLOligo' => 'right_arm',
+    'RROligo' => 'right_arm',
+);
 
 const our %DEFAULT_CHROMOSOME_DIR => (
     Mouse => {

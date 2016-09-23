@@ -16,8 +16,9 @@ use namespace::autoclean;
 extends qw( DesignCreate::Cmd::Complete );
 with qw(
 DesignCreate::CmdRole::TargetLocation
-
-
+DesignCreate::CmdRole::FindConditionalOligos
+DesignCreate::CmdRole::ConsolidateDesignData
+DesignCreate::CmdRole::PersistDesign
 );
 
 # execute in the parent class carries out all the common steps needed for all

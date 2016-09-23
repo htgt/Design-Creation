@@ -42,13 +42,14 @@ const my %SPECIES => (
 );
 
 const my %DESIGN_METHODS => (
-    deletion          => 1,
-    insertion         => 1,
-    conditional       => 1,
-    gibson            => 1,
-    'gibson-deletion' => 1,
-    'global-only'     => 1,
-    'fusion-deletion'  => 1,
+    deletion                    => 1,
+    insertion                   => 1,
+    conditional                 => 1,
+    gibson                      => 1,
+    'gibson-deletion'           => 1,
+    'global-only'               => 1,
+    'fusion-deletion'           => 1,
+    'conditional-inversion'     => 1,
 );
 
 const my %AOS_SEARCH_METHODS => (

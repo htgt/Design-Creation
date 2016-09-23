@@ -99,6 +99,9 @@ sub _build_oligos {
     elsif ( $design_method eq 'fusion-deletion' ) {
         return [ qw( f5F U5 D3 f3R ) ];
     }
+    elsif ( $design_method eq 'conditional-inversion' ) {
+        return [ qw( LFOligo LROligo RLOligo RROligo ) ];
+    }
     elsif ( $design_method eq 'global-only' ) {
         return [ qw( G5 G3 ) ];
     }
