@@ -1,4 +1,10 @@
 package DesignCreate::Cmd::Complete::GibsonDeletionDesignExon;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::Cmd::Complete::GibsonDeletionDesignExon::VERSION = '0.043';
+}
+## use critic
+
 
 =head1 NAME
 

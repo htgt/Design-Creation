@@ -1,4 +1,10 @@
 package DesignCreate::Role::AOS;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::Role::AOS::VERSION = '0.043';
+}
+## use critic
+
 
 =head1 NAME
 

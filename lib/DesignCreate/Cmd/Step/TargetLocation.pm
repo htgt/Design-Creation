@@ -1,4 +1,10 @@
 package DesignCreate::Cmd::Step::TargetLocation;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::Cmd::Step::TargetLocation::VERSION = '0.043';
+}
+## use critic
+
 
 =head1 NAME
 

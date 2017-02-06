@@ -1,4 +1,10 @@
 package DesignCreate::Role::FilterOligos;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::Role::FilterOligos::VERSION = '0.043';
+}
+## use critic
+
 
 =head1 NAME
 

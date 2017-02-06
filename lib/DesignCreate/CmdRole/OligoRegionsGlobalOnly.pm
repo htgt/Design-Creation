@@ -1,4 +1,10 @@
 package DesignCreate::CmdRole::OligoRegionsGlobalOnly;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::CmdRole::OligoRegionsGlobalOnly::VERSION = '0.043';
+}
+## use critic
+
 
 =head1 NAME
 

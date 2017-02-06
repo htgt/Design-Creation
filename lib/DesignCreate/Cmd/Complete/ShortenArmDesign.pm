@@ -1,4 +1,10 @@
 package DesignCreate::Cmd::Complete::ShortenArmDesign;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::Cmd::Complete::ShortenArmDesign::VERSION = '0.043';
+}
+## use critic
+
 
 =head1 NAME
 

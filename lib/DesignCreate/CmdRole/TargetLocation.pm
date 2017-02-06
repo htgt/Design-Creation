@@ -1,4 +1,10 @@
 package DesignCreate::CmdRole::TargetLocation;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::CmdRole::TargetLocation::VERSION = '0.043';
+}
+## use critic
+
 
 =head1 NAME
 
