@@ -1,7 +1,7 @@
 package DesignCreate::Exception::OligoPairRegionValidation;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Exception::OligoPairRegionValidation::VERSION = '0.042';
+    $DesignCreate::Exception::OligoPairRegionValidation::VERSION = '0.044';
 }
 ## use critic
 

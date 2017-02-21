@@ -1,7 +1,7 @@
 package DesignCreate::CmdRole::TargetLocation;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdRole::TargetLocation::VERSION = '0.042';
+    $DesignCreate::CmdRole::TargetLocation::VERSION = '0.044';
 }
 ## use critic
 

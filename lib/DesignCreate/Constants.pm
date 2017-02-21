@@ -1,7 +1,7 @@
 package DesignCreate::Constants;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Constants::VERSION = '0.042';
+    $DesignCreate::Constants::VERSION = '0.044';
 }
 ## use critic
 
@@ -86,8 +86,10 @@ const our $EXONERATE_CMD => $ENV{EXONERATE_CMD}
 # '/software/ensembl/exonerate-2.2.0/bin/exonerate'
 
 const our %BWA_GENOME_FILES => (
-    Human => $ENV{'DESIGN_CREATION_HUMAN_FA'} // '/lustre/scratch109/srpipe/references/Human/GRCh38_15/all/bwa/Homo_sapiens.GRCh38_15.fa',
-    Mouse => $ENV{'DESIGN_CREATION_MOUSE_FA'} // '/lustre/scratch109/srpipe/references/Mus_musculus/GRCm38/all/bwa/Mus_musculus.GRCm38.68.dna.toplevel.fa',
+    Human => $ENV{'DESIGN_CREATION_HUMAN_FA'} //
+    '/lustre/scratch117/core/sciops_repository/references/Human/GRCh38_15/all/bwa/Homo_sapiens.GRCh38_15.fa',
+    Mouse => $ENV{'DESIGN_CREATION_MOUSE_FA'} //
+    '/lustre/scratch117/core/sciops_repository/references/Mus_musculus/GRCm38/all/bwa/Mus_musculus.GRCm38.68.dna.toplevel.fa',
 );
 
 const our %CURRENT_ASSEMBLY => (
@@ -161,11 +163,11 @@ const our %FUSION_OLIGO_CLASS => (
 
 const our %DEFAULT_CHROMOSOME_DIR => (
     Mouse => {
-        GRCm38 => '/lustre/scratch109/blastdb/Users/team87/Mouse/GRCm38',
+        GRCm38 => '/lustre/scratch117/core/corebio/blastdb/Ensembl/Mouse/GRCm38',
     },
     Human =>{
-        GRCh37 => '/lustre/scratch109/blastdb/Users/team87/Human/GRCh37',
-        GRCh38 => '/lustre/scratch109/blastdb/Users/team87/Human/GRCh38',
+        GRCh37 => '/lustre/scratch117/core/corebio/blastdb/Ensembl/Human/GRCh37',
+        GRCh38 => '/lustre/scratch117/core/corebio/blastdb/Ensembl/Human/GRCh38',
     },
 );
 

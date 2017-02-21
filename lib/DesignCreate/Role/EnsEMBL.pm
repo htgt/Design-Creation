@@ -1,7 +1,7 @@
 package DesignCreate::Role::EnsEMBL;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Role::EnsEMBL::VERSION = '0.042';
+    $DesignCreate::Role::EnsEMBL::VERSION = '0.044';
 }
 ## use critic
 
