@@ -1,7 +1,7 @@
 #!/bin/bash
 PROGRAMPATH=/nfs/team87/farm3_lims2_vms/software/perl/bin
 
-BASE_DIR=/lustre/scratch109/sanger/$USER/design-create
+BASE_DIR=/lustre/scratch117/sciops/team87/design-create
 
 WORK_DIR=$BASE_DIR/designs_workdir/$LSB_JOBINDEX
 
