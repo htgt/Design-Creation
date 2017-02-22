@@ -1,7 +1,7 @@
 package DesignCreate::Cmd::Step::PickGapOligos;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Cmd::Step::PickGapOligos::VERSION = '0.044';
+    $DesignCreate::Cmd::Step::PickGapOligos::VERSION = '0.045';
 }
 ## use critic
 

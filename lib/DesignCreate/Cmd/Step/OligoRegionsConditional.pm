@@ -1,7 +1,7 @@
 package DesignCreate::Cmd::Step::OligoRegionsConditional;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Cmd::Step::OligoRegionsConditional::VERSION = '0.044';
+    $DesignCreate::Cmd::Step::OligoRegionsConditional::VERSION = '0.045';
 }
 ## use critic
 

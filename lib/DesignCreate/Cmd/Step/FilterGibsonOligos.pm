@@ -1,7 +1,7 @@
 package DesignCreate::Cmd::Step::FilterGibsonOligos;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Cmd::Step::FilterGibsonOligos::VERSION = '0.044';
+    $DesignCreate::Cmd::Step::FilterGibsonOligos::VERSION = '0.045';
 }
 ## use critic
 

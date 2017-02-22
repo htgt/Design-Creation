@@ -1,7 +1,7 @@
 package DesignCreate::Util::Primer3;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Util::Primer3::VERSION = '0.044';
+    $DesignCreate::Util::Primer3::VERSION = '0.045';
 }
 ## use critic
 
