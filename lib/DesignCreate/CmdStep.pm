@@ -1,7 +1,7 @@
 package DesignCreate::CmdStep;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::CmdStep::VERSION = '0.045';
+    $DesignCreate::CmdStep::VERSION = '0.046';
 }
 ## use critic
 

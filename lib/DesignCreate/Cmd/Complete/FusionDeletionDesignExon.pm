@@ -1,7 +1,7 @@
 package DesignCreate::Cmd::Complete::FusionDeletionDesignExon;
 ## no critic(RequireUseStrict,RequireUseWarnings)
 {
-    $DesignCreate::Cmd::Complete::FusionDeletionDesignExon::VERSION = '0.045';
+    $DesignCreate::Cmd::Complete::FusionDeletionDesignExon::VERSION = '0.046';
 }
 ## use critic
 
