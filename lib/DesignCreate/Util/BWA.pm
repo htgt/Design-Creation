@@ -273,8 +273,9 @@ sub oligo_hits {
             $oligo_hits{$id}{chr} = $chromosome;
             $oligo_hits{$id}{start} = $chr_start;
 
+            my $threshold = $ENV{BWA_GENOMIC_THRESHOLD} || 30;
             # score ok above 30 look to be totally unique
-            if ( $score > 30 ) {
+            if ( $score > $threshold ) {
                 $oligo_hits{$id}{unique_alignment} = 1;
             }
         }
