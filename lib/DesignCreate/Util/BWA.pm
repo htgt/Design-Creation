@@ -13,7 +13,7 @@ Align sequence(s) against a genome to find number of hits using BWA aln
 use Moose;
 use DesignCreate::Exception;
 use DesignCreate::Exception::MissingFile;
-use DesignCreate::Types qw( PositiveInt Species );
+use DesignCreate::Types qw( PositiveInt NaturalNumber Species );
 use DesignCreate::Constants qw(
     $BWA_CMD
     $SAMTOOLS_CMD
@@ -58,7 +58,7 @@ has num_bwa_threads => (
 # default of 2 only gets hits with > 90% similarity
 has num_mismatches => (
     is       => 'ro',
-    isa      => PositiveInt,
+    isa      => NaturalNumber,
     required => 1,
     default  => 2,
 );
