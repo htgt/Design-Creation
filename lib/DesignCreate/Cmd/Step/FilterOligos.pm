@@ -1,4 +1,10 @@
 package DesignCreate::Cmd::Step::FilterOligos;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::Cmd::Step::FilterOligos::VERSION = '0.047';
+}
+## use critic
+
 
 =head1 NAME
 

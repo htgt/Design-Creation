@@ -1,4 +1,10 @@
 package DesignCreate::CmdRole::ConsolidateDesignData;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::CmdRole::ConsolidateDesignData::VERSION = '0.047';
+}
+## use critic
+
 
 =head1 NAME
 

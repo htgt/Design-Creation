@@ -1,4 +1,10 @@
 package DesignCreate::CmdRole::TargetExons;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::CmdRole::TargetExons::VERSION = '0.047';
+}
+## use critic
+
 
 =head1 NAME
 

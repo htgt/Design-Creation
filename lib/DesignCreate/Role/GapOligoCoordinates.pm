@@ -1,4 +1,10 @@
 package DesignCreate::Role::GapOligoCoordinates;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::Role::GapOligoCoordinates::VERSION = '0.047';
+}
+## use critic
+
 
 =head1 NAME
 

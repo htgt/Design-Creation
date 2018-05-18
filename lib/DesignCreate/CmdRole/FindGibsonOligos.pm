@@ -1,4 +1,10 @@
 package DesignCreate::CmdRole::FindGibsonOligos;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::CmdRole::FindGibsonOligos::VERSION = '0.047';
+}
+## use critic
+
 
 =head1 NAME
 

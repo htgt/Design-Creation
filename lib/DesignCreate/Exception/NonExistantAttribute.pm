@@ -1,4 +1,10 @@
 package DesignCreate::Exception::NonExistantAttribute;
+## no critic(RequireUseStrict,RequireUseWarnings)
+{
+    $DesignCreate::Exception::NonExistantAttribute::VERSION = '0.047';
+}
+## use critic
+
 
 use Moose;
 use namespace::autoclean;
