@@ -281,10 +281,7 @@ sub oligo_hits {
         }
         else {
             $oligo_hits{$id}{hits}++;
-            # store the first 10 hit locations
-            if ( $oligo_hits{$id}{hits} < 10 ) {
-                push @{ $oligo_hits{$id}{hit_locations} }, { chr => $chromosome, start => $chr_start };
-            }
+            push @{ $oligo_hits{$id}{hit_locations} }, { chr => $chromosome, start => $chr_start };
         }
     }
 
