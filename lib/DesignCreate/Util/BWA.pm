@@ -27,12 +27,20 @@ use IPC::Run 'run';
 use Const::Fast;
 use namespace::autoclean;
 use Bio::SeqIO;
+use IO::String;
+use Data::Dumper;
 
 with qw( MooseX::Log::Log4perl );
 
+has api => (
+    is => 'ro',
+    isa => 'WebAppCommon::Util::RemoteFileAccess',
+    required => 1,
+);
+
 has query_file => (
     is       => 'ro',
-    isa      => AbsFile,
+    isa      => 'Path::Class::File',
     coerce   => 1,
     required => 1,
 );
@@ -77,7 +85,7 @@ has delete_bwa_files => (
 
 has target_file => (
     is         => 'rw',
-    isa        => AbsFile,
+    isa        => 'Path::Class::File',
     lazy_build => 1,
 );
 
@@ -123,6 +131,10 @@ sub _build_oligo_seqs {
     my $self = shift;
     my %oligo_seqs;
 
+    #my $file_content = $self->api->get_file_content($self->query_file);
+    #print "$file_content\n";
+    #my $file_content_io = IO::String->new($file_content);
+    #my $seq_in = Bio::SeqIO->new( -fh => $file_content_io, -format => 'fasta' );
     my $seq_in = Bio::SeqIO->new( -fh => $self->query_file->openr, -format => 'fasta' );
     while ( my $seq = $seq_in->next_seq ) {
         $oligo_seqs{ $seq->display_id } = $seq->seq;
@@ -193,12 +205,15 @@ sub generate_sam_file {
 
     my $bwa_aln_file = $self->work_dir->file('query.sai')->absolute;
     my $bwa_aln_log_file = $self->work_dir->file( 'bwa_aln.log' )->absolute;
-    run( \@aln_command,
-        '<', \undef,
-        '>', $bwa_aln_file->stringify,
-        '2>', $bwa_aln_log_file->stringify
-    ) or DesignCreate::Exception->throw(
-            "Failed to run bwa aln command, see log file: $bwa_aln_log_file" );
+    my $target_file = $self->target_file->stringify;
+    my $query_file = $self->query_file->stringify;
+    system("ssh bwa \"bwa aln -n 0 -o 0 -N -t 2 $target_file $query_file > $bwa_aln_file 2> $bwa_aln_log_file\"");
+    #run( \@aln_command,
+    #     '<', \undef,
+    #    '>', $bwa_aln_file->stringify,
+    #    '2>', $bwa_aln_log_file->stringify
+    #) or DesignCreate::Exception->throw(
+    #        "Failed to run bwa aln command, see log file: $bwa_aln_log_file" );
 
     my @samse_command = (
         $BWA_CMD,
@@ -212,12 +227,13 @@ sub generate_sam_file {
 
     my $sam_file = $self->work_dir->file('query.sam')->absolute;
     my $bwa_samse_log_file = $self->work_dir->file( 'bwa_samse.log' )->absolute;
-    run( \@samse_command,
-        '<', \undef,
-        '>', $sam_file->stringify,
-        '2>', $bwa_samse_log_file->stringify
-    ) or DesignCreate::Exception->throw(
-            "Failed to run bwa samse command, see log file: $bwa_samse_log_file" );
+    system("ssh bwa \"bwa samse -n 900000 $target_file $bwa_aln_file $query_file > $sam_file 2> $bwa_samse_log_file\"");
+    #run( \@samse_command,
+    #    '<', \undef,
+    #    '>', $sam_file->stringify,
+    #    '2>', $bwa_samse_log_file->stringify
+    #) or DesignCreate::Exception->throw(
+    #        "Failed to run bwa samse command, see log file: $bwa_samse_log_file" );
 
     my @xa2multi_command = (
         $XA2MULTI_CMD,
@@ -227,9 +243,11 @@ sub generate_sam_file {
 
     my $xa2multi_log_file = $self->work_dir->file('xa2multi.log')->absolute;
     my $err = "";
-    run( \@xa2multi_command, '<', \undef, '>', $self->sam_multi_file->stringify, '2>', \$err)
-        or DesignCreate::Exception->throw(
-            "Failed to run xa2multi command: $err" );
+    my $sam_multi_file = $self->sam_multi_file->stringify;
+    system("ssh bwa \"/home/ubuntu/xa2multi.pl $sam_file > $sam_multi_file 2> $xa2multi_log_file\"");
+    #run( \@xa2multi_command, '<', \undef, '>', $self->sam_multi_file->stringify, '2>', \$err)
+    #    or DesignCreate::Exception->throw(
+    #        "Failed to run xa2multi command: $err" );
 
     if ( $self->delete_bwa_files ) {
         $sam_file->remove;
@@ -250,7 +268,9 @@ sub oligo_hits {
     $self->log->info( 'Calculating oligo hits' );
     my %oligo_hits;
 
-    my $fh = $self->sam_multi_file->openr;
+    my $file_content = $self->api->get_file_content($self->sam_multi_file);
+    my $fh = IO::String->new($file_content);
+    #my $fh = $self->sam_multi_file->openr;
     while ( <$fh> ) {
         next if /^@/;
         my @data = split /\t/;
@@ -286,7 +306,8 @@ sub oligo_hits {
     }
 
     my $oligo_hits_file = $self->work_dir->file( 'oligo_hits.yaml' );
-    DumpFile( $oligo_hits_file, \%oligo_hits );
+    $self->api->post_file_content($oligo_hits_file, Dumper(\%oligo_hits));
+    #DumpFile( $oligo_hits_file, \%oligo_hits );
 
     return \%oligo_hits;
 }
