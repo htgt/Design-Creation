@@ -29,27 +29,64 @@ use namespace::autoclean;
 use Bio::SeqIO;
 use IO::String;
 use Data::Dumper;
+use Path::Class;
+use Data::UUID;
 
 with qw( MooseX::Log::Log4perl );
+
+has primers => (
+    is => 'ro',
+    isa => 'HashRef',
+);
 
 has api => (
     is => 'ro',
     isa => 'WebAppCommon::Util::RemoteFileAccess',
-    required => 1,
+    lazy_build => 1,
 );
 
-has query_file => (
-    is       => 'ro',
-    isa      => 'Path::Class::File',
-    coerce   => 1,
-    required => 1,
-);
+sub _build_api {
+    return WebAppCommon::Util::RemoteFileAccess->new({server => 'bwa'});
+}
 
 has work_dir => (
-    is       => 'ro',
-    isa      => 'Path::Class::Dir',
-    required => 1,
+    is         => 'ro',
+    isa        => 'Path::Class::Dir',
+    lazy_build => 1,
 );
+
+sub _build_work_dir {
+    my $self = shift;
+    my $unique_string = Data::UUID->new()->create_str();
+    my $root_dir = $ENV{'LIMS2_BWA_OLIGO_DIR'} // '/var/tmp/bwa';
+    my $work_dir = dir($root_dir, '_' . $unique_string);
+    $self->api->make_dir($work_dir->stringify);
+    #or croak 'Could not create directory ' . $self->work_dir->stringify . ": $!";
+    return $work_dir;
+}
+
+has query_file => (
+    is         => 'ro',
+    isa        => 'Path::Class::File',
+    lazy_build => 1,
+);
+
+sub _build_query_file {
+    my $self = shift;
+    my $file_content = '';
+    my $file_content_io = IO::String->new($file_content);
+    my $seq_out = Bio::SeqIO->new( -fh => $file_content_io, -format => 'fasta' );
+    foreach my $oligo ( sort keys %{$self->primers} ) {
+        my $fasta_seq = Bio::Seq->new(
+            -seq => $self->primers->{$oligo}->{seq},
+            -id  => $oligo
+        );
+        $seq_out->write_seq($fasta_seq);
+    }
+    my $fasta_file_name = $self->work_dir->file('oligos.fasta');
+    $self->api->post_file_content($fasta_file_name, $file_content);
+    return $fasta_file_name;
+}
 
 has species => (
     is       => 'ro',
