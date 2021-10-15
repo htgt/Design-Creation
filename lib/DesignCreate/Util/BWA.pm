@@ -76,12 +76,29 @@ sub _build_query_file {
     my $file_content = '';
     my $file_content_io = IO::String->new($file_content);
     my $seq_out = Bio::SeqIO->new( -fh => $file_content_io, -format => 'fasta' );
-    foreach my $oligo ( sort keys %{$self->primers} ) {
-        my $fasta_seq = Bio::Seq->new(
-            -seq => $self->primers->{$oligo}->{seq},
-            -id  => $oligo
-        );
-        $seq_out->write_seq($fasta_seq);
+    if ($self->primers->{'left'} || $self->primers->{'right'}) {
+        foreach my $oligo ( sort keys %{$self->primers->{'left'}} ) {
+            my $fasta_seq = Bio::Seq->new(
+                -seq => $self->primers->{'left'}->{$oligo}->{seq},
+                -id  => $oligo
+            );
+            $seq_out->write_seq($fasta_seq);
+        }
+        foreach my $oligo ( sort keys %{$self->primers->{'right'}} ) {
+            my $fasta_seq = Bio::Seq->new(
+                -seq => $self->primers->{'right'}->{$oligo}->{seq},
+                -id  => $oligo
+            );
+            $seq_out->write_seq($fasta_seq);
+        }
+    } else {
+        foreach my $oligo ( sort keys %{$self->primers} ) {
+            my $fasta_seq = Bio::Seq->new(
+                -seq => $self->primers->{$oligo}->{seq},
+                -id  => $oligo
+            );
+            $seq_out->write_seq($fasta_seq);
+        }
     }
     my $fasta_file_name = $self->work_dir->file('oligos.fasta');
     $self->api->post_file_content($fasta_file_name, $file_content);
