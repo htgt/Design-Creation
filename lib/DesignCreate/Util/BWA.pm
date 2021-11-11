@@ -20,6 +20,7 @@ use DesignCreate::Constants qw(
     $XA2MULTI_CMD
     %BWA_GENOME_FILES
 );
+use WebAppCommon::Util::RemoteFileAccess;
 use MooseX::Types::Path::Class::MoreCoercions qw/AbsFile/;
 use Path::Class  qw( file );
 use YAML::Any qw( LoadFile DumpFile );
