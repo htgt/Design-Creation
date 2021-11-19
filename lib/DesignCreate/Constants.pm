@@ -84,7 +84,7 @@ const our $EXONERATE_CMD => $ENV{EXONERATE_CMD}
 
 const our %BWA_GENOME_FILES => (
     Human => $ENV{'DESIGN_CREATION_HUMAN_FA'} //
-    '/lustre/scratch117/core/sciops_repository/references/Human/GRCh38_15/all/bwa/Homo_sapiens.GRCh38_15.fa',
+    '/home/ubuntu/reference/Homo_sapiens.GRCh38.dna.primary_assembly.fa',
     Mouse => $ENV{'DESIGN_CREATION_MOUSE_FA'} //
     '/lustre/scratch117/core/sciops_repository/references/Mus_musculus/GRCm38/all/bwa/Mus_musculus.GRCm38.68.dna.toplevel.fa',
 );
