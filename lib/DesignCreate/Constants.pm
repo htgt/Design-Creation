@@ -24,6 +24,7 @@ BEGIN {
     $PRIMER3_CONFIG_FILE
     $PRIMER3_CMD
     $AOS_LOCATION
+    $BWA_SERVER
     $BWA_CMD
     $SAMTOOLS_CMD
     $XA2MULTI_CMD
@@ -65,14 +66,16 @@ const our $PRIMER3_CMD => $ENV{PRIMER3_CMD}
 #TODO switch to value below once vms upgraded sp12 Wed 11 Dec 2013 13:56:19 GMT
 # '/nfs/team87/farm3_lims2_vms/software/primer3/src/primer3_core'
 
+const our $BWA_SERVER => $ENV{LIMS2_BWA_SERVER};
+
 const our $BWA_CMD => $ENV{BWA_CMD}
-    || '/software/solexa/bin/bwa';
+    || '/usr/bin/bwa';
 
 const our $SAMTOOLS_CMD => $ENV{SAMTOOLS_CMD}
     || '/software/solexa/bin/samtools';
 
 const our $XA2MULTI_CMD => $ENV{XA2MULTI_CMD}
-    || '/software/solexa/bin/aligners/bwa/current/xa2multi.pl';
+    || '/home/ubuntu/xa2multi.pl';
 
 const our $EXONERATE_CMD => $ENV{EXONERATE_CMD}
     || '/software/team87/brave_new_world/app/exonerate-2.2.0-x86_64/bin/exonerate';

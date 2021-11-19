@@ -15,6 +15,7 @@ use DesignCreate::Exception;
 use DesignCreate::Exception::MissingFile;
 use DesignCreate::Types qw( PositiveInt NaturalNumber Species );
 use DesignCreate::Constants qw(
+    $BWA_SERVER
     $BWA_CMD
     $SAMTOOLS_CMD
     $XA2MULTI_CMD
@@ -36,18 +37,30 @@ use Data::UUID;
 with qw( MooseX::Log::Log4perl );
 
 has primers => (
-    is => 'ro',
+    is  => 'ro',
     isa => 'HashRef',
 );
 
+has design_id => (
+    is      => 'ro',
+    isa     => 'Str',
+    default => ''
+);
+
+has well_id => (
+    is      => 'ro',
+    isa     => 'Str',
+    default => '',
+);
+
 has api => (
-    is => 'ro',
+    is  => 'ro',
     isa => 'WebAppCommon::Util::RemoteFileAccess',
     lazy_build => 1,
 );
 
 sub _build_api {
-    return WebAppCommon::Util::RemoteFileAccess->new({server => 'bwa'});
+    return WebAppCommon::Util::RemoteFileAccess->new({server => $BWA_SERVER});
 }
 
 has work_dir => (
@@ -60,9 +73,9 @@ sub _build_work_dir {
     my $self = shift;
     my $unique_string = Data::UUID->new()->create_str();
     my $root_dir = $ENV{'LIMS2_BWA_OLIGO_DIR'} // '/var/tmp/bwa';
-    my $work_dir = dir($root_dir, '_' . $unique_string);
-    $self->api->make_dir($work_dir->stringify);
-    #or croak 'Could not create directory ' . $self->work_dir->stringify . ": $!";
+    my $work_dir = dir($root_dir, $self->well_id . '_' . $unique_string);
+    $self->api->make_dir($work_dir) == 0
+        or DesignCreate::Exception->throw("Could not create $work_dir");
     return $work_dir;
 }
 
@@ -101,9 +114,10 @@ sub _build_query_file {
             $seq_out->write_seq($fasta_seq);
         }
     }
-    my $fasta_file_name = $self->work_dir->file('oligos.fasta');
-    $self->api->post_file_content($fasta_file_name, $file_content);
-    return $fasta_file_name;
+    my $query_fasta = $self->work_dir->file($self->design_id . '_oligos.fasta');
+    $self->api->post_file_content($query_fasta, $file_content) == 0
+        or DesignCreate::Exception->throw("Could not create $query_fasta");
+    return $query_fasta;
 }
 
 has species => (
@@ -113,7 +127,7 @@ has species => (
 );
 
 has num_bwa_threads => (
-    is     => 'ro',
+    is      => 'ro',
     isa     => PositiveInt,
     default => 2,
 );
@@ -186,10 +200,6 @@ sub _build_oligo_seqs {
     my $self = shift;
     my %oligo_seqs;
 
-    #my $file_content = $self->api->get_file_content($self->query_file);
-    #print "$file_content\n";
-    #my $file_content_io = IO::String->new($file_content);
-    #my $seq_in = Bio::SeqIO->new( -fh => $file_content_io, -format => 'fasta' );
     my $seq_in = Bio::SeqIO->new( -fh => $self->query_file->openr, -format => 'fasta' );
     while ( my $seq = $seq_in->next_seq ) {
         $oligo_seqs{ $seq->display_id } = $seq->seq;
@@ -246,8 +256,11 @@ sub generate_sam_file {
     my $self = shift;
     $self->log->info( 'Generating sam file' );
 
-    my @aln_command = (
-        $BWA_CMD,
+    my $bwa_aln_file = $self->work_dir->file('query.sai')->absolute;
+    my $bwa_aln_log_file = $self->work_dir->file( 'bwa_aln.log' )->absolute;
+    my $aln_command = join( ' ', (
+        'ssh', $BWA_SERVER,
+        "\"$BWA_CMD",
         'aln',                         # align command
         "-n", $self->num_mismatches,   # number of mismatches allowed over sequence
         "-o", 0,                       # disable gapped alignments
@@ -255,58 +268,53 @@ sub generate_sam_file {
         "-t", $self->num_bwa_threads,  # specify number of threads
         $self->target_file->stringify, # target genome file, indexed for bwa
         $self->query_file->stringify,  # query file with oligo sequences
-    );
-    $self->log->debug( "BWA aln command: " . join( ' ', @aln_command ) );
+        '>', $bwa_aln_file->stringify,
+        '2>', "$bwa_aln_log_file\"",
+    ));
+    $self->log->debug( "BWA aln command: $aln_command");
 
-    my $bwa_aln_file = $self->work_dir->file('query.sai')->absolute;
-    my $bwa_aln_log_file = $self->work_dir->file( 'bwa_aln.log' )->absolute;
-    my $target_file = $self->target_file->stringify;
-    my $query_file = $self->query_file->stringify;
-    system("ssh bwa \"bwa aln -n 0 -o 0 -N -t 2 $target_file $query_file > $bwa_aln_file 2> $bwa_aln_log_file\"");
-    #run( \@aln_command,
-    #     '<', \undef,
-    #    '>', $bwa_aln_file->stringify,
-    #    '2>', $bwa_aln_log_file->stringify
-    #) or DesignCreate::Exception->throw(
-    #        "Failed to run bwa aln command, see log file: $bwa_aln_log_file" );
+    system($aln_command) == 0
+        or DesignCreate::Exception->throw(
+        "Failed to run bwa aln command, see log file: $bwa_aln_log_file");
 
-    my @samse_command = (
-        $BWA_CMD,
+    my $sam_file = $self->work_dir->file('query.sam')->absolute;
+    my $bwa_samse_log_file = $self->work_dir->file( 'bwa_samse.log' )->absolute;
+    my $samse_command = join( ' ', (
+        'ssh', $BWA_SERVER,
+        "\"$BWA_CMD",
         'samse',                       # converts sai file (binary) to sam file
         '-n 900000',                   # max number of allowed hits per oligo
         $self->target_file->stringify, # target genome file
         $bwa_aln_file->stringify,      # sai binary file, output from bwa aln step
         $self->query_file->stringify,  # query file with oligo sequences
-    );
-    $self->log->debug( "BWA samse command: " . join( ' ', @samse_command ) );
+        '>', $sam_file->stringify,
+        '2>', "$bwa_samse_log_file\"",
+    ));
+    $self->log->debug( "BWA samse command: $samse_command");
 
-    my $sam_file = $self->work_dir->file('query.sam')->absolute;
-    my $bwa_samse_log_file = $self->work_dir->file( 'bwa_samse.log' )->absolute;
-    system("ssh bwa \"bwa samse -n 900000 $target_file $bwa_aln_file $query_file > $sam_file 2> $bwa_samse_log_file\"");
-    #run( \@samse_command,
-    #    '<', \undef,
-    #    '>', $sam_file->stringify,
-    #    '2>', $bwa_samse_log_file->stringify
-    #) or DesignCreate::Exception->throw(
-    #        "Failed to run bwa samse command, see log file: $bwa_samse_log_file" );
-
-    my @xa2multi_command = (
-        $XA2MULTI_CMD,
-        $sam_file->stringify, # sam file output from samse step
-    );
-    $self->log->debug( "xa2multi command: " . join( ' ', @xa2multi_command ) );
+    system($samse_command) == 0
+        or DesignCreate::Exception->throw(
+        "Failed to run bwa samse command, see log file: $bwa_samse_log_file");
 
     my $xa2multi_log_file = $self->work_dir->file('xa2multi.log')->absolute;
-    my $err = "";
-    my $sam_multi_file = $self->sam_multi_file->stringify;
-    system("ssh bwa \"/home/ubuntu/xa2multi.pl $sam_file > $sam_multi_file 2> $xa2multi_log_file\"");
-    #run( \@xa2multi_command, '<', \undef, '>', $self->sam_multi_file->stringify, '2>', \$err)
-    #    or DesignCreate::Exception->throw(
-    #        "Failed to run xa2multi command: $err" );
+    my $xa2multi_command = join( ' ', (
+        'ssh', $BWA_SERVER,
+        "\"$XA2MULTI_CMD",
+        $sam_file->stringify, # sam file output from samse step
+        '>', $self->sam_multi_file->stringify,
+        '2>', "$xa2multi_log_file\"",
+    ));
+    $self->log->debug( "xa2multi command: $xa2multi_command");
+
+    system($xa2multi_command) == 0
+        or DesignCreate::Exception->throw(
+        "Failed to run xa2multi command, see log file: $xa2multi_log_file");
 
     if ( $self->delete_bwa_files ) {
-        $sam_file->remove;
-        $bwa_aln_file->remove;
+        system("ssh $BWA_SERVER \"rm $sam_file\"") == 0
+            or DesignCreate::Exception->throw("Could not remove $sam_file");
+        system("ssh $BWA_SERVER \"rm $bwa_aln_file\"") == 0
+            or DesignCreate::Exception->throw("Could not remove $bwa_aln_file");
     }
 
     return;
@@ -325,7 +333,6 @@ sub oligo_hits {
 
     my $file_content = $self->api->get_file_content($self->sam_multi_file);
     my $fh = IO::String->new($file_content);
-    #my $fh = $self->sam_multi_file->openr;
     while ( <$fh> ) {
         next if /^@/;
         my @data = split /\t/;
@@ -362,7 +369,6 @@ sub oligo_hits {
 
     my $oligo_hits_file = $self->work_dir->file( 'oligo_hits.yaml' );
     $self->api->post_file_content($oligo_hits_file, Dumper(\%oligo_hits));
-    #DumpFile( $oligo_hits_file, \%oligo_hits );
 
     return \%oligo_hits;
 }
