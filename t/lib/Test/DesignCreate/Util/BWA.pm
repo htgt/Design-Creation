@@ -69,7 +69,7 @@ sub constructor : Test(startup => 6) {
         species         => 'Human',
         num_bwa_threads => 1,
         design_id       => 123,
-        well_id         => 'Miseq_Crispr_456_18-11-2021',
+        well_id         => 'Test_Miseq_Crispr_456_18-11-2021',
     ), 'we got another object';
 
     isa_ok $o_alt, $test->class;
@@ -136,7 +136,7 @@ sub _build_work_dir : Tests(2) {
     like $work_dir, qr/^\/home\/ubuntu\/bwa_dump\/_[\w-]+/, '_build_work_dir outputs work dir path as expected';
 
     $work_dir = $o_alt->_build_work_dir;
-    like $work_dir, qr/^\/home\/ubuntu\/bwa_dump\/Miseq_Crispr_456_18-11-2021_[\w-]+/, '_build_work_dir outputs alt work dir path as expected';
+    like $work_dir, qr/^\/home\/ubuntu\/bwa_dump\/Test_Miseq_Crispr_456_18-11-2021_[\w-]+/, '_build_work_dir outputs alt work dir path as expected';
 }
 
 sub _build_query_file : Tests(6) {
