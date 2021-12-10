@@ -43,7 +43,6 @@ sub constructor : Test(startup => 6) {
         primers         => $primer_data,
         species         => 'Human',
         num_bwa_threads => 1,
-        num_mismatches  => 0,
     ), 'we got a object';
 
     isa_ok $o, $test->class;
@@ -114,8 +113,8 @@ sub oligo_hits : Tests(5) {
     my $o = $test->{o}; 
 
     ok my $oligo_hits = $o->oligo_hits, 'can call oligo_hits method';
-    ok exists $oligo_hits->{'5F-2'}, 'we have data on 5F-2 oligo';
-    is $oligo_hits->{'5F-2'}{hits}, 2, 'correct number of hits for 5F-2 oligo';
+    ok exists $oligo_hits->{'3F-1'}, 'we have data on 3F-1 oligo';
+    is $oligo_hits->{'3F-1'}{hits}, 3, 'correct number of hits for 3F-1 oligo';
     ok exists $oligo_hits->{'3R-1'}, 'we have data on 3F-1 oligo';
     is $oligo_hits->{'3R-1'}{hits}, 1, 'correct number of hits for 3R-1 oligo';
 }
@@ -127,25 +126,15 @@ sub _build_api : Tests(1) {
     isa_ok $o->_build_api, 'WebAppCommon::Util::RemoteFileAccess', '_build_api returns RemoteFileAccess object';
 }
 
-sub _build_work_dir : Tests(2) {
-    my $test = shift;
-    my $o = $test->{o};
-    my $o_alt = $test->{alt};
-
-    my $work_dir = $o->_build_work_dir;
-    like $work_dir, qr/^\/home\/ubuntu\/bwa_dump\/_[\w-]+/, '_build_work_dir outputs work dir path as expected';
-
-    $work_dir = $o_alt->_build_work_dir;
-    like $work_dir, qr/^\/home\/ubuntu\/bwa_dump\/Test_Miseq_Crispr_456_18-11-2021_[\w-]+/, '_build_work_dir outputs alt work dir path as expected';
-}
-
 sub _build_query_file : Tests(6) {
     my $test = shift;
     my $o = $test->{o};
     my $o_alt = $test->{alt};
 
     my $query_file = $o->_build_query_file;
-    is $query_file, $o->work_dir . '/_oligos.fasta', '_build_query_file outputs query file path as expected';
+    like $query_file,
+    qr/^\/home\/ubuntu\/bwa_dump\/_[\w-]+\/_oligos\.fasta/,
+    '_build_query_file outputs query file path as expected';
     ok $o->api->check_file_existence($query_file), 'query file exists';
     my $expected_file_content =
         ">3F-0\nCAAGTGGTTCAAGTATTCTCCTTAC\n" .
@@ -164,7 +153,9 @@ sub _build_query_file : Tests(6) {
 
 
     $query_file = $o_alt->_build_query_file;
-    is $query_file, $o_alt->work_dir . '/123_oligos.fasta', '_build_query_file outputs alt query file path as expected';
+    like $query_file,
+    qr/^\/home\/ubuntu\/bwa_dump\/Test_Miseq_Crispr_456_18-11-2021_[\w-]+\/123_oligos.fasta/,
+    '_build_query_file outputs alt query file path as expected';
     ok $o_alt->api->check_file_existence($query_file), 'alt query file exists';
     $expected_file_content =
         ">left_0\nCAAGTGGTTCAAGTATTCTCCTTAC\n" .

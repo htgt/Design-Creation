@@ -33,6 +33,7 @@ use IO::String;
 use Data::Dumper;
 use Path::Class;
 use Data::UUID;
+use POSIX qw(EXIT_SUCCESS);
 
 with qw( MooseX::Log::Log4perl );
 
@@ -72,9 +73,9 @@ has work_dir => (
 sub _build_work_dir {
     my $self = shift;
     my $unique_string = Data::UUID->new()->create_str();
-    my $root_dir = $ENV{'LIMS2_BWA_OLIGO_DIR'} // '/var/tmp/bwa';
-    my $work_dir = dir($root_dir, $self->well_id . '_' . $unique_string);
-    $self->api->make_dir($work_dir) == 0
+    my $root_dir = $ENV{LIMS2_BWA_OLIGO_DIR} // '/var/tmp/bwa';
+    my $work_dir = dir($root_dir, join('_', ($self->well_id, $unique_string)));
+    $self->api->make_dir($work_dir) == EXIT_SUCCESS
         or DesignCreate::Exception->throw("Could not create $work_dir");
     return $work_dir;
 }
@@ -90,34 +91,29 @@ sub _build_query_file {
     my $file_content = '';
     my $file_content_io = IO::String->new($file_content);
     my $seq_out = Bio::SeqIO->new( -fh => $file_content_io, -format => 'fasta' );
-    if ($self->primers->{'left'} || $self->primers->{'right'}) {
-        foreach my $oligo ( sort keys %{$self->primers->{'left'}} ) {
-            my $fasta_seq = Bio::Seq->new(
-                -seq => $self->primers->{'left'}->{$oligo}->{seq},
-                -id  => $oligo
-            );
-            $seq_out->write_seq($fasta_seq);
-        }
-        foreach my $oligo ( sort keys %{$self->primers->{'right'}} ) {
-            my $fasta_seq = Bio::Seq->new(
-                -seq => $self->primers->{'right'}->{$oligo}->{seq},
-                -id  => $oligo
-            );
-            $seq_out->write_seq($fasta_seq);
-        }
+    if ($self->primers->{left}) {
+        write_oligos($seq_out, $self->primers->{left});
+        write_oligos($seq_out, $self->primers->{right});
     } else {
-        foreach my $oligo ( sort keys %{$self->primers} ) {
-            my $fasta_seq = Bio::Seq->new(
-                -seq => $self->primers->{$oligo}->{seq},
-                -id  => $oligo
-            );
-            $seq_out->write_seq($fasta_seq);
-        }
+        write_oligos($seq_out, $self->primers);
     }
+
     my $query_fasta = $self->work_dir->file($self->design_id . '_oligos.fasta');
-    $self->api->post_file_content($query_fasta, $file_content) == 0
+    $self->api->post_file_content($query_fasta, $file_content) == EXIT_SUCCESS
         or DesignCreate::Exception->throw("Could not create $query_fasta");
     return $query_fasta;
+}
+
+sub write_oligos {
+    my ($seq_out, $oligos) = @_;
+    foreach my $oligo ( sort keys %{$oligos} ) {
+        my $fasta_seq = Bio::Seq->new(
+            -seq => $oligos->{$oligo}->{seq},
+            -id  => $oligo
+        );
+        $seq_out->write_seq($fasta_seq);
+    }
+    return;
 }
 
 has species => (
@@ -259,61 +255,61 @@ sub generate_sam_file {
     my $bwa_aln_file = $self->work_dir->file('query.sai')->absolute;
     my $bwa_aln_log_file = $self->work_dir->file( 'bwa_aln.log' )->absolute;
     my $aln_command = join( ' ', (
-        'ssh', $BWA_SERVER,
-        "\"$BWA_CMD",
-        'aln',                         # align command
-        "-n", $self->num_mismatches,   # number of mismatches allowed over sequence
-        "-o", 0,                       # disable gapped alignments
-        "-N",                          # disable iterative search so we get all hits
-        "-t", $self->num_bwa_threads,  # specify number of threads
-        $self->target_file->stringify, # target genome file, indexed for bwa
-        $self->query_file->stringify,  # query file with oligo sequences
-        '>', $bwa_aln_file->stringify,
-        '2>', "$bwa_aln_log_file\"",
+        "ssh $BWA_SERVER",
+        "\"$BWA_CMD",                    # quote terminated at end of remote command
+        'aln',                           # align command
+        '-n' => $self->num_mismatches,   # number of mismatches allowed over sequence
+        '-o' => 0,                       # disable gapped alignments
+        '-N',                            # disable iterative search so we get all hits
+        '-t' => $self->num_bwa_threads,  # specify number of threads
+        $self->target_file->stringify,   # target genome file, indexed for bwa
+        $self->query_file->stringify,    # query file with oligo sequences
+        '>'  => $bwa_aln_file->stringify,
+        '2>' => "$bwa_aln_log_file\"",
     ));
     $self->log->debug( "BWA aln command: $aln_command");
 
-    system($aln_command) == 0
+    system($aln_command) == EXIT_SUCCESS
         or DesignCreate::Exception->throw(
         "Failed to run bwa aln command, see log file: $bwa_aln_log_file");
 
     my $sam_file = $self->work_dir->file('query.sam')->absolute;
     my $bwa_samse_log_file = $self->work_dir->file( 'bwa_samse.log' )->absolute;
     my $samse_command = join( ' ', (
-        'ssh', $BWA_SERVER,
-        "\"$BWA_CMD",
-        'samse',                       # converts sai file (binary) to sam file
-        '-n 900000',                   # max number of allowed hits per oligo
-        $self->target_file->stringify, # target genome file
-        $bwa_aln_file->stringify,      # sai binary file, output from bwa aln step
-        $self->query_file->stringify,  # query file with oligo sequences
-        '>', $sam_file->stringify,
-        '2>', "$bwa_samse_log_file\"",
+        "ssh $BWA_SERVER",
+        "\"$BWA_CMD",                   # quote terminated at end of remote command
+        'samse',                        # converts sai file (binary) to sam file
+        '-n' => '900000',               # max number of allowed hits per oligo
+        $self->target_file->stringify,  # target genome file
+        $bwa_aln_file->stringify,       # sai binary file, output from bwa aln step
+        $self->query_file->stringify,   # query file with oligo sequences
+        '>'  => $sam_file->stringify,
+        '2>' => "$bwa_samse_log_file\"",
     ));
     $self->log->debug( "BWA samse command: $samse_command");
 
-    system($samse_command) == 0
+    system($samse_command) == EXIT_SUCCESS
         or DesignCreate::Exception->throw(
         "Failed to run bwa samse command, see log file: $bwa_samse_log_file");
 
     my $xa2multi_log_file = $self->work_dir->file('xa2multi.log')->absolute;
     my $xa2multi_command = join( ' ', (
-        'ssh', $BWA_SERVER,
-        "\"$XA2MULTI_CMD",
+        "ssh $BWA_SERVER",
+        "\"$XA2MULTI_CMD",    # quote terminated at end of remote command
         $sam_file->stringify, # sam file output from samse step
-        '>', $self->sam_multi_file->stringify,
-        '2>', "$xa2multi_log_file\"",
+        '>'  => $self->sam_multi_file->stringify,
+        '2>' => "$xa2multi_log_file\"",
     ));
     $self->log->debug( "xa2multi command: $xa2multi_command");
 
-    system($xa2multi_command) == 0
+    system($xa2multi_command) == EXIT_SUCCESS
         or DesignCreate::Exception->throw(
         "Failed to run xa2multi command, see log file: $xa2multi_log_file");
 
     if ( $self->delete_bwa_files ) {
-        system("ssh $BWA_SERVER \"rm $sam_file\"") == 0
+        system("ssh $BWA_SERVER \"rm $sam_file\"") == EXIT_SUCCESS
             or DesignCreate::Exception->throw("Could not remove $sam_file");
-        system("ssh $BWA_SERVER \"rm $bwa_aln_file\"") == 0
+        system("ssh $BWA_SERVER \"rm $bwa_aln_file\"") == EXIT_SUCCESS
             or DesignCreate::Exception->throw("Could not remove $bwa_aln_file");
     }
 
