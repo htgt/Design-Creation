@@ -24,6 +24,7 @@ BEGIN {
     $PRIMER3_CONFIG_FILE
     $PRIMER3_CMD
     $AOS_LOCATION
+    $BWA_SERVER
     $BWA_CMD
     $SAMTOOLS_CMD
     $XA2MULTI_CMD
@@ -65,14 +66,16 @@ const our $PRIMER3_CMD => $ENV{PRIMER3_CMD}
 #TODO switch to value below once vms upgraded sp12 Wed 11 Dec 2013 13:56:19 GMT
 # '/nfs/team87/farm3_lims2_vms/software/primer3/src/primer3_core'
 
+const our $BWA_SERVER => $ENV{LIMS2_BWA_SERVER};
+
 const our $BWA_CMD => $ENV{BWA_CMD}
-    || '/software/solexa/bin/bwa';
+    || '/usr/bin/bwa';
 
 const our $SAMTOOLS_CMD => $ENV{SAMTOOLS_CMD}
     || '/software/solexa/bin/samtools';
 
 const our $XA2MULTI_CMD => $ENV{XA2MULTI_CMD}
-    || '/software/solexa/bin/aligners/bwa/current/xa2multi.pl';
+    || '/home/ubuntu/xa2multi.pl';
 
 const our $EXONERATE_CMD => $ENV{EXONERATE_CMD}
     || '/software/team87/brave_new_world/app/exonerate-2.2.0-x86_64/bin/exonerate';
@@ -81,9 +84,9 @@ const our $EXONERATE_CMD => $ENV{EXONERATE_CMD}
 
 const our %BWA_GENOME_FILES => (
     Human => $ENV{'DESIGN_CREATION_HUMAN_FA'} //
-    '/lustre/scratch117/core/sciops_repository/references/Human/GRCh38_15/all/bwa/Homo_sapiens.GRCh38_15.fa',
+    '/home/ubuntu/reference/Homo_sapiens.GRCh38.dna.primary_assembly.fa',
     Mouse => $ENV{'DESIGN_CREATION_MOUSE_FA'} //
-    '/lustre/scratch117/core/sciops_repository/references/Mus_musculus/GRCm38/all/bwa/Mus_musculus.GRCm38.68.dna.toplevel.fa',
+    '/home/ubuntu/reference/Mus_musculus.GRCm38.68.dna.toplevel.fa',
 );
 
 const our %CURRENT_ASSEMBLY => (
