@@ -61,6 +61,9 @@ has api => (
 );
 
 sub _build_api {
+    if (! defined $BWA_SERVER) {
+        DesignCreate::Exception->throw('BWA server not defined');
+    }
     return WebAppCommon::Util::RemoteFileAccess->new({server => $BWA_SERVER});
 }
 
